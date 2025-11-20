@@ -10,26 +10,19 @@ import Link from 'next/link';
 import {
   ThreePanelLayout,
   CenterPanel,
-  RightPanel,
   PanelHeader,
   PanelContent,
 } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/lib/ui/design-system';
-import ThreePreview from '@/components/ThreePreview';
+import ThreeDViewer from '@/components/ThreeDViewer';
 import {
-  Filter,
   Download,
   Star,
   Eye,
   Heart,
-  MessageCircle,
-  Share2,
   DollarSign,
-  User,
-  Calendar,
-  Tag,
   TrendingUp,
   Clock,
   Grid3x3,
@@ -55,7 +48,6 @@ interface Design {
 }
 
 export default function ExplorePage() {
-  const [selectedDesign, setSelectedDesign] = useState<Design | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeFilter, setActiveFilter] = useState('trending');
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,6 +79,11 @@ export default function ExplorePage() {
             files: p.file_count || 0,
             comments: p.comment_count || 0,
             liked: false,
+            // Ensure file_path and file_type are correct and extension has dot
+            fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase().replace('.', ''))
+              ? `/api/files/${String(p.file_path).replace(/^[^\w/]+/, '').replace(/[^\w.\-/]+/g, '')}`
+              : null,
+            fileType: p.file_type ? (p.file_type.startsWith('.') ? p.file_type : `.${p.file_type}`) : null,
           }));
           setDesigns(mappedDesigns);
         }
@@ -213,17 +210,6 @@ export default function ExplorePage() {
     { id: 'premium', label: 'Premium', icon: DollarSign },
   ];
 
-  const popularTags = [
-    'Mechanical', 'Furniture', 'Electronics', 'Tools', 'Robotics',
-    'Drone', 'Enclosure', 'Bracket', 'Organizer', 'Art',
-  ];
-
-  const spotlightCreators = [
-    { name: 'Sarah Chen', avatar: 'SC', designs: 45, followers: 892 },
-    { name: 'Alex Rivera', avatar: 'AR', designs: 38, followers: 756 },
-    { name: 'Mike Johnson', avatar: 'MJ', designs: 32, followers: 623 },
-  ];
-
   const trendingCollections = [
     { name: 'Workshop Essentials', count: 24, icon: '🔧' },
     { name: 'Home Automation', count: 18, icon: '🏠' },
@@ -239,17 +225,30 @@ export default function ExplorePage() {
             title="Explore Designs"
             actions={
               <div className="flex items-center gap-2">
+                <Link href="/upload" title="Upload a new design">
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    icon={<svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12' /></svg>}
+                    iconPosition="left"
+                    className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                  >
+                    Upload Design
+                  </Button>
+                </Link>
                 <Button
                   variant={viewMode === 'grid' ? 'primary' : 'ghost'}
                   size="sm"
                   icon={<Grid3x3 size={16} />}
                   onClick={() => setViewMode('grid')}
+                  aria-label="Grid View"
                 />
                 <Button
                   variant={viewMode === 'list' ? 'primary' : 'ghost'}
                   size="sm"
                   icon={<List size={16} />}
                   onClick={() => setViewMode('list')}
+                  aria-label="List View"
                 />
               </div>
             }
@@ -282,6 +281,10 @@ export default function ExplorePage() {
                         files: p.file_count || 0,
                         comments: p.comment_count || 0,
                         liked: false,
+                        fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase().replace('.', ''))
+                          ? `/api/files/${p.file_path}`
+                          : null,
+                        fileType: p.file_type ? (p.file_type.startsWith('.') ? p.file_type : `.${p.file_type}`) : null,
                       }));
                       setDesigns(mapped);
                     });
@@ -387,271 +390,82 @@ export default function ExplorePage() {
             ) : (
               <div className={viewMode === 'grid' ? 'grid grid-cols-3 gap-4' : 'space-y-3'}>
                 {designs.map((design) => (
-                <Card
-                  key={design.id}
-                  hover
-                  padding="none"
-                  onClick={() => setSelectedDesign(design)}
-                  style={{
-                    cursor: 'pointer',
-                    borderColor: selectedDesign?.id === design.id ? DS.colors.primary.blue : DS.colors.border.default,
-                  }}
-                >
-                  {/* Thumbnail */}
-                  <div
-                    className="w-full h-48 relative overflow-hidden flex items-center justify-center text-7xl"
-                    style={{ backgroundColor: DS.colors.background.panel }}
+                <Link href={`/project/${design.id}`} key={design.id} style={{ textDecoration: 'none' }}>
+                  <Card
+                    hover
+                    padding="none"
+                    style={{ cursor: 'pointer' }}
                   >
-                    {design.thumbnail}
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3
-                        className="font-semibold text-base line-clamp-1"
-                        style={{ color: DS.colors.text.primary }}
-                      >
-                        {design.title}
-                      </h3>
-                      {design.liked && <Heart size={16} fill={DS.colors.accent.error} style={{ color: DS.colors.accent.error }} />}
-                    </div>
-
-                    <div className="flex items-center gap-2 mb-3">
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ backgroundColor: DS.colors.primary.blue, color: '#ffffff' }}
-                      >
-                        {design.authorAvatar}
-                      </div>
-                      <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                        {design.author}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-sm mb-3" style={{ color: DS.colors.text.tertiary }}>
-                      <div className="flex items-center gap-1">
-                        <Star size={14} />
-                        {design.stars}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Download size={14} />
-                        {design.downloads}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Eye size={14} />
-                        {design.views}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {design.tags.slice(0, 2).map((tag) => (
-                        <Badge key={tag} variant="default" size="sm">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {design.price !== null && (
-                        <Badge variant="primary" size="sm">
-                          ${design.price}
-                        </Badge>
+                    {/* 3D Preview */}
+                    <div className="w-full h-48 relative overflow-hidden flex items-center justify-center bg-[#181818]">
+                      {design.fileUrl ? (
+                        <ThreeDViewer
+                          fileUrl={design.fileUrl}
+                          fileName={design.title}
+                          fileType={design.fileType}
+                          preset="card"
+                        />
+                      ) : (
+                        <span className="text-7xl">{design.thumbnail}</span>
                       )}
                     </div>
-                  </div>
-                </Card>
+                    {/* Content */}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3
+                          className="font-semibold text-base line-clamp-1"
+                          style={{ color: DS.colors.text.primary }}
+                        >
+                          {design.title}
+                        </h3>
+                        {design.liked && <Heart size={16} fill={DS.colors.accent.error} style={{ color: DS.colors.accent.error }} />}
+                      </div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                          style={{ backgroundColor: DS.colors.primary.blue, color: '#ffffff' }}
+                        >
+                          {design.authorAvatar}
+                        </div>
+                        <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
+                          {design.author}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm mb-3" style={{ color: DS.colors.text.tertiary }}>
+                        <div className="flex items-center gap-1">
+                          <Star size={14} />
+                          {design.stars}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Download size={14} />
+                          {design.downloads}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Eye size={14} />
+                          {design.views}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {design.tags.slice(0, 2).map((tag) => (
+                          <Badge key={tag} variant="default" size="sm">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {design.price !== null && (
+                          <Badge variant="primary" size="sm">
+                            ${design.price}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
               ))}
               </div>
             )}
             </div>
           </PanelContent>
         </CenterPanel>
-      }
-      rightPanel={
-        <RightPanel>
-          {selectedDesign ? (
-            <>
-              <PanelHeader title="Design Details" />
-              <PanelContent>
-                {/* Thumbnail */}
-                <div
-                  className="w-full h-48 rounded-lg flex items-center justify-center text-8xl mb-4"
-                  style={{ backgroundColor: DS.colors.background.panel }}
-                >
-                  {selectedDesign.thumbnail}
-                </div>
-
-                {/* Title & Author */}
-                <h3 className="text-xl font-bold mb-2" style={{ color: DS.colors.text.primary }}>
-                  {selectedDesign.title}
-                </h3>
-                <Link href={`/profile/${selectedDesign.author}`} className="flex items-center gap-2 mb-4">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                    style={{ backgroundColor: DS.colors.primary.blue, color: '#ffffff' }}
-                  >
-                    {selectedDesign.authorAvatar}
-                  </div>
-                  <span className="text-sm font-medium" style={{ color: DS.colors.primary.blue }}>
-                    {selectedDesign.author}
-                  </span>
-                </Link>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
-                      {selectedDesign.stars}
-                    </div>
-                    <div className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                      Stars
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
-                      {selectedDesign.downloads}
-                    </div>
-                    <div className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                      Downloads
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
-                      {selectedDesign.comments}
-                    </div>
-                    <div className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                      Comments
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold mb-2" style={{ color: DS.colors.text.primary }}>
-                    Description
-                  </h4>
-                  <p className="text-sm leading-relaxed" style={{ color: DS.colors.text.secondary }}>
-                    {selectedDesign.description}
-                  </p>
-                </div>
-
-                {/* Tags */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold mb-2" style={{ color: DS.colors.text.primary }}>
-                    Tags
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedDesign.tags.map((tag) => (
-                      <Badge key={tag} variant="default" size="sm">
-                        <Tag size={12} className="mr-1" />
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Metadata */}
-                <div className="space-y-2 mb-6 text-sm" style={{ color: DS.colors.text.secondary }}>
-                  <div className="flex items-center gap-2">
-                    <Calendar size={14} />
-                    <span>Created {selectedDesign.createdAt}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Download size={14} />
-                    <span>{selectedDesign.files} files included</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MessageCircle size={14} />
-                    <span>{selectedDesign.comments} comments</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Eye size={14} />
-                    <span>{selectedDesign.views} views</span>
-                  </div>
-                  {selectedDesign.price !== null && (
-                    <div className="flex items-center gap-2">
-                      <DollarSign size={14} />
-                      <span className="font-semibold" style={{ color: DS.colors.accent.cyan }}>
-                        ${selectedDesign.price}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="space-y-2">
-                  <Button
-                    variant="primary"
-                    fullWidth
-                    icon={<Download size={16} />}
-                    iconPosition="left"
-                  >
-                    {selectedDesign.price ? `Buy for $${selectedDesign.price}` : 'Download Free'}
-                  </Button>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button variant="ghost" size="sm" icon={<Heart size={16} />} />
-                    <Button variant="ghost" size="sm" icon={<MessageCircle size={16} />} />
-                    <Button variant="ghost" size="sm" icon={<Share2 size={16} />} />
-                  </div>
-                </div>
-              </PanelContent>
-            </>
-          ) : (
-            <>
-              <PanelHeader title="Spotlight Creators" />
-              <PanelContent>
-                <div className="space-y-3 mb-6">
-                  {spotlightCreators.map((creator) => (
-                    <Link key={creator.name} href={`/profile/${creator.name}`}>
-                      <Card hover padding="md" style={{ cursor: 'pointer' }}>
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-12 h-12 rounded-full flex items-center justify-center font-bold"
-                            style={{ backgroundColor: DS.colors.primary.blue, color: '#ffffff' }}
-                          >
-                            {creator.avatar}
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-medium text-sm" style={{ color: DS.colors.text.primary }}>
-                              {creator.name}
-                            </h4>
-                            <p className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                              {creator.designs} designs • {creator.followers} followers
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-
-                <h4 className="text-sm font-semibold mb-3" style={{ color: DS.colors.text.primary }}>
-                  Popular Tags
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {popularTags.map((tag) => (
-                    <button
-                      key={tag}
-                      className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-                      style={{
-                        backgroundColor: DS.colors.background.elevated,
-                        color: DS.colors.text.secondary,
-                      }}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="text-center py-8 mt-6">
-                  <EmptyState
-                    icon={<Filter />}
-                    title="No design selected"
-                    description="Click on a design to view details"
-                  />
-                </div>
-              </PanelContent>
-            </>
-          )}
-        </RightPanel>
       }
     />
   );

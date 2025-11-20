@@ -115,7 +115,7 @@ export default function ForumPage() {
           
           <PanelContent>
             {/* Search & Categories */}
-            <div className="mb-6">
+            <div className="mb-6 px-2 md:px-6 pt-4 md:pt-8">
               <div className="relative mb-4">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2" size={20} style={{ color: DS.colors.text.tertiary }} />
                 <input

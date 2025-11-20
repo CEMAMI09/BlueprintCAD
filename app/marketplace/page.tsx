@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ThreePanelLayout,
@@ -34,6 +34,7 @@ import {
   GitBranch,
   Calendar,
 } from 'lucide-react';
+import ThreeDViewer from '@/components/ThreeDViewer';
 
 interface Listing {
   id: string;
@@ -68,7 +69,56 @@ export default function MarketplacePage() {
 
   const categories = ['All Categories', 'Electronics', 'Mechanical', '3D Printing', 'Robotics', 'IoT', 'Automotive'];
   
-  const listings: Listing[] = [];
+
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
+
+  useEffect(() => {
+    const fetchListings = async () => {
+      setLoading(true);
+      setFetchError('');
+      try {
+        const res = await fetch('/api/projects?for_sale=true');
+        if (res.ok) {
+          const projects = await res.json();
+          // Map API data to Listing format
+          const mappedListings: Listing[] = projects.map((p: any) => ({
+            id: p.id.toString(),
+            title: p.name || p.title,
+            description: p.description || '',
+            price: p.price || 0,
+            currency: 'USD',
+            thumbnail: p.thumbnail_path || '',
+            seller: {
+              username: p.username,
+              avatar: '',
+              verified: !!p.seller_verified,
+              rating: p.seller_rating || 0,
+            },
+            category: p.category || 'Other',
+            tags: p.tags ? p.tags.split(',') : [],
+            rating: p.rating || 0,
+            reviews: p.review_count || 0,
+            downloads: p.downloads || 0,
+            versions: p.versions || [],
+            license: p.license || '',
+            featured: !!p.featured,
+              fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase()) ? `/api/files/${String(p.file_path).replace(/^[^\w/]+/, '').replace(/[^\w.\-/]+/g, '')}` : null,
+              fileType: p.file_type || null,
+          }));
+          setListings(mappedListings);
+        } else {
+          setFetchError('Failed to load marketplace listings.');
+        }
+      } catch (err) {
+        setFetchError('Network error while loading listings.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchListings();
+  }, []);
 
   const filteredListings = listings.filter(listing => {
     const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -87,25 +137,38 @@ export default function MarketplacePage() {
             title="Hardware Marketplace"
             actions={
               <div className="flex items-center gap-3">
+                <Link href="/upload" title="Upload a new design">
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    icon={<svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12' /></svg>}
+                    iconPosition="left"
+                    className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                  >
+                    Upload Design
+                  </Button>
+                </Link>
                 <Button
                   variant={viewMode === 'grid' ? 'primary' : 'secondary'}
                   size="sm"
                   icon={<Grid size={16} />}
                   onClick={() => setViewMode('grid')}
+                  aria-label="Grid View"
                 />
                 <Button
                   variant={viewMode === 'list' ? 'primary' : 'secondary'}
                   size="sm"
                   icon={<List size={16} />}
                   onClick={() => setViewMode('list')}
+                  aria-label="List View"
                 />
               </div>
             }
           />
           
           <PanelContent>
-            <div className="max-w-7xl mx-auto px-6 py-6">
-              <div className="flex gap-6">
+            <div className="py-6 pl-4 md:pl-8 pr-0">
+              <div className="flex gap-4">
               {/* Filters Sidebar - INSIDE center panel */}
               <div className="w-64 flex-shrink-0">
                 <div className="sticky top-0 space-y-6">
@@ -257,43 +320,52 @@ export default function MarketplacePage() {
                 {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredListings.map((listing) => (
-                      <Card
-                        key={listing.id}
-                        hover
-                        padding="none"
-                        onClick={() => setSelectedListing(listing)}
-                        style={{
-                          cursor: 'pointer',
-                          borderColor: selectedListing?.id === listing.id ? DS.colors.primary.blue : DS.colors.border.default,
-                        }}
-                      >
-                        <div className="aspect-video rounded-t-lg" style={{ backgroundColor: DS.colors.background.panelHover }} />
-                        <div className="p-4">
-                          <h3 className="font-semibold mb-2 truncate" style={{ color: DS.colors.text.primary }}>
-                            {listing.title}
-                          </h3>
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-xl font-bold" style={{ color: DS.colors.primary.blue }}>
-                              ${listing.price}
-                            </span>
-                            <Badge variant="default" size="sm">{listing.category}</Badge>
+                      <Link href={`/project/${listing.id}`} key={listing.id} style={{ textDecoration: 'none' }}>
+                        <Card
+                          hover
+                          padding="none"
+                          style={{
+                            cursor: 'pointer',
+                            borderColor: selectedListing?.id === listing.id ? DS.colors.primary.blue : DS.colors.border.default,
+                          }}
+                        >
+                          <div className="aspect-video rounded-t-lg flex items-center justify-center bg-[#181818]">
+                            {listing.fileUrl ? (
+                              <ThreeDViewer
+                                fileUrl={listing.fileUrl}
+                                fileName={listing.title}
+                                fileType={listing.fileType}
+                                preset="card"
+                              />
+                            ) : null}
                           </div>
-                          <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.secondary }}>
-                            <span className="flex items-center gap-1">
-                              <Star size={14} style={{ color: DS.colors.accent.warning }} />
-                              {listing.rating}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Download size={14} />
-                              {listing.downloads}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MessageCircle size={14} />
-                              {listing.reviews}
-                            </span>
+                          <div className="p-4">
+                            <h3 className="font-semibold mb-2 truncate" style={{ color: DS.colors.text.primary }}>
+                              {listing.title}
+                            </h3>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-xl font-bold" style={{ color: DS.colors.primary.blue }}>
+                                ${listing.price}
+                              </span>
+                              <Badge variant="default" size="sm">{listing.category}</Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.secondary }}>
+                              <span className="flex items-center gap-1">
+                                <Star size={14} style={{ color: DS.colors.accent.warning }} />
+                                {listing.rating}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Download size={14} />
+                                {listing.downloads}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MessageCircle size={14} />
+                                {listing.reviews}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </Card>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
                 ) : (

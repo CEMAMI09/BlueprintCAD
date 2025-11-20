@@ -32,6 +32,9 @@ export default function CADViewer({
   const seqRef = useRef(0);
   const [isClient, setIsClient] = useState(false);
 
+  // Debug state
+  const [debugInfo, setDebugInfo] = useState<{fileUrl?: string, fileType?: string, size?: any} | null>(null);
+
   // Detect file format from filename or URL
   const detectFormat = useCallback(() => {
     // If explicit fileType is provided, use that (most reliable)
@@ -256,13 +259,22 @@ export default function CADViewer({
             }
 
             // Center and scale model
+                        // Debug: log the fileUrl and fileType being used
+                        // eslint-disable-next-line no-console
+                        console.log('CADViewer loading:', { fileUrl, fileType, size });
             const box = new Box3().setFromObject(meshToAdd);
             const size = new Vector3();
             box.getSize(size);
-            const maxDim = Math.max(size.x, size.y, size.z) || 1;
+            let maxDim = Math.max(size.x, size.y, size.z) || 1;
+            // Enforce a minimum size for visibility
+            if (maxDim < 0.01) maxDim = 0.01;
             const scale = 1.5 / maxDim;
             meshToAdd.scale.setScalar(scale);
-            meshToAdd.position.sub(box.getCenter(new Vector3()).multiplyScalar(scale));
+            // Center the model at the origin robustly
+            const center = box.getCenter(new Vector3());
+            meshToAdd.position.x -= center.x * scale;
+            meshToAdd.position.y -= center.y * scale;
+            meshToAdd.position.z -= center.z * scale;
 
             // Remove any previous meshes
             const toRemove: any[] = [];
@@ -273,6 +285,7 @@ export default function CADViewer({
 
             scene.add(meshToAdd);
             camera.lookAt(0, 0, 0);
+            setDebugInfo({ fileUrl, fileType, size: { x: size.x, y: size.y, z: size.z } });
             setLoading(false);
           },
           // Progress callback
@@ -399,7 +412,14 @@ export default function CADViewer({
       
       <div className="relative">
         <div ref={containerRef} className={`${height} w-full`} />
-        
+        {/* Debug overlay */}
+        {debugInfo && (
+          <div className="absolute left-2 bottom-2 bg-black/80 text-xs text-gray-200 px-2 py-1 rounded z-50 pointer-events-none">
+            <div>fileUrl: {debugInfo.fileUrl}</div>
+            <div>fileType: {debugInfo.fileType}</div>
+            <div>size: x={debugInfo.size?.x?.toFixed(3)} y={debugInfo.size?.y?.toFixed(3)} z={debugInfo.size?.z?.toFixed(3)}</div>
+          </div>
+        )}
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-3">
@@ -408,7 +428,6 @@ export default function CADViewer({
             </div>
           </div>
         )}
-        
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/90">
             <div className="text-center px-4">
