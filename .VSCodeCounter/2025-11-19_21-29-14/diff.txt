@@ -1,0 +1,63 @@
+Date : 2025-11-19 21:29:14
+Directory : c:\Users\codye\forge
+Total : 23 files,  6391 codes, 670 comments, 1252 blanks, all 8313 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| TypeScript     |          9 |      3,281 |        573 |        699 |      4,553 |
+| TypeScript JSX |         10 |      1,925 |         97 |        220 |      2,242 |
+| Markdown       |          4 |      1,185 |          0 |        333 |      1,518 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                       | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                          |         23 |      6,391 |        670 |      1,252 |      8,313 |
+| . (Files)                                                  |          2 |        500 |          0 |        139 |        639 |
+| __tests__                                                  |          1 |        180 |          9 |         52 |        241 |
+| app                                                        |          1 |        425 |         20 |         68 |        513 |
+| app\cad-editor                                             |          1 |        425 |         20 |         68 |        513 |
+| components                                                 |          9 |      1,500 |         77 |        152 |      1,729 |
+| components\cad                                             |          9 |      1,500 |         77 |        152 |      1,729 |
+| docs                                                       |          2 |        685 |          0 |        194 |        879 |
+| lib                                                        |          7 |      2,975 |        551 |        618 |      4,144 |
+| lib\cad                                                    |          7 |      2,975 |        551 |        618 |      4,144 |
+| pages                                                      |          1 |        126 |         13 |         29 |        168 |
+| pages\api                                                  |          1 |        126 |         13 |         29 |        168 |
+| pages\api\cad                                              |          1 |        126 |         13 |         29 |        168 |
+| pages\api\cad\files                                        |          1 |        126 |         13 |         29 |        168 |
+| pages\api\cad\files\[id]                                   |          1 |        126 |         13 |         29 |        168 |
++------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                   | language       | code       | comment    | blank      | total      |
++------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| c:\Users\codye\forge\SHELL_TOOL.md                         | Markdown       |        320 |          0 |         88 |        408 |
+| c:\Users\codye\forge\SKETCH_CANVAS_FIX.md                  | Markdown       |        180 |          0 |         51 |        231 |
+| c:\Users\codye\forge\__tests__\draft-analysis.test.ts      | TypeScript     |        180 |          9 |         52 |        241 |
+| c:\Users\codye\forge\app\cad-editor\page.tsx               | TypeScript JSX |        425 |         20 |         68 |        513 |
+| c:\Users\codye\forge\components\cad\CADViewport.tsx        | TypeScript JSX |          3 |          1 |          1 |          5 |
+| c:\Users\codye\forge\components\cad\ChamferModal.tsx       | TypeScript JSX |          3 |          0 |          0 |          3 |
+| c:\Users\codye\forge\components\cad\DraftAnalysisModal.tsx | TypeScript JSX |        343 |         11 |         26 |        380 |
+| c:\Users\codye\forge\components\cad\FilletModal.tsx        | TypeScript JSX |          3 |          0 |          0 |          3 |
+| c:\Users\codye\forge\components\cad\ShellModal.tsx         | TypeScript JSX |        450 |         28 |         54 |        532 |
+| c:\Users\codye\forge\components\cad\SidebarRight.tsx       | TypeScript JSX |         35 |          0 |          0 |         35 |
+| c:\Users\codye\forge\components\cad\SketchCanvas.tsx       | TypeScript JSX |        170 |         15 |         21 |        206 |
+| c:\Users\codye\forge\components\cad\SweepLoftModal.tsx     | TypeScript JSX |        491 |         22 |         50 |        563 |
+| c:\Users\codye\forge\components\cad\Toolbar.tsx            | TypeScript JSX |          2 |          0 |          0 |          2 |
+| c:\Users\codye\forge\docs\DRAFT_ANALYSIS.md                | Markdown       |        234 |          0 |         69 |        303 |
+| c:\Users\codye\forge\docs\OPTIMIZED_SOLVER.md              | Markdown       |        451 |          0 |        125 |        576 |
+| c:\Users\codye\forge\lib\cad\draft-analysis-helpers.ts     | TypeScript     |         90 |         36 |         24 |        150 |
+| c:\Users\codye\forge\lib\cad\draft-analysis.ts             | TypeScript     |        349 |         60 |         53 |        462 |
+| c:\Users\codye\forge\lib\cad\face-operations.ts            | TypeScript     |        419 |         59 |         91 |        569 |
+| c:\Users\codye\forge\lib\cad\shell-integration.ts          | TypeScript     |        476 |         85 |         84 |        645 |
+| c:\Users\codye\forge\lib\cad\shell-operation.ts            | TypeScript     |        555 |         89 |        111 |        755 |
+| c:\Users\codye\forge\lib\cad\sweep-loft-integration.ts     | TypeScript     |        422 |         92 |        108 |        622 |
+| c:\Users\codye\forge\lib\cad\sweep-loft.ts                 | TypeScript     |        664 |        130 |        147 |        941 |
+| c:\Users\codye\forge\pages\api\cad\files\[id]\metadata.ts  | TypeScript     |        126 |         13 |         29 |        168 |
+| Total                                                      |                |      6,391 |        670 |      1,252 |      8,313 |
++------------------------------------------------------------+----------------+------------+------------+------------+------------+

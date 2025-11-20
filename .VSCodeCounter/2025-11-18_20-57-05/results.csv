@@ -1,0 +1,293 @@
+"filename", "language", "JSON with Comments", "TypeScript", "JavaScript", "Markdown", "XML", "JSON", "MS SQL", "TypeScript JSX", "PostCSS", "comment", "blank", "total"
+"c:\Users\codye\forge\ARCHITECTURE.md", "Markdown", 0, 0, 0, 524, 0, 0, 0, 0, 0, 0, 108, 632
+"c:\Users\codye\forge\CAD_EDITOR_DOCS.md", "Markdown", 0, 0, 0, 368, 0, 0, 0, 0, 0, 0, 87, 455
+"c:\Users\codye\forge\CAD_FORMATS_EXTENSION.md", "Markdown", 0, 0, 0, 193, 0, 0, 0, 0, 0, 0, 49, 242
+"c:\Users\codye\forge\COMMENTS_SYSTEM_COMPLETE.md", "Markdown", 0, 0, 0, 188, 0, 0, 0, 0, 0, 0, 45, 233
+"c:\Users\codye\forge\DRAG_DROP_GUIDE.md", "Markdown", 0, 0, 0, 132, 0, 0, 0, 0, 0, 0, 48, 180
+"c:\Users\codye\forge\EMAIL_VERIFICATION.md", "Markdown", 0, 0, 0, 327, 0, 0, 0, 0, 0, 0, 64, 391
+"c:\Users\codye\forge\ESTIMATOR_QUICKSTART.md", "Markdown", 0, 0, 0, 209, 0, 0, 0, 0, 0, 0, 58, 267
+"c:\Users\codye\forge\ESTIMATOR_README.md", "Markdown", 0, 0, 0, 295, 0, 0, 0, 0, 0, 0, 80, 375
+"c:\Users\codye\forge\FILLET_CHAMFER_IMPLEMENTATION.md", "Markdown", 0, 0, 0, 264, 0, 0, 0, 0, 0, 0, 58, 322
+"c:\Users\codye\forge\IMPLEMENTATION_COMPLETE.md", "Markdown", 0, 0, 0, 329, 0, 0, 0, 0, 0, 0, 89, 418
+"c:\Users\codye\forge\ISSUE_SYSTEM_DOCS.md", "Markdown", 0, 0, 0, 220, 0, 0, 0, 0, 0, 0, 35, 255
+"c:\Users\codye\forge\NESTED_FOLDERS.md", "Markdown", 0, 0, 0, 239, 0, 0, 0, 0, 0, 0, 57, 296
+"c:\Users\codye\forge\ONSHAPE_ROADMAP.md", "Markdown", 0, 0, 0, 538, 0, 0, 0, 0, 0, 0, 136, 674
+"c:\Users\codye\forge\OWNERSHIP_TRANSFER_GUIDE.md", "Markdown", 0, 0, 0, 157, 0, 0, 0, 0, 0, 0, 34, 191
+"c:\Users\codye\forge\PRIVATE_ACCOUNTS.md", "Markdown", 0, 0, 0, 81, 0, 0, 0, 0, 0, 0, 27, 108
+"c:\Users\codye\forge\PURCHASE_FLOW.md", "Markdown", 0, 0, 0, 340, 0, 0, 0, 0, 0, 0, 107, 447
+"c:\Users\codye\forge\PURCHASE_FLOW_COMPLETE.md", "Markdown", 0, 0, 0, 259, 0, 0, 0, 0, 0, 0, 67, 326
+"c:\Users\codye\forge\QUICK_START.md", "Markdown", 0, 0, 0, 255, 0, 0, 0, 0, 0, 0, 74, 329
+"c:\Users\codye\forge\QUICK_START_PURCHASE.md", "Markdown", 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 15, 60
+"c:\Users\codye\forge\README.md", "Markdown", 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 24, 75
+"c:\Users\codye\forge\RECOVERY_SYSTEM_SETUP.md", "Markdown", 0, 0, 0, 164, 0, 0, 0, 0, 0, 0, 45, 209
+"c:\Users\codye\forge\RENAME_MOVE_COMPLETE.md", "Markdown", 0, 0, 0, 131, 0, 0, 0, 0, 0, 0, 32, 163
+"c:\Users\codye\forge\SCALING_FEATURE.md", "Markdown", 0, 0, 0, 147, 0, 0, 0, 0, 0, 0, 32, 179
+"c:\Users\codye\forge\SEPARATION_OF_CONCERNS.md", "Markdown", 0, 0, 0, 115, 0, 0, 0, 0, 0, 0, 25, 140
+"c:\Users\codye\forge\SETUP-TYPESCRIPT.md", "Markdown", 0, 0, 0, 37, 0, 0, 0, 0, 0, 0, 12, 49
+"c:\Users\codye\forge\SETUP.md", "Markdown", 0, 0, 0, 121, 0, 0, 0, 0, 0, 0, 31, 152
+"c:\Users\codye\forge\START_HERE.md", "Markdown", 0, 0, 0, 119, 0, 0, 0, 0, 0, 0, 37, 156
+"c:\Users\codye\forge\app\api\cad\files\feature-tree\route.ts", "TypeScript", 0, 122, 0, 0, 0, 0, 0, 0, 0, 5, 25, 152
+"c:\Users\codye\forge\app\auth\callback\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 78, 0, 6, 11, 95
+"c:\Users\codye\forge\app\cad-editor\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 465, 0, 32, 54, 551
+"c:\Users\codye\forge\app\checkout\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 407, 0, 5, 47, 459
+"c:\Users\codye\forge\app\checkout\success\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 124, 0, 5, 14, 143
+"c:\Users\codye\forge\app\components\CheckoutModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 148, 0, 3, 26, 177
+"c:\Users\codye\forge\app\components\FolderBreadcrumb.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 124, 0, 1, 14, 139
+"c:\Users\codye\forge\app\components\FolderTree.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 190, 0, 4, 30, 224
+"c:\Users\codye\forge\app\components\VerificationBanner.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 101, 0, 1, 11, 113
+"c:\Users\codye\forge\app\components\layout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 1, 10
+"c:\Users\codye\forge\app\components\navbar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 199, 0, 9, 17, 225
+"c:\Users\codye\forge\app\components\threepreview.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 237, 0, 12, 48, 297
+"c:\Users\codye\forge\app\explore\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 76, 0, 0, 10, 86
+"c:\Users\codye\forge\app\forgot-password\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 140, 0, 4, 14, 158
+"c:\Users\codye\forge\app\forgot-username\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 140, 0, 4, 14, 158
+"c:\Users\codye\forge\app\forum\[id]\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 255, 0, 5, 26, 286
+"c:\Users\codye\forge\app\forum\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 311, 0, 6, 27, 344
+"c:\Users\codye\forge\app\globals.css", "PostCSS", 0, 0, 0, 0, 0, 0, 0, 0, 41, 2, 8, 51
+"c:\Users\codye\forge\app\issues\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 570, 0, 11, 59, 640
+"c:\Users\codye\forge\app\layout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 36, 0, 0, 5, 41
+"c:\Users\codye\forge\app\login\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 216, 0, 8, 28, 252
+"c:\Users\codye\forge\app\marketplace\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 60, 0, 3, 7, 70
+"c:\Users\codye\forge\app\messages\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 287, 0, 11, 24, 322
+"c:\Users\codye\forge\app\orders\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 309, 0, 7, 24, 340
+"c:\Users\codye\forge\app\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 85, 0, 5, 10, 100
+"c:\Users\codye\forge\app\profile\[username]\followers\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 159, 0, 0, 20, 179
+"c:\Users\codye\forge\app\profile\[username]\following\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 159, 0, 0, 20, 179
+"c:\Users\codye\forge\app\profile\[username]\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 797, 0, 30, 57, 884
+"c:\Users\codye\forge\app\project\[id]\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 587, 0, 17, 43, 647
+"c:\Users\codye\forge\app\providers\AuthProvider.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 3, 9
+"c:\Users\codye\forge\app\quote\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 726, 0, 20, 81, 827
+"c:\Users\codye\forge\app\register\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 160, 0, 5, 20, 185
+"c:\Users\codye\forge\app\reset-password\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 213, 0, 5, 23, 241
+"c:\Users\codye\forge\app\settings\account\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 238, 0, 2, 26, 266
+"c:\Users\codye\forge\app\upload\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 421, 0, 12, 46, 479
+"c:\Users\codye\forge\app\verify-email\page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 123, 0, 2, 16, 141
+"c:\Users\codye\forge\check-issues-table.js", "JavaScript", 0, 0, 40, 0, 0, 0, 0, 0, 0, 2, 9, 51
+"c:\Users\codye\forge\components\CADViewer.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 349, 0, 32, 45, 426
+"c:\Users\codye\forge\components\CADViewerModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 82, 0, 4, 8, 94
+"c:\Users\codye\forge\components\ChangeRoleModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 138, 0, 1, 17, 156
+"c:\Users\codye\forge\components\CommentSystem.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 380, 0, 10, 36, 426
+"c:\Users\codye\forge\components\ConfirmationModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 95, 0, 0, 6, 101
+"c:\Users\codye\forge\components\CreateFolderModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 119, 0, 0, 11, 130
+"c:\Users\codye\forge\components\FolderCard.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 162, 0, 0, 10, 172
+"c:\Users\codye\forge\components\HistoryModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 170, 0, 0, 12, 182
+"c:\Users\codye\forge\components\InvitationsNotification.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 105, 0, 1, 9, 115
+"c:\Users\codye\forge\components\InviteMemberModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 82, 0, 0, 9, 91
+"c:\Users\codye\forge\components\Layout.js", "JavaScript", 0, 0, 11, 0, 0, 0, 0, 0, 0, 1, 1, 13
+"c:\Users\codye\forge\components\MoveFolderModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 174, 0, 1, 17, 192
+"c:\Users\codye\forge\components\Navbar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 207, 0, 9, 17, 233
+"c:\Users\codye\forge\components\NotificationsDropdown.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 229, 0, 9, 17, 255
+"c:\Users\codye\forge\components\ProjectCard.js", "JavaScript", 0, 0, 155, 0, 0, 0, 0, 0, 0, 4, 13, 172
+"c:\Users\codye\forge\components\RenameModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 95, 0, 0, 12, 107
+"c:\Users\codye\forge\components\ThreeDViewer.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 128, 0, 40, 17, 185
+"c:\Users\codye\forge\components\ThreePreview.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 222, 0, 17, 29, 268
+"c:\Users\codye\forge\components\TransferOwnershipModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 161, 0, 0, 18, 179
+"c:\Users\codye\forge\components\TransferRequestsList.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 194, 0, 1, 21, 216
+"c:\Users\codye\forge\components\VersionDropdown.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 104, 0, 0, 14, 118
+"c:\Users\codye\forge\components\VersionHistory.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 211, 0, 3, 26, 240
+"c:\Users\codye\forge\components\cad\AdvancedSketchModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 321, 0, 11, 21, 353
+"c:\Users\codye\forge\components\cad\BottomBar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 119, 0, 5, 8, 132
+"c:\Users\codye\forge\components\cad\CADViewport.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 801, 0, 74, 130, 1005
+"c:\Users\codye\forge\components\cad\ChamferModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 235, 0, 5, 18, 258
+"c:\Users\codye\forge\components\cad\ConstraintContextMenu.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 224, 0, 7, 18, 249
+"c:\Users\codye\forge\components\cad\ConstraintIconOverlay.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 235, 0, 12, 48, 295
+"c:\Users\codye\forge\components\cad\ConstraintManager.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 273, 0, 7, 25, 305
+"c:\Users\codye\forge\components\cad\ConstraintToolbar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 145, 0, 12, 18, 175
+"c:\Users\codye\forge\components\cad\DimensionEditor.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 296, 0, 9, 25, 330
+"c:\Users\codye\forge\components\cad\DimensionRenderer.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 336, 0, 20, 53, 409
+"c:\Users\codye\forge\components\cad\DimensionToolbar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 224, 0, 4, 12, 240
+"c:\Users\codye\forge\components\cad\EnhancedCADViewport.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 277, 0, 22, 44, 343
+"c:\Users\codye\forge\components\cad\ExportModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 125, 0, 0, 14, 139
+"c:\Users\codye\forge\components\cad\ExtrudeModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 113, 0, 0, 11, 124
+"c:\Users\codye\forge\components\cad\FeatureTreeSidebar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 418, 0, 29, 40, 487
+"c:\Users\codye\forge\components\cad\FilletModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 165, 0, 9, 16, 190
+"c:\Users\codye\forge\components\cad\LoadingSplash.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 1, 12
+"c:\Users\codye\forge\components\cad\SidebarLeft.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 131, 0, 4, 10, 145
+"c:\Users\codye\forge\components\cad\SidebarRight.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 208, 0, 4, 13, 225
+"c:\Users\codye\forge\components\cad\SketchCanvas.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 334, 0, 22, 45, 401
+"c:\Users\codye\forge\components\cad\SketchModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 9, 79
+"c:\Users\codye\forge\components\cad\Toolbar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 151, 0, 5, 13, 169
+"c:\Users\codye\forge\docs\3D_VIEWER_GUIDE.md", "Markdown", 0, 0, 0, 308, 0, 0, 0, 0, 0, 0, 74, 382
+"c:\Users\codye\forge\docs\3D_VIEWER_IMPLEMENTATION.md", "Markdown", 0, 0, 0, 507, 0, 0, 0, 0, 0, 0, 149, 656
+"c:\Users\codye\forge\docs\ADVANCED_SKETCH_TOOLS.md", "Markdown", 0, 0, 0, 371, 0, 0, 0, 0, 0, 0, 81, 452
+"c:\Users\codye\forge\docs\DIMENSION_ANNOTATIONS.md", "Markdown", 0, 0, 0, 523, 0, 0, 0, 0, 0, 0, 150, 673
+"c:\Users\codye\forge\docs\FEATURE_TREE.md", "Markdown", 0, 0, 0, 359, 0, 0, 0, 0, 0, 0, 102, 461
+"c:\Users\codye\forge\docs\FEATURE_TREE_INTEGRATION.md", "Markdown", 0, 0, 0, 168, 0, 0, 0, 0, 0, 0, 51, 219
+"c:\Users\codye\forge\docs\OAUTH_IMPLEMENTATION.md", "Markdown", 0, 0, 0, 227, 0, 0, 0, 0, 0, 0, 43, 270
+"c:\Users\codye\forge\docs\OAUTH_SETUP.md", "Markdown", 0, 0, 0, 301, 0, 0, 0, 0, 0, 0, 68, 369
+"c:\Users\codye\forge\docs\PASSWORD_RECOVERY.md", "Markdown", 0, 0, 0, 229, 0, 0, 0, 0, 0, 0, 70, 299
+"c:\Users\codye\forge\docs\QUICKSTART.md", "Markdown", 0, 0, 0, 139, 0, 0, 0, 0, 0, 0, 34, 173
+"c:\Users\codye\forge\docs\SECURITY.md", "Markdown", 0, 0, 0, 293, 0, 0, 0, 0, 0, 0, 71, 364
+"c:\Users\codye\forge\eslint.config.mjs", "JavaScript", 0, 0, 14, 0, 0, 0, 0, 0, 0, 2, 3, 19
+"c:\Users\codye\forge\lib\auth.js", "JavaScript", 0, 0, 33, 0, 0, 0, 0, 0, 0, 1, 7, 41
+"c:\Users\codye\forge\lib\cad-formats.js", "JavaScript", 0, 0, 251, 0, 0, 0, 0, 0, 0, 54, 25, 330
+"c:\Users\codye\forge\lib\cad\brep\README.md", "Markdown", 0, 0, 0, 234, 0, 0, 0, 0, 0, 0, 66, 300
+"c:\Users\codye\forge\lib\cad\brep\boolean.ts", "TypeScript", 0, 499, 0, 0, 0, 0, 0, 0, 0, 142, 126, 767
+"c:\Users\codye\forge\lib\cad\brep\fillet-chamfer.ts", "TypeScript", 0, 394, 0, 0, 0, 0, 0, 0, 0, 131, 113, 638
+"c:\Users\codye\forge\lib\cad\brep\occt.ts", "TypeScript", 0, 287, 0, 0, 0, 0, 0, 0, 0, 71, 56, 414
+"c:\Users\codye\forge\lib\cad\brep\opencascade.d.ts", "TypeScript", 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 1, 5
+"c:\Users\codye\forge\lib\cad\brep\operations.test.ts", "TypeScript", 0, 344, 0, 0, 0, 0, 0, 0, 0, 16, 93, 453
+"c:\Users\codye\forge\lib\cad\brep\operations.ts", "TypeScript", 0, 382, 0, 0, 0, 0, 0, 0, 0, 180, 102, 664
+"c:\Users\codye\forge\lib\cad\brep\preview.ts", "TypeScript", 0, 288, 0, 0, 0, 0, 0, 0, 0, 50, 63, 401
+"c:\Users\codye\forge\lib\cad\brep\topology.ts", "TypeScript", 0, 575, 0, 0, 0, 0, 0, 0, 0, 162, 101, 838
+"c:\Users\codye\forge\lib\cad\constraint-solver.ts", "TypeScript", 0, 630, 0, 0, 0, 0, 0, 0, 0, 172, 141, 943
+"c:\Users\codye\forge\lib\cad\dimension-annotations.ts", "TypeScript", 0, 373, 0, 0, 0, 0, 0, 0, 0, 32, 63, 468
+"c:\Users\codye\forge\lib\cad\dimension-integration.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 366, 0, 41, 28, 435
+"c:\Users\codye\forge\lib\cad\dimension-manager.ts", "TypeScript", 0, 292, 0, 0, 0, 0, 0, 0, 0, 61, 48, 401
+"c:\Users\codye\forge\lib\cad\edge-highlighter.ts", "TypeScript", 0, 165, 0, 0, 0, 0, 0, 0, 0, 45, 41, 251
+"c:\Users\codye\forge\lib\cad\feature-tree.ts", "TypeScript", 0, 531, 0, 0, 0, 0, 0, 0, 0, 109, 126, 766
+"c:\Users\codye\forge\lib\cad\geometry-kernel.ts", "TypeScript", 0, 453, 0, 0, 0, 0, 0, 0, 0, 49, 98, 600
+"c:\Users\codye\forge\lib\cad\optimized-solver.ts", "TypeScript", 0, 688, 0, 0, 0, 0, 0, 0, 0, 125, 118, 931
+"c:\Users\codye\forge\lib\cad\sketch-solver.ts", "TypeScript", 0, 161, 0, 0, 0, 0, 0, 0, 0, 8, 47, 216
+"c:\Users\codye\forge\lib\cad\sketch-tools.ts", "TypeScript", 0, 623, 0, 0, 0, 0, 0, 0, 0, 149, 120, 892
+"c:\Users\codye\forge\lib\cad\solver-integration.ts", "TypeScript", 0, 401, 0, 0, 0, 0, 0, 0, 0, 119, 84, 604
+"c:\Users\codye\forge\lib\db.js", "JavaScript", 0, 0, 168, 0, 0, 0, 0, 0, 0, 5, 6, 179
+"c:\Users\codye\forge\lib\email-templates.js", "JavaScript", 0, 0, 269, 0, 0, 0, 0, 0, 0, 1, 6, 276
+"c:\Users\codye\forge\lib\email-verification.js", "JavaScript", 0, 0, 61, 0, 0, 0, 0, 0, 0, 14, 20, 95
+"c:\Users\codye\forge\lib\email.js", "JavaScript", 0, 0, 201, 0, 0, 0, 0, 0, 0, 17, 19, 237
+"c:\Users\codye\forge\lib\folder-utils.js", "JavaScript", 0, 0, 179, 0, 0, 0, 0, 0, 0, 69, 45, 293
+"c:\Users\codye\forge\lib\print-cost-config.js", "JavaScript", 0, 0, 178, 0, 0, 0, 0, 0, 0, 14, 10, 202
+"c:\Users\codye\forge\lib\print-cost-estimator.js", "JavaScript", 0, 0, 367, 0, 0, 0, 0, 0, 0, 92, 81, 540
+"c:\Users\codye\forge\lib\print-cost-validator.js", "JavaScript", 0, 0, 271, 0, 0, 0, 0, 0, 0, 39, 40, 350
+"c:\Users\codye\forge\lib\privacy-utils.js", "JavaScript", 0, 0, 79, 0, 0, 0, 0, 0, 0, 40, 21, 140
+"c:\Users\codye\forge\lib\rate-limit.js", "JavaScript", 0, 0, 71, 0, 0, 0, 0, 0, 0, 31, 20, 122
+"c:\Users\codye\forge\lib\stl-printability.js", "JavaScript", 0, 0, 96, 0, 0, 0, 0, 0, 0, 17, 20, 133
+"c:\Users\codye\forge\lib\stl-utils.js", "JavaScript", 0, 0, 104, 0, 0, 0, 0, 0, 0, 39, 35, 178
+"c:\Users\codye\forge\lib\stripe-utils.js", "JavaScript", 0, 0, 66, 0, 0, 0, 0, 0, 0, 19, 12, 97
+"c:\Users\codye\forge\lib\thumbnailGenerator.js", "JavaScript", 0, 0, 134, 0, 0, 0, 0, 0, 0, 29, 28, 191
+"c:\Users\codye\forge\lib\thumbnailGeneratorSimple.js", "JavaScript", 0, 0, 211, 0, 0, 0, 0, 0, 0, 36, 26, 273
+"c:\Users\codye\forge\lib\verification-middleware.js", "JavaScript", 0, 0, 23, 0, 0, 0, 0, 0, 0, 12, 7, 42
+"c:\Users\codye\forge\migrations\002_orders_schema.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 40, 0, 0, 1, 3, 44
+"c:\Users\codye\forge\migrations\003_issues_schema.js", "JavaScript", 0, 0, 61, 0, 0, 0, 0, 0, 0, 2, 7, 70
+"c:\Users\codye\forge\migrations\004_cad_editor_schema.js", "JavaScript", 0, 0, 95, 0, 0, 0, 0, 0, 0, 4, 10, 109
+"c:\Users\codye\forge\migrations\005_add_user_tier.js", "JavaScript", 0, 0, 23, 0, 0, 0, 0, 0, 0, 1, 5, 29
+"c:\Users\codye\forge\migrations\add_feature_trees.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 12, 0, 0, 1, 2, 15
+"c:\Users\codye\forge\migrations\add_thumbnail_path.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 6, 0, 0, 5, 4, 15
+"c:\Users\codye\forge\migrations\check-orders.js", "JavaScript", 0, 0, 53, 0, 0, 0, 0, 0, 0, 4, 9, 66
+"c:\Users\codye\forge\migrations\run-orders-migration.js", "JavaScript", 0, 0, 14, 0, 0, 0, 0, 0, 0, 4, 5, 23
+"c:\Users\codye\forge\migrations\setup-cad-user.js", "JavaScript", 0, 0, 41, 0, 0, 0, 0, 0, 0, 3, 8, 52
+"c:\Users\codye\forge\next.config.js", "JavaScript", 0, 0, 11, 0, 0, 0, 0, 0, 0, 3, 1, 15
+"c:\Users\codye\forge\package-lock.json", "JSON", 0, 0, 0, 0, 0, 6845, 0, 0, 0, 0, 1, 6846
+"c:\Users\codye\forge\package.json", "JSON", 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 1, 46
+"c:\Users\codye\forge\pages\_app.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 2, 7
+"c:\Users\codye\forge\pages\api\auth\[...nextauth].js", "JavaScript", 0, 0, 204, 0, 0, 0, 0, 0, 0, 16, 39, 259
+"c:\Users\codye\forge\pages\api\auth\disconnect.js", "JavaScript", 0, 0, 57, 0, 0, 0, 0, 0, 0, 7, 14, 78
+"c:\Users\codye\forge\pages\api\auth\forgot-password.ts", "TypeScript", 0, 71, 0, 0, 0, 0, 0, 0, 0, 11, 16, 98
+"c:\Users\codye\forge\pages\api\auth\forgot-username.ts", "TypeScript", 0, 60, 0, 0, 0, 0, 0, 0, 0, 6, 13, 79
+"c:\Users\codye\forge\pages\api\auth\login.js", "JavaScript", 0, 0, 41, 0, 0, 0, 0, 0, 0, 4, 10, 55
+"c:\Users\codye\forge\pages\api\auth\providers.js", "JavaScript", 0, 0, 41, 0, 0, 0, 0, 0, 0, 3, 9, 53
+"c:\Users\codye\forge\pages\api\auth\register.js", "JavaScript", 0, 0, 73, 0, 0, 0, 0, 0, 0, 10, 17, 100
+"c:\Users\codye\forge\pages\api\auth\resend-verification.js", "JavaScript", 0, 0, 62, 0, 0, 0, 0, 0, 0, 9, 14, 85
+"c:\Users\codye\forge\pages\api\auth\reset-password.ts", "TypeScript", 0, 53, 0, 0, 0, 0, 0, 0, 0, 6, 14, 73
+"c:\Users\codye\forge\pages\api\auth\verify-email.js", "JavaScript", 0, 0, 37, 0, 0, 0, 0, 0, 0, 5, 10, 52
+"c:\Users\codye\forge\pages\api\cad\files\[id].js", "JavaScript", 0, 0, 57, 0, 0, 0, 0, 0, 0, 4, 11, 72
+"c:\Users\codye\forge\pages\api\cad\files\[id]\save.js", "JavaScript", 0, 0, 91, 0, 0, 0, 0, 0, 0, 7, 16, 114
+"c:\Users\codye\forge\pages\api\cad\files\[id]\versions.js", "JavaScript", 0, 0, 59, 0, 0, 0, 0, 0, 0, 3, 11, 73
+"c:\Users\codye\forge\pages\api\cad\files\upload.js", "JavaScript", 0, 0, 65, 0, 0, 0, 0, 0, 0, 4, 16, 85
+"c:\Users\codye\forge\pages\api\cad\list.js", "JavaScript", 0, 0, 57, 0, 0, 0, 0, 0, 0, 3, 9, 69
+"c:\Users\codye\forge\pages\api\comments\[commentId]\reactions.ts", "TypeScript", 0, 40, 0, 0, 0, 0, 0, 0, 0, 3, 8, 51
+"c:\Users\codye\forge\pages\api\comments\on\[entityType]\[entityId].ts", "TypeScript", 0, 156, 0, 0, 0, 0, 0, 0, 0, 13, 25, 194
+"c:\Users\codye\forge\pages\api\files\[file].ts", "TypeScript", 0, 80, 0, 0, 0, 0, 0, 0, 0, 20, 26, 126
+"c:\Users\codye\forge\pages\api\folders\[id]\activity.ts", "TypeScript", 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 4, 36
+"c:\Users\codye\forge\pages\api\folders\[id]\breadcrumb.ts", "TypeScript", 0, 18, 0, 0, 0, 0, 0, 0, 0, 0, 4, 22
+"c:\Users\codye\forge\pages\api\folders\[id]\comments.ts", "TypeScript", 0, 78, 0, 0, 0, 0, 0, 0, 0, 2, 12, 92
+"c:\Users\codye\forge\pages\api\folders\[id]\index.ts", "TypeScript", 0, 113, 0, 0, 0, 0, 0, 0, 0, 4, 21, 138
+"c:\Users\codye\forge\pages\api\folders\[id]\members.ts", "TypeScript", 0, 91, 0, 0, 0, 0, 0, 0, 0, 5, 18, 114
+"c:\Users\codye\forge\pages\api\folders\[id]\members\[memberId].ts", "TypeScript", 0, 76, 0, 0, 0, 0, 0, 0, 0, 4, 18, 98
+"c:\Users\codye\forge\pages\api\folders\[id]\members\[memberId]\role.ts", "TypeScript", 0, 116, 0, 0, 0, 0, 0, 0, 0, 18, 33, 167
+"c:\Users\codye\forge\pages\api\folders\[id]\move-folder.ts", "TypeScript", 0, 121, 0, 0, 0, 0, 0, 0, 0, 11, 24, 156
+"c:\Users\codye\forge\pages\api\folders\[id]\rename.ts", "TypeScript", 0, 80, 0, 0, 0, 0, 0, 0, 0, 7, 19, 106
+"c:\Users\codye\forge\pages\api\folders\index.ts", "TypeScript", 0, 90, 0, 0, 0, 0, 0, 0, 0, 3, 18, 111
+"c:\Users\codye\forge\pages\api\folders\move.ts", "TypeScript", 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 7, 42
+"c:\Users\codye\forge\pages\api\folders\tree.ts", "TypeScript", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 5, 28
+"c:\Users\codye\forge\pages\api\forum\[id].ts", "TypeScript", 0, 88, 0, 0, 0, 0, 0, 0, 0, 8, 25, 121
+"c:\Users\codye\forge\pages\api\forum\threads.ts", "TypeScript", 0, 71, 0, 0, 0, 0, 0, 0, 0, 4, 17, 92
+"c:\Users\codye\forge\pages\api\invitations\[id].ts", "TypeScript", 0, 64, 0, 0, 0, 0, 0, 0, 0, 3, 12, 79
+"c:\Users\codye\forge\pages\api\invitations\index.ts", "TypeScript", 0, 36, 0, 0, 0, 0, 0, 0, 0, 0, 5, 41
+"c:\Users\codye\forge\pages\api\issues\[id]\update.js", "JavaScript", 0, 0, 88, 0, 0, 0, 0, 0, 0, 7, 21, 116
+"c:\Users\codye\forge\pages\api\issues\list.js", "JavaScript", 0, 0, 127, 0, 0, 0, 0, 0, 0, 9, 26, 162
+"c:\Users\codye\forge\pages\api\issues\submit.js", "JavaScript", 0, 0, 104, 0, 0, 0, 0, 0, 0, 11, 20, 135
+"c:\Users\codye\forge\pages\api\manufacturing-orders\create.js", "JavaScript", 0, 0, 101, 0, 0, 0, 0, 0, 0, 6, 14, 121
+"c:\Users\codye\forge\pages\api\messages.ts", "TypeScript", 0, 99, 0, 0, 0, 0, 0, 0, 0, 9, 21, 129
+"c:\Users\codye\forge\pages\api\messages\[username].ts", "TypeScript", 0, 39, 0, 0, 0, 0, 0, 0, 0, 4, 10, 53
+"c:\Users\codye\forge\pages\api\notifications.ts", "TypeScript", 0, 50, 0, 0, 0, 0, 0, 0, 0, 4, 11, 65
+"c:\Users\codye\forge\pages\api\orders\checkout.js", "JavaScript", 0, 0, 69, 0, 0, 0, 0, 0, 0, 10, 20, 99
+"c:\Users\codye\forge\pages\api\orders\confirm.js", "JavaScript", 0, 0, 109, 0, 0, 0, 0, 0, 0, 13, 21, 143
+"c:\Users\codye\forge\pages\api\orders\download.js", "JavaScript", 0, 0, 61, 0, 0, 0, 0, 0, 0, 12, 18, 91
+"c:\Users\codye\forge\pages\api\orders\my-orders.js", "JavaScript", 0, 0, 68, 0, 0, 0, 0, 0, 0, 5, 13, 86
+"c:\Users\codye\forge\pages\api\orders\refund.js", "JavaScript", 0, 0, 92, 0, 0, 0, 0, 0, 0, 9, 18, 119
+"c:\Users\codye\forge\pages\api\ownership-transfer\[requestId].ts", "TypeScript", 0, 170, 0, 0, 0, 0, 0, 0, 0, 27, 41, 238
+"c:\Users\codye\forge\pages\api\ownership-transfer\index.ts", "TypeScript", 0, 137, 0, 0, 0, 0, 0, 0, 0, 11, 19, 167
+"c:\Users\codye\forge\pages\api\projects\[id]\comments.js", "JavaScript", 0, 0, 49, 0, 0, 0, 0, 0, 0, 0, 9, 58
+"c:\Users\codye\forge\pages\api\projects\[id]\index.js", "JavaScript", 0, 0, 106, 0, 0, 0, 0, 0, 0, 10, 24, 140
+"c:\Users\codye\forge\pages\api\projects\[id]\like.js", "JavaScript", 0, 0, 47, 0, 0, 0, 0, 0, 0, 1, 7, 55
+"c:\Users\codye\forge\pages\api\projects\[id]\rename.ts", "TypeScript", 0, 78, 0, 0, 0, 0, 0, 0, 0, 7, 17, 102
+"c:\Users\codye\forge\pages\api\projects\[id]\restore-version.ts", "TypeScript", 0, 61, 0, 0, 0, 0, 0, 0, 0, 7, 15, 83
+"c:\Users\codye\forge\pages\api\projects\[id]\upload-version.ts", "TypeScript", 0, 134, 0, 0, 0, 0, 0, 0, 0, 12, 27, 173
+"c:\Users\codye\forge\pages\api\projects\[id]\versions.ts", "TypeScript", 0, 44, 0, 0, 0, 0, 0, 0, 0, 4, 8, 56
+"c:\Users\codye\forge\pages\api\projects\estimate.js", "JavaScript", 0, 0, 134, 0, 0, 0, 0, 0, 0, 4, 18, 156
+"c:\Users\codye\forge\pages\api\projects\index.js", "JavaScript", 0, 0, 135, 0, 0, 0, 0, 0, 0, 7, 19, 161
+"c:\Users\codye\forge\pages\api\projects\move.ts", "TypeScript", 0, 90, 0, 0, 0, 0, 0, 0, 0, 8, 18, 116
+"c:\Users\codye\forge\pages\api\quote\analyze.js", "JavaScript", 0, 0, 102, 0, 0, 0, 0, 0, 0, 8, 24, 134
+"c:\Users\codye\forge\pages\api\rename-move-history\[entityType]\[entityId].ts", "TypeScript", 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 8, 42
+"c:\Users\codye\forge\pages\api\stats.js", "JavaScript", 0, 0, 18, 0, 0, 0, 0, 0, 0, 1, 4, 23
+"c:\Users\codye\forge\pages\api\thumbnails\generate.ts", "TypeScript", 0, 62, 0, 0, 0, 0, 0, 0, 0, 12, 16, 90
+"c:\Users\codye\forge\pages\api\upload.js", "JavaScript", 0, 0, 109, 0, 0, 0, 0, 0, 0, 11, 17, 137
+"c:\Users\codye\forge\pages\api\users\[username]\follow.js", "JavaScript", 0, 0, 69, 0, 0, 0, 0, 0, 0, 7, 15, 91
+"c:\Users\codye\forge\pages\api\users\[username]\followers.js", "JavaScript", 0, 0, 94, 0, 0, 0, 0, 0, 0, 9, 16, 119
+"c:\Users\codye\forge\pages\api\users\[username]\following.js", "JavaScript", 0, 0, 94, 0, 0, 0, 0, 0, 0, 10, 16, 120
+"c:\Users\codye\forge\pages\api\users\[username]\index.js", "JavaScript", 0, 0, 87, 0, 0, 0, 0, 0, 0, 9, 16, 112
+"c:\Users\codye\forge\pages\api\users\check-pending.js", "JavaScript", 0, 0, 27, 0, 0, 0, 0, 0, 0, 2, 8, 37
+"c:\Users\codye\forge\pages\api\users\follow-request.js", "JavaScript", 0, 0, 57, 0, 0, 0, 0, 0, 0, 8, 16, 81
+"c:\Users\codye\forge\pages\api\users\follow-requests.js", "JavaScript", 0, 0, 26, 0, 0, 0, 0, 0, 0, 2, 6, 34
+"c:\Users\codye\forge\pages\api\users\follow.js", "JavaScript", 0, 0, 46, 0, 0, 0, 0, 0, 0, 5, 10, 61
+"c:\Users\codye\forge\pages\api\users\profile-picture\[file].ts", "TypeScript", 0, 31, 0, 0, 0, 0, 0, 0, 0, 2, 8, 41
+"c:\Users\codye\forge\pages\api\users\profile.ts", "TypeScript", 0, 140, 0, 0, 0, 0, 0, 0, 0, 17, 28, 185
+"c:\Users\codye\forge\pages\api\users\search.ts", "TypeScript", 0, 24, 0, 0, 0, 0, 0, 0, 0, 2, 7, 33
+"c:\Users\codye\forge\pages\api\users\update-privacy.js", "JavaScript", 0, 0, 29, 0, 0, 0, 0, 0, 0, 1, 8, 38
+"c:\Users\codye\forge\pages\folders\[id].tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 847, 0, 10, 67, 924
+"c:\Users\codye\forge\pages\folders\index.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 348, 0, 5, 28, 381
+"c:\Users\codye\forge\pages\transfer-requests.js", "JavaScript", 0, 0, 18, 0, 0, 0, 0, 0, 0, 0, 3, 21
+"c:\Users\codye\forge\postcss.config.js", "JavaScript", 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 6
+"c:\Users\codye\forge\postcss.config.mjs", "JavaScript", 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 2, 9
+"c:\Users\codye\forge\public\file.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\codye\forge\public\globe.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\codye\forge\public\next.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\codye\forge\public\output.css", "PostCSS", 0, 0, 0, 0, 0, 0, 0, 0, 1627, 168, 435, 2230
+"c:\Users\codye\forge\public\vercel.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\codye\forge\public\window.svg", "XML", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\codye\forge\run-migration.js", "JavaScript", 0, 0, 72, 0, 0, 0, 0, 0, 0, 3, 9, 84
+"c:\Users\codye\forge\scripts\add-comments-system.js", "JavaScript", 0, 0, 115, 0, 0, 0, 0, 0, 0, 8, 15, 138
+"c:\Users\codye\forge\scripts\add-email-verification.js", "JavaScript", 0, 0, 91, 0, 0, 0, 0, 0, 0, 13, 23, 127
+"c:\Users\codye\forge\scripts\add-extended-profile-fields.js", "JavaScript", 0, 0, 47, 0, 0, 0, 0, 0, 0, 6, 8, 61
+"c:\Users\codye\forge\scripts\add-file-versions.js", "JavaScript", 0, 0, 50, 0, 0, 0, 0, 0, 0, 4, 6, 60
+"c:\Users\codye\forge\scripts\add-follow-requests.js", "JavaScript", 0, 0, 25, 0, 0, 0, 0, 0, 0, 1, 5, 31
+"c:\Users\codye\forge\scripts\add-messaging-notifications.js", "JavaScript", 0, 0, 57, 0, 0, 0, 0, 0, 0, 4, 9, 70
+"c:\Users\codye\forge\scripts\add-oauth-support.js", "JavaScript", 0, 0, 125, 0, 0, 0, 0, 0, 0, 15, 23, 163
+"c:\Users\codye\forge\scripts\add-ownership-transfer.js", "JavaScript", 0, 0, 76, 0, 0, 0, 0, 0, 0, 6, 11, 93
+"c:\Users\codye\forge\scripts\add-private-accounts.js", "JavaScript", 0, 0, 23, 0, 0, 0, 0, 0, 0, 1, 5, 29
+"c:\Users\codye\forge\scripts\add-profile-columns.js", "JavaScript", 0, 0, 28, 0, 0, 0, 0, 0, 0, 0, 6, 34
+"c:\Users\codye\forge\scripts\add-profile-fields.js", "JavaScript", 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 4, 25
+"c:\Users\codye\forge\scripts\add-project-dimensions.js", "JavaScript", 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 6, 41
+"c:\Users\codye\forge\scripts\add-recovery-tokens-table.js", "JavaScript", 0, 0, 48, 0, 0, 0, 0, 0, 0, 3, 7, 58
+"c:\Users\codye\forge\scripts\add-rename-move-support.js", "JavaScript", 0, 0, 92, 0, 0, 0, 0, 0, 0, 7, 16, 115
+"c:\Users\codye\forge\scripts\check-comments.js", "JavaScript", 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 6, 23
+"c:\Users\codye\forge\scripts\check-schema.js", "JavaScript", 0, 0, 18, 0, 0, 0, 0, 0, 0, 0, 6, 24
+"c:\Users\codye\forge\scripts\check-users.js", "JavaScript", 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 5, 21
+"c:\Users\codye\forge\scripts\create-follows-table.js", "JavaScript", 0, 0, 32, 0, 0, 0, 0, 0, 0, 3, 6, 41
+"c:\Users\codye\forge\scripts\create-forum-tables.js", "JavaScript", 0, 0, 66, 0, 0, 0, 0, 0, 0, 3, 8, 77
+"c:\Users\codye\forge\scripts\debug-file.js", "JavaScript", 0, 0, 44, 0, 0, 0, 0, 0, 0, 3, 8, 55
+"c:\Users\codye\forge\scripts\generate-existing-thumbnails.js", "JavaScript", 0, 0, 91, 0, 0, 0, 0, 0, 0, 11, 21, 123
+"c:\Users\codye\forge\scripts\migrate-existing-projects-to-versions.js", "JavaScript", 0, 0, 72, 0, 0, 0, 0, 0, 0, 4, 8, 84
+"c:\Users\codye\forge\scripts\migrate-nested-folders.js", "JavaScript", 0, 0, 95, 0, 0, 0, 0, 0, 0, 5, 11, 111
+"c:\Users\codye\forge\scripts\migrate-thumbnails.js", "JavaScript", 0, 0, 62, 0, 0, 0, 0, 0, 0, 7, 14, 83
+"c:\Users\codye\forge\scripts\run-migration.js", "JavaScript", 0, 0, 22, 0, 0, 0, 0, 0, 0, 1, 7, 30
+"c:\Users\codye\forge\scripts\test-privacy-filter.js", "JavaScript", 0, 0, 51, 0, 0, 0, 0, 0, 0, 1, 7, 59
+"c:\Users\codye\forge\scripts\test-recovery-system.js", "JavaScript", 0, 0, 74, 0, 0, 0, 0, 0, 0, 11, 15, 100
+"c:\Users\codye\forge\scripts\verify-migration.js", "JavaScript", 0, 0, 41, 0, 0, 0, 0, 0, 0, 4, 10, 55
+"c:\Users\codye\forge\scripts\verify-schema.js", "JavaScript", 0, 0, 27, 0, 0, 0, 0, 0, 0, 3, 7, 37
+"c:\Users\codye\forge\tailwind.config.js", "JavaScript", 0, 0, 25, 0, 0, 0, 0, 0, 0, 1, 0, 26
+"c:\Users\codye\forge\tsconfig.json", "JSON with Comments", 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 43
+"c:\Users\codye\forge\types\index.ts", "TypeScript", 0, 88, 0, 0, 0, 0, 0, 0, 0, 0, 6, 94
+"c:\Users\codye\forge\types\next-auth.d.ts", "TypeScript", 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 4, 36
+"Total", "-", 42, 10116, 7861, 9507, 5, 6890, 58, 18341, 1668, 3677, 8384, 66549
