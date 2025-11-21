@@ -1,7 +1,7 @@
 // Get list of users that a user is following (with pagination)
-import { getDb } from '../../../../lib/db';
-import { getUserFromRequest } from '../../../../lib/auth';
-import { isProfileVisible } from '../../../../lib/privacy-utils';
+import { getDb } from '../../../../db/db';
+import { getUserFromRequest } from '../../../../backend/lib/auth';
+import { isProfileVisible } from '../../../../backend/lib/privacy-utils';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

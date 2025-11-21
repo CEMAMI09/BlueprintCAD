@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, Tabs, EmptyState } from '@/components/ui/UIComponents';
-import { DesignSystem as DS } from '@/lib/ui/design-system';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import {
   User,
   MapPin,
@@ -40,6 +40,7 @@ export default function ProfilePage() {
   const username = (params?.username || '') as string;
   const [profile, setProfile] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
+  const [starredProjects, setStarredProjects] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
@@ -52,11 +53,16 @@ export default function ProfilePage() {
     }
   }, []);
 
+  const isOwnProfile = currentUser?.username === username;
+
   useEffect(() => {
     if (username) {
       fetchProfile();
       fetchUserProjects();
       checkFollowStatus();
+      if (currentUser?.username === username) {
+        fetchStarredProjects();
+      }
     }
   }, [username, currentUser]);
 
@@ -140,7 +146,23 @@ export default function ProfilePage() {
     }
   };
 
-  const isOwnProfile = currentUser?.username === username;
+  const fetchStarredProjects = async () => {
+    if (!currentUser) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/projects/starred', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStarredProjects(data);
+      }
+    } catch (error) {
+      console.error('Error fetching starred projects:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -310,7 +332,7 @@ export default function ProfilePage() {
               <Tabs
                 tabs={[
                   { id: 'projects', label: 'Projects', icon: <Grid size={16} />, badge: projects.length },
-                  { id: 'liked', label: 'Liked', icon: <Heart size={16} /> },
+                  ...(isOwnProfile ? [{ id: 'starred', label: 'Starred', icon: <Star size={16} />, badge: starredProjects.length }] : []),
                 ]}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
@@ -378,12 +400,64 @@ export default function ProfilePage() {
                   </>
                 )}
 
-                {activeTab === 'liked' && (
-                  <EmptyState
-                    icon={<Heart size={48} />}
-                    title="No liked projects"
-                    description="Projects you like will appear here."
-                  />
+                {activeTab === 'starred' && (
+                  <>
+                    {starredProjects.length === 0 ? (
+                      <EmptyState
+                        icon={<Star size={48} />}
+                        title="No starred projects"
+                        description="Projects you star will appear here."
+                      />
+                    ) : (
+                      <div className="grid grid-cols-3 gap-4">
+                        {starredProjects.map((project) => (
+                          <Card
+                            key={project.id}
+                            hover
+                            padding="none"
+                            onClick={() => router.push(`/project/${project.id}`)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            {/* Thumbnail */}
+                            <div 
+                              className="w-full h-48 flex items-center justify-center text-5xl"
+                              style={{ backgroundColor: DS.colors.background.panel }}
+                            >
+                              📦
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-4">
+                              <h3 className="font-semibold mb-2 line-clamp-1" style={{ color: DS.colors.text.primary }}>
+                                {project.name || project.title}
+                              </h3>
+                              
+                              {project.description && (
+                                <p className="text-sm mb-3 line-clamp-2" style={{ color: DS.colors.text.secondary }}>
+                                  {project.description}
+                                </p>
+                              )}
+
+                              <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.tertiary }}>
+                                <div className="flex items-center gap-1">
+                                  <Star size={14} />
+                                  {project.likes || 0}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Download size={14} />
+                                  {project.downloads || 0}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Eye size={14} />
+                                  {project.views || 0}
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

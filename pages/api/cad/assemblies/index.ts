@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getDb } from '@/lib/db';
-import { AssemblyDocument } from '@/lib/cad/assembly-system';
+import { getDb } from '../../../db/db';
+import { AssemblyDocument } from '@/backend/lib/cad/assembly-system';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {

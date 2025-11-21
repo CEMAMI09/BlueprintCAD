@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UIComponents';
-import { DesignSystem as DS } from '@/lib/ui/design-system';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import ThreeDViewer from '@/components/ThreeDViewer';
 import {
   Download,
@@ -45,6 +45,8 @@ interface Design {
   files: number;
   comments: number;
   liked: boolean;
+  fileUrl?: string | null;
+  fileType?: string | null;
 }
 
 export default function ExplorePage() {
@@ -80,12 +82,15 @@ export default function ExplorePage() {
             comments: p.comment_count || 0,
             liked: false,
             // Ensure file_path and file_type are correct and extension has dot
-            fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase().replace('.', ''))
-              ? `/api/files/${String(p.file_path).replace(/^[^\w/]+/, '').replace(/[^\w.\-/]+/g, '')}`
+              fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase().replace('.', ''))
+              ? `/api/files/${encodeURIComponent(String(p.file_path))}`
               : null,
             fileType: p.file_type ? (p.file_type.startsWith('.') ? p.file_type : `.${p.file_type}`) : null,
           }));
           setDesigns(mappedDesigns);
+          // Debug: log mapped designs for 3D viewer troubleshooting
+          // eslint-disable-next-line no-console
+          console.log('Explore: mapped designs ->', mappedDesigns.map(d => ({ id: d.id, title: d.title, fileUrl: d.fileUrl, fileType: d.fileType })));
         }
       } catch (error) {
         console.error('Failed to fetch projects:', error);
@@ -96,111 +101,6 @@ export default function ExplorePage() {
     };
     fetchProjects();
   }, []);
-
-  const mockDesigns: Design[] = [
-    {
-      id: '1',
-      title: 'Parametric Gear System',
-      author: 'Sarah Chen',
-      authorAvatar: 'SC',
-      thumbnail: '⚙️',
-      stars: 342,
-      downloads: 1284,
-      views: 5420,
-      price: null,
-      tags: ['Mechanical', 'Gears', 'Assembly'],
-      createdAt: '2025-01-15',
-      description: 'Fully parametric gear system with configurable tooth count, pressure angle, and module. Perfect for mechanical assemblies.',
-      files: 8,
-      comments: 24,
-      liked: false,
-    },
-    {
-      id: '2',
-      title: 'Modern Chair Design',
-      author: 'Mike Johnson',
-      authorAvatar: 'MJ',
-      thumbnail: '🪑',
-      stars: 567,
-      downloads: 2150,
-      views: 8920,
-      price: 25.00,
-      tags: ['Furniture', 'Design', 'Premium'],
-      createdAt: '2025-01-14',
-      description: 'Ergonomic chair design with curved surfaces and sustainable materials. Includes assembly instructions.',
-      files: 12,
-      comments: 45,
-      liked: true,
-    },
-    {
-      id: '3',
-      title: 'Drone Frame v3',
-      author: 'Alex Rivera',
-      authorAvatar: 'AR',
-      thumbnail: '🚁',
-      stars: 892,
-      downloads: 3420,
-      views: 12500,
-      price: null,
-      tags: ['Drone', 'Racing', 'FPV'],
-      createdAt: '2025-01-13',
-      description: 'Lightweight drone frame optimized for FPV racing. Carbon fiber compatible. Multiple motor mounts included.',
-      files: 15,
-      comments: 78,
-      liked: true,
-    },
-    {
-      id: '4',
-      title: 'Modular Toolbox',
-      author: 'Lisa Wang',
-      authorAvatar: 'LW',
-      thumbnail: '🧰',
-      stars: 234,
-      downloads: 890,
-      views: 3210,
-      price: 15.00,
-      tags: ['Organization', 'Tools', 'Modular'],
-      createdAt: '2025-01-12',
-      description: 'Customizable toolbox system with interchangeable dividers. Stack them vertically or arrange horizontally.',
-      files: 6,
-      comments: 19,
-      liked: false,
-    },
-    {
-      id: '5',
-      title: 'Articulated Robot Arm',
-      author: 'Tom Bradley',
-      authorAvatar: 'TB',
-      thumbnail: '🦾',
-      stars: 1024,
-      downloads: 4580,
-      views: 15200,
-      price: null,
-      tags: ['Robotics', 'Arduino', 'Education'],
-      createdAt: '2025-01-11',
-      description: '6-axis articulated robot arm with servo mounts. Educational project with full assembly guide and Arduino code.',
-      files: 22,
-      comments: 134,
-      liked: true,
-    },
-    {
-      id: '6',
-      title: 'Phone Stand Pro',
-      author: 'Emma Davis',
-      authorAvatar: 'ED',
-      thumbnail: '📱',
-      stars: 445,
-      downloads: 1920,
-      views: 6780,
-      price: 5.00,
-      tags: ['Accessory', 'Phone', 'Minimal'],
-      createdAt: '2025-01-10',
-      description: 'Adjustable phone stand with cable management. Fits all phone sizes. Minimal and modern aesthetic.',
-      files: 4,
-      comments: 31,
-      liked: false,
-    },
-  ];
 
   const filters = [
     { id: 'trending', label: 'Trending', icon: TrendingUp },
@@ -213,9 +113,8 @@ export default function ExplorePage() {
   const trendingCollections = [
     { name: 'Workshop Essentials', count: 24, icon: '🔧' },
     { name: 'Home Automation', count: 18, icon: '🏠' },
-    { name: 'Robotics Projects', count: 31, icon: '🤖' },
+    { name: 'Robotics Projects', count: 31, icon: '🤖' }
   ];
-
   return (
     <ThreePanelLayout
       leftPanel={<GlobalNavSidebar />}
@@ -282,7 +181,7 @@ export default function ExplorePage() {
                         comments: p.comment_count || 0,
                         liked: false,
                         fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase().replace('.', ''))
-                          ? `/api/files/${p.file_path}`
+                          ? `/api/files/${encodeURIComponent(String(p.file_path))}`
                           : null,
                         fileType: p.file_type ? (p.file_type.startsWith('.') ? p.file_type : `.${p.file_type}`) : null,
                       }));
@@ -332,6 +231,10 @@ export default function ExplorePage() {
                               files: p.file_count || 0,
                               comments: p.comment_count || 0,
                               liked: false,
+                              fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase().replace('.', ''))
+                                ? `/api/files/${encodeURIComponent(String(p.file_path))}`
+                                : null,
+                              fileType: p.file_type ? (p.file_type.startsWith('.') ? p.file_type : `.${p.file_type}`) : null,
                             }));
                             setDesigns(mapped);
                           });
@@ -389,78 +292,81 @@ export default function ExplorePage() {
               />
             ) : (
               <div className={viewMode === 'grid' ? 'grid grid-cols-3 gap-4' : 'space-y-3'}>
-                {designs.map((design) => (
-                <Link href={`/project/${design.id}`} key={design.id} style={{ textDecoration: 'none' }}>
-                  <Card
-                    hover
-                    padding="none"
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {/* 3D Preview */}
-                    <div className="w-full h-48 relative overflow-hidden flex items-center justify-center bg-[#181818]">
-                      {design.fileUrl ? (
-                        <ThreeDViewer
-                          fileUrl={design.fileUrl}
-                          fileName={design.title}
-                          fileType={design.fileType}
-                          preset="card"
-                        />
-                      ) : (
-                        <span className="text-7xl">{design.thumbnail}</span>
-                      )}
-                    </div>
-                    {/* Content */}
-                    <div className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3
-                          className="font-semibold text-base line-clamp-1"
-                          style={{ color: DS.colors.text.primary }}
-                        >
-                          {design.title}
-                        </h3>
-                        {design.liked && <Heart size={16} fill={DS.colors.accent.error} style={{ color: DS.colors.accent.error }} />}
-                      </div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                          style={{ backgroundColor: DS.colors.primary.blue, color: '#ffffff' }}
-                        >
-                          {design.authorAvatar}
+                {designs.map((design) => {
+                  return (
+                    <Link href={`/project/${design.id}`} key={design.id} style={{ textDecoration: 'none' }}>
+                      <Card hover padding="none" style={{ cursor: 'pointer' }} className="h-full flex flex-col">
+                        {/* 3D Preview */}
+                        <div className="aspect-video rounded-t-lg overflow-hidden bg-[#181818] flex-shrink-0 relative">
+                          {design.fileUrl && design.fileType ? (
+                            <div className="absolute inset-0 w-full h-full">
+                              <ThreeDViewer
+                                fileUrl={design.fileUrl}
+                                fileName={design.title}
+                                fileType={design.fileType}
+                                preset="card"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center w-full h-full">
+                              <span className="text-5xl mb-2">📦</span>
+                              <span className="text-xs text-gray-500">No 3D file available</span>
+                            </div>
+                          )}
                         </div>
-                        <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                          {design.author}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm mb-3" style={{ color: DS.colors.text.tertiary }}>
-                        <div className="flex items-center gap-1">
-                          <Star size={14} />
-                          {design.stars}
+                        {/* Card Content */}
+                        <div className="p-4 flex flex-col flex-grow min-h-[140px]">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3
+                              className="font-semibold text-base line-clamp-1 flex-1"
+                              style={{ color: DS.colors.text.primary }}
+                            >
+                              {design.title}
+                            </h3>
+                            {design.liked && <Heart size={16} fill={DS.colors.accent.error} style={{ color: DS.colors.accent.error }} className="flex-shrink-0 ml-2" />}
+                          </div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                              style={{ backgroundColor: DS.colors.primary.blue, color: '#ffffff' }}
+                            >
+                              {design.authorAvatar}
+                            </div>
+                            <span className="text-sm truncate" style={{ color: DS.colors.text.secondary }}>
+                              {design.author}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm mb-3" style={{ color: DS.colors.text.tertiary }}>
+                            <div className="flex items-center gap-1">
+                              <Star size={14} />
+                              {design.stars}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Download size={14} />
+                              {design.downloads}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Eye size={14} />
+                              {design.views}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 mt-auto">
+                            {design.tags.slice(0, 2).map((tag) => (
+                              <Badge key={tag} variant="default" size="sm">
+                                {tag}
+                              </Badge>
+                            ))}
+                            {design.price !== null && (
+                              <Badge variant="primary" size="sm">
+                                ${design.price}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Download size={14} />
-                          {design.downloads}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Eye size={14} />
-                          {design.views}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {design.tags.slice(0, 2).map((tag) => (
-                          <Badge key={tag} variant="default" size="sm">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {design.price !== null && (
-                          <Badge variant="primary" size="sm">
-                            ${design.price}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
+                      </Card>
+                    </Link>
+                  );
+                })}
               </div>
             )}
             </div>

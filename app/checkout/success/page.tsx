@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Layout from '../../../components/Layout';
+import Layout from '@/components/Layout';
 import Link from 'next/link';
 
 export default function CheckoutSuccess() {

@@ -1,8 +1,8 @@
 // GET all projects, POST new project
-import { getDb } from '../../../lib/db';
-import { getUserFromRequest, verifyAuth } from '../../../lib/auth';
-import { filterProjectsByPrivacy } from '../../../lib/privacy-utils';
-import { requireEmailVerification } from '../../../lib/verification-middleware';
+import { getDb } from '../../../db/db';
+import { getUserFromRequest, verifyAuth } from '../../../backend/lib/auth';
+import { filterProjectsByPrivacy } from '../../../backend/lib/privacy-utils';
+import { requireEmailVerification } from '../../../backend/lib/verification-middleware';
 
 export default async function handler(req, res) {
   const db = await getDb();
@@ -112,7 +112,7 @@ export default async function handler(req, res) {
       const path = require('path');
       let fileSize = null;
       try {
-        const fullPath = path.join(process.cwd(), 'uploads', file_path);
+        const fullPath = path.join(process.cwd(), 'storage', 'uploads', file_path);
         if (fs.existsSync(fullPath)) {
           const stats = fs.statSync(fullPath);
           fileSize = stats.size;

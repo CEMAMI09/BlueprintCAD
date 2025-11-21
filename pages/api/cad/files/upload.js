@@ -1,8 +1,8 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
-import { verifyToken } from '../../../../lib/auth';
-import { getDb } from '../../../../lib/db';
+import { verifyToken } from '../../../../backend/lib/auth';
+import { getDb } from '../../../../db/db';
 
 export const config = {
   api: {
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     const db = await getDb();
 
     // Parse form data
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'cad');
+    const uploadDir = path.join(process.cwd(), 'storage', 'uploads', 'cad');
     
     // Create directory if it doesn't exist
     if (!fs.existsSync(uploadDir)) {

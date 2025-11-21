@@ -1,7 +1,7 @@
 // Handle forgot username requests
-import { getDb } from '../../../lib/db';
-import { sendUsernameReminderEmail } from '../../../lib/email';
-import { checkRateLimit, getClientIP } from '../../../lib/rate-limit';
+import { getDb } from '../../../db/db';
+import { sendUsernameReminderEmail } from '../../../backend/lib/email';
+import { checkRateLimit, getClientIP } from '../../../backend/lib/rate-limit';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 interface RateLimitResult {

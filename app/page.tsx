@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/UIComponents';
-import { DesignSystem as DS } from '@/lib/ui/design-system';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import {
   Box,
   Users,

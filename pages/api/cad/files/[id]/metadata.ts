@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import pool from '@/lib/db';
+import pool from '../../../../db/db';
 
 /**
  * API endpoint to save display-only metadata to CAD files

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import { BOMGenerator, BOMDocument, BOMTitleBlock } from '@/lib/cad/bom-generator';
+import { BOMGenerator, BOMDocument, BOMTitleBlock } from '@/backend/lib/cad/bom-generator';
 import BOMViewer from '@/components/cad/BOMViewer';
 
 export default function BOMEditorPage() {

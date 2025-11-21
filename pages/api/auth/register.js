@@ -1,8 +1,8 @@
 // Handle user registration
-import { getDb } from '../../../lib/db';
-import { hashPassword, generateToken } from '../../../lib/auth';
-import { createVerificationToken } from '../../../lib/email-verification';
-import { getVerificationEmailHTML, getVerificationEmailText } from '../../../lib/email-templates';
+import { getDb } from '../../../db/db';
+import { hashPassword, generateToken } from '../../../backend/lib/auth';
+import { createVerificationToken } from '../../../backend/lib/email-verification';
+import { getVerificationEmailHTML, getVerificationEmailText } from '../../../backend/lib/email-templates';
 import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {

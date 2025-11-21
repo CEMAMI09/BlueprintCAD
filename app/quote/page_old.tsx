@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Layout from '../../components/Layout';
-import ThreePreview from '../../components/ThreePreview';
+import Layout from '@/components/Layout';
+import ThreePreview from '@/components/ThreePreview';
 
 interface ManufacturingOption {
   name: string;

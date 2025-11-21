@@ -25,6 +25,24 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@/components/*": [
+        "./frontend/components/*",
+        "./components/*"
+      ],
+      "@/lib/*": [
+        "./backend/lib/*",
+        "./lib/*"
+      ],
+      "@/db/*": [
+        "./db/*"
+      ],
+      "@/storage/*": [
+        "./storage/*"
+      ],
+      "@/types/*": [
+        "./frontend/types/*",
+        "./types/*"
       ]
     }
   },

@@ -8,7 +8,7 @@ import { Folder } from '@/types';
 import { ThreePanelLayout, LeftPanel, CenterPanel, RightPanel, PanelHeader, PanelContent } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Upload as UploadIcon, FolderIcon, Globe, Lock, DollarSign } from 'lucide-react';
-import * as DS from '@/lib/ui/design-system';
+import * as DS from '@/backend/lib/ui/design-system';
 
 interface FormData {
   title: string;
@@ -464,7 +464,9 @@ const fetchFolders = async () => {
             {file && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <h2 className="text-lg font-semibold mb-4">3D Preview</h2>
-                <ThreePreview file={file} />
+                <div className="w-full">
+                  <ThreePreview file={file} />
+                </div>
               </div>
             )}
 

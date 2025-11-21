@@ -1,7 +1,7 @@
 // API endpoint to upload a new version of a project file
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getDb } from '../../../../lib/db';
-import { getUserFromRequest } from '../../../../lib/auth';
+import { getDb } from '../../../../db/db';
+import { getUserFromRequest } from '../../../../backend/lib/auth';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Setup formidable to handle file upload
-    const uploadDir = path.join(process.cwd(), 'uploads');
+    const uploadDir = path.join(process.cwd(), 'storage', 'uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -107,8 +107,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (is3DFile) {
         try {
-          const { generatePlaceholderThumbnail } = require('../../../../lib/thumbnailGeneratorSimple');
-          const thumbsDir = path.join(process.cwd(), 'uploads', 'thumbnails');
+          const { generatePlaceholderThumbnail } = require('../../../../backend/lib/thumbnailGeneratorSimple');
+          const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
           if (!fs.existsSync(thumbsDir)) {
             fs.mkdirSync(thumbsDir, { recursive: true });
           }

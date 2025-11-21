@@ -1,6 +1,6 @@
 import React from 'react';
-import Layout from '../components/Layout';
-import TransferRequestsList from '../components/TransferRequestsList';
+import Layout from '@/components/Layout';
+import TransferRequestsList from '@/components/TransferRequestsList';
 
 export default function TransferRequests() {
   return (

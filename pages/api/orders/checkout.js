@@ -3,8 +3,8 @@
  * POST /api/orders/checkout
  */
 
-import { getDb } from '../../../lib/db';
-import { getUserFromRequest } from '../../../lib/auth';
+import { getDb } from '../../../db/db';
+import { getUserFromRequest } from '../../../backend/lib/auth';
 const { createPaymentIntent } = require('../../../lib/stripe-utils');
 
 export default async function handler(req, res) {

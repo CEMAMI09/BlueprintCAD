@@ -1,7 +1,7 @@
 // Handle forgot password requests
-import { getDb } from '../../../lib/db';
-import { sendPasswordResetEmail } from '../../../lib/email';
-import { checkRateLimit } from '../../../lib/rate-limit';
+import { getDb } from '../../../db/db';
+import { sendPasswordResetEmail } from '../../../backend/lib/email';
+import { checkRateLimit } from '../../../backend/lib/rate-limit';
 import crypto from 'crypto';
 import type { NextApiRequest, NextApiResponse } from 'next';
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Database from 'better-sqlite3';
 import path from 'path';
 
-const dbPath = path.join(process.cwd(), 'forge.db');
+const dbPath = path.join(process.cwd(), 'db', 'forge.db');
 
 export async function POST(req: NextRequest) {
   try {

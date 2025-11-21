@@ -3,8 +3,8 @@
  * POST /api/orders/confirm
  */
 
-import { getDb } from '../../../lib/db';
-import { getUserFromRequest } from '../../../lib/auth';
+import { getDb } from '../../../db/db';
+import { getUserFromRequest } from '../../../backend/lib/auth';
 const { getPaymentIntent } = require('../../../lib/stripe-utils');
 const { sendEmail, emailTemplates } = require('../../../lib/email-templates');
 const crypto = require('crypto');

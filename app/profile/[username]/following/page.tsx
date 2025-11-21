@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Navbar from '../../../components/navbar';
+import Navbar from '@/components/navbar';
 
 interface User {
   id: number;

@@ -1,5 +1,5 @@
-import { getDb } from '../../../../lib/db.js';
-import { getUserFromRequest } from '../../../../lib/auth.js';
+import { getDb } from '../../../../db/db';
+import { getUserFromRequest } from '../../../../backend/lib/auth.js';
 
 export default async function handler(req, res) {
   const { id } = req.query;

@@ -2,9 +2,9 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
-import { getUserFromRequest } from '../../lib/auth';
-import { validateExtension, isViewable, isExtractable } from '../../lib/cad-formats';
-import { requireEmailVerification } from '../../lib/verification-middleware';
+import { getUserFromRequest } from '../../backend/lib/auth';
+import { validateExtension, isViewable, isExtractable } from '../../backend/lib/cad-formats';
+import { requireEmailVerification } from '../../backend/lib/verification-middleware';
 
 export const config = {
   api: {
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   try {
     // Ensure upload directory exists (outside public for security)
-    const uploadDir = path.join(process.cwd(), 'uploads');
+    const uploadDir = path.join(process.cwd(), 'storage', 'uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
           
           // For STL files, use the STL-specific parser
           if (ext === 'stl') {
-            const { getSTLDimensions } = require('../../lib/stl-utils');
+            const { getSTLDimensions } = require('../../backend/lib/stl-utils'));
             console.log('Extracting STL dimensions from:', fullFilePath);
             const dimData = getSTLDimensions(fullFilePath);
             console.log('Extracted dimension data:', dimData);
@@ -107,8 +107,8 @@ export default async function handler(req, res) {
       
       if (is3DFile) {
         try {
-          const { generatePlaceholderThumbnail } = require('../../lib/thumbnailGeneratorSimple');
-          const thumbsDir = path.join(process.cwd(), 'uploads', 'thumbnails');
+          const { generatePlaceholderThumbnail } = require('../../backend/lib/thumbnailGeneratorSimple');
+          const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
           if (!fs.existsSync(thumbsDir)) {
             fs.mkdirSync(thumbsDir, { recursive: true });
           }

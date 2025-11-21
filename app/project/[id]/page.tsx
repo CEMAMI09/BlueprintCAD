@@ -3,15 +3,15 @@
 
 import { ThreePanelLayout, CenterPanel, PanelHeader, PanelContent } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
-import { DesignSystem as DS } from '@/lib/ui/design-system';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import ThreeDViewer from '../../../components/ThreeDViewer';
-import RenameModal from '../../../components/RenameModal';
-import HistoryModal from '../../../components/HistoryModal';
-import CommentSystem from '../../../components/CommentSystem';
-import ConfirmationModal from '../../../components/ConfirmationModal';
+import ThreeDViewer from '@/components/ThreeDViewer';
+import RenameModal from '@/components/RenameModal';
+import HistoryModal from '@/components/HistoryModal';
+import CommentSystem from '@/components/CommentSystem';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import Link from 'next/link';
 
 interface Comment {
@@ -51,7 +51,7 @@ export default function ProjectDetail() {
   const [project, setProject] = useState<Project | null>(null);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(false); // Using "liked" for starred state
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
   const [actionError, setActionError] = useState<string>('');
@@ -73,7 +73,7 @@ export default function ProjectDetail() {
     if (id) {
       fetchProject();
       fetchComments();
-      fetchLikeState();
+      fetchLikeState(); // Fetches starred state
       checkPurchaseStatus();
     }
   }, [id]);
@@ -95,7 +95,7 @@ export default function ProjectDetail() {
     }
   };
 
-  const fetchLikeState = async () => {
+  const fetchLikeState = async () => { // Fetches starred state
     try {
       const res = await fetch(`/api/projects/${id}/like`, {
         headers: {
@@ -122,6 +122,9 @@ export default function ProjectDetail() {
       if (res.ok) {
         const data = await res.json();
         setProject(data);
+          // Debug: log project file info for 3D viewer
+          // eslint-disable-next-line no-console
+          console.log('Project loaded:', { id: data.id, file_path: data.file_path, file_type: data.file_type, fileUrl: data.file_path ? `/api/files/${data.file_path}` : null });
         setFetchError('');
       } else {
         const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
@@ -148,7 +151,7 @@ export default function ProjectDetail() {
     }
   };
 
-  const handleLike = async () => {
+  const handleLike = async () => { // Handles star/unstar
     if (!user) {
       router.push('/login');
       return;
@@ -169,11 +172,11 @@ export default function ProjectDetail() {
         setProject(project => project ? { ...project, likes: data.likes ?? project.likes } : null);
       } else {
         const err = await res.json().catch(() => ({}));
-        setActionError(err.error || `Failed to like (status ${res.status})`);
+        setActionError(err.error || `Failed to star (status ${res.status})`);
       }
     } catch (err) {
-      console.error('Failed to like:', err);
-      setActionError('Network error while liking.');
+      console.error('Failed to star:', err);
+      setActionError('Network error while starring.');
     }
   };
 
@@ -310,7 +313,8 @@ export default function ProjectDetail() {
   }
 
   return (
-    <ThreePanelLayout
+    <>
+      <ThreePanelLayout
       leftPanel={<GlobalNavSidebar />}
       centerPanel={
         <CenterPanel>
@@ -336,9 +340,9 @@ export default function ProjectDetail() {
               <div className="md:col-span-2 space-y-6">
                 <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl overflow-hidden">
                   {/* Auto-loading 3D Viewer for all CAD file types */}
-                  {project.file_type ? (
+                  {project.file_type && project.file_path && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(project.file_type.toLowerCase().replace('.', '')) ? (
                     <ThreeDViewer
-                      fileUrl={`/api/files/${project.file_path}`}
+                      fileUrl={`/api/files/${encodeURIComponent(project.file_path)}`}
                       fileName={`${project.title}${project.file_type.startsWith('.') ? project.file_type : `.${project.file_type}`}`}
                       fileType={project.file_type.startsWith('.') ? project.file_type : `.${project.file_type}`}
                       preset="detail"
@@ -389,15 +393,15 @@ export default function ProjectDetail() {
                     onClick={handleLike}
                     className={`w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
                       liked 
-                        ? 'bg-pink-600 hover:bg-pink-700' 
+                        ? 'bg-yellow-600 hover:bg-yellow-700' 
                         : ''
                     }`}
                     style={!liked ? { background: DS.colors.background.panel, color: DS.colors.text.primary } : { color: '#fff' }}
                   >
                     <svg className="w-5 h-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                     </svg>
-                    {project.likes || 0} Likes
+                    {project.likes || 0} Stars
                   </button>
                   {/* Hide download button for paid items (unless you're the owner) */}
                   {(() => {
@@ -616,6 +620,17 @@ export default function ProjectDetail() {
           </PanelContent>
         </CenterPanel>
       }
-    />
+      />
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Project"
+        message={`Are you sure you want to delete "${project?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmColor="red"
+        loading={isDeleting}
+      />
+    </>
   );
 }

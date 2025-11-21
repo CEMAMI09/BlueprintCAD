@@ -1,7 +1,7 @@
 // API endpoint for updating user profile
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getUserFromRequest } from '../../../lib/auth';
-import { getDb } from '../../../lib/db';
+import { getUserFromRequest } from '../../../backend/lib/auth';
+import { getDb } from '../../../db/db';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const form = formidable({
-      uploadDir: path.join(process.cwd(), 'uploads', 'profiles'),
+      uploadDir: path.join(process.cwd(), 'storage', 'uploads', 'profiles'),
       keepExtensions: true,
       maxFileSize: 5 * 1024 * 1024, // 5MB
       filename: (name, ext, part) => {
@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Create profiles directory if it doesn't exist
-    const profilesDir = path.join(process.cwd(), 'uploads', 'profiles');
+    const profilesDir = path.join(process.cwd(), 'storage', 'uploads', 'profiles');
     if (!fs.existsSync(profilesDir)) {
       fs.mkdirSync(profilesDir, { recursive: true });
     }
@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Delete old profile picture if exists
       if (currentUser?.profile_picture) {
-        const oldPath = path.join(process.cwd(), 'uploads', 'profiles', currentUser.profile_picture);
+        const oldPath = path.join(process.cwd(), 'storage', 'uploads', 'profiles', currentUser.profile_picture);
         if (fs.existsSync(oldPath)) {
           fs.unlinkSync(oldPath);
         }
@@ -129,7 +129,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Delete old banner if exists
       if (currentUser?.banner) {
-        const oldPath = path.join(process.cwd(), 'uploads', 'profiles', currentUser.banner);
+        const oldPath = path.join(process.cwd(), 'storage', 'uploads', 'profiles', currentUser.banner);
         if (fs.existsSync(oldPath)) {
           fs.unlinkSync(oldPath);
         }

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Layout from '../../../components/Layout';
-import ProjectCard from '../../../components/ProjectCard';
+import Layout from '@/components/Layout';
+import ProjectCard from '@/components/ProjectCard';
 
 export default function Profile() {
   const params = useParams();

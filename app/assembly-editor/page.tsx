@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { getAssemblySystem, AssemblyTreeNode, PartInstance } from '@/lib/cad/assembly-system';
-import { MateType, GeometryReference, Mate } from '@/lib/cad/mate-system';
-import { MateAdvancedSolver, DOFAnalysis, SolverResult, CollisionInfo } from '@/lib/cad/mate-solver';
-import { GeometryPicker, PickResult } from '@/lib/cad/geometry-picker';
-import { InteractiveDragHandler } from '@/lib/cad/interactive-drag';
-import { ExplodedViewSystem, ExplodeAnimation } from '@/lib/cad/exploded-view';
-import { VideoExporter } from '@/lib/cad/video-exporter';
+import { getAssemblySystem, AssemblyTreeNode, PartInstance } from '@/backend/lib/cad/assembly-system';
+import { MateType, GeometryReference, Mate } from '@/backend/lib/cad/mate-system';
+import { MateAdvancedSolver, DOFAnalysis, SolverResult, CollisionInfo } from '@/backend/lib/cad/mate-solver';
+import { GeometryPicker, PickResult } from '@/backend/lib/cad/geometry-picker';
+import { InteractiveDragHandler } from '@/backend/lib/cad/interactive-drag';
+import { ExplodedViewSystem, ExplodeAnimation } from '@/backend/lib/cad/exploded-view';
+import { VideoExporter } from '@/backend/lib/cad/video-exporter';
 import AssemblyTreePanel from '@/components/cad/AssemblyTreePanel';
 import ExplodeControls from '@/components/cad/ExplodeControls';
 import PartBrowserPanel from '@/components/cad/PartBrowserPanel';

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Layout from '../../components/layout';
+import Layout from '@/components/layout';
 import Link from 'next/link';
 
 interface Reply {

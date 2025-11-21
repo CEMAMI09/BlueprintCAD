@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UIComponents';
-import { DesignSystem as DS } from '@/lib/ui/design-system';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import {
   DollarSign,
   Star,
@@ -57,6 +57,8 @@ interface Listing {
   versions: { version: string; date: string; notes: string }[];
   license: string;
   featured: boolean;
+  fileUrl?: string | null;
+  fileType?: string | null;
 }
 
 export default function MarketplacePage() {
@@ -104,10 +106,15 @@ export default function MarketplacePage() {
             versions: p.versions || [],
             license: p.license || '',
             featured: !!p.featured,
-              fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase()) ? `/api/files/${String(p.file_path).replace(/^[^\w/]+/, '').replace(/[^\w.\-/]+/g, '')}` : null,
-              fileType: p.file_type || null,
+            fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase().replace('.', ''))
+              ? `/api/files/${encodeURIComponent(String(p.file_path))}`
+              : null,
+            fileType: p.file_type ? (p.file_type.startsWith('.') ? p.file_type : `.${p.file_type}`) : null,
           }));
           setListings(mappedListings);
+          // Debug: log mapped listings to confirm file URLs/types
+          // eslint-disable-next-line no-console
+          console.log('Marketplace: mapped listings ->', mappedListings.map(l => ({ id: l.id, title: l.title, fileUrl: l.fileUrl, fileType: l.fileType })));
         } else {
           setFetchError('Failed to load marketplace listings.');
         }
@@ -329,15 +336,22 @@ export default function MarketplacePage() {
                             borderColor: selectedListing?.id === listing.id ? DS.colors.primary.blue : DS.colors.border.default,
                           }}
                         >
-                          <div className="aspect-video rounded-t-lg flex items-center justify-center bg-[#181818]">
-                            {listing.fileUrl ? (
-                              <ThreeDViewer
-                                fileUrl={listing.fileUrl}
-                                fileName={listing.title}
-                                fileType={listing.fileType}
-                                preset="card"
-                              />
-                            ) : null}
+                          <div className="aspect-video rounded-t-lg overflow-hidden bg-[#181818] relative">
+                            {listing.fileUrl && listing.fileType ? (
+                              <div className="absolute inset-0 w-full h-full">
+                                <ThreeDViewer
+                                  fileUrl={listing.fileUrl}
+                                  fileName={listing.title}
+                                  fileType={listing.fileType}
+                                  preset="card"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center w-full h-full">
+                                <span className="text-5xl mb-2">📦</span>
+                                <span className="text-xs text-gray-500">No 3D file available</span>
+                              </div>
+                            )}
                           </div>
                           <div className="p-4">
                             <h3 className="font-semibold mb-2 truncate" style={{ color: DS.colors.text.primary }}>
@@ -444,7 +458,23 @@ export default function MarketplacePage() {
             <PanelContent>
               <div className="space-y-6">
                 {/* Preview */}
-                <div className="aspect-video rounded-lg" style={{ backgroundColor: DS.colors.background.panelHover }} />
+                <div className="rounded-lg overflow-hidden" style={{ backgroundColor: DS.colors.background.panelHover }}>
+                  {selectedListing.fileUrl ? (
+                    <ThreeDViewer
+                      fileUrl={selectedListing.fileUrl}
+                      fileName={selectedListing.title}
+                      fileType={selectedListing.fileType || undefined}
+                      preset="detail"
+                    />
+                  ) : (
+                    <div className="aspect-video flex items-center justify-center">
+                      <div className="flex flex-col items-center justify-center w-full h-full">
+                        <span className="text-5xl mb-2">📦</span>
+                        <span className="text-xs text-gray-500">No 3D file available</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Title & Price */}
                 <div>

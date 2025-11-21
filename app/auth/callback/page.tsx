@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import Layout from '../../../components/Layout';
+import Layout from '@/components/Layout';
 
 export default function OAuthCallback() {
   const router = useRouter();

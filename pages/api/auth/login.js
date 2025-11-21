@@ -1,6 +1,6 @@
 // Handle user login
-import { getDb } from '../../../lib/db';
-import { verifyPassword, generateToken } from '../../../lib/auth';
+import { getDb } from '../../../db/db';
+import { verifyPassword, generateToken } from '../../../backend/lib/auth';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Badge, Tabs, EmptyState } from '@/components/ui/UIComponents';
-import { DesignSystem as DS } from '@/lib/ui/design-system';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import {
   Bell,
   Check,

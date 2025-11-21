@@ -2,9 +2,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
-import { getUserFromRequest } from '../../../lib/auth';
-import { getDb } from '../../../lib/db';
-import { getAllExtensions, getContentType } from '../../../lib/cad-formats';
+import { getUserFromRequest } from '../../../backend/lib/auth';
+import { getDb } from '../../../db/db';
+import { getAllExtensions, getContentType } from '../../../backend/lib/cad-formats';
 
 // Get all allowed file extensions from CAD formats module
 const ALLOWED_EXTENSIONS = getAllExtensions();
@@ -16,17 +16,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { file } = req.query;
-    
-    if (!file || typeof file !== 'string') {
+
+    if (!file) {
+      return res.status(400).json({ error: 'File parameter required' });
+    }
+
+    const rawFile = Array.isArray(file) ? file[0] : file;
+    // Decode percent-encoded path segments (client uses encodeURIComponent)
+    let decodedFile: string;
+    try {
+      decodedFile = decodeURIComponent(rawFile);
+    } catch (e) {
+      decodedFile = rawFile;
+    }
+
+    if (typeof decodedFile !== 'string' || decodedFile.length === 0) {
       return res.status(400).json({ error: 'File parameter required' });
     }
 
     // Security: prevent directory traversal attacks
-    const sanitizedFile = path.normalize(file).replace(/^(\.\.(\/|\\|$))+/, '');
-    const filePath = path.join(process.cwd(), 'uploads', sanitizedFile);
+    const sanitizedFile = path.normalize(decodedFile).replace(/^(\.\.(\/|\\|$))+/, '');
+    const uploadsDir = path.join(process.cwd(), 'storage', 'uploads');
+    const filePath = path.join(uploadsDir, sanitizedFile);
     
     // Security: ensure file is within uploads directory
-    const uploadsDir = path.join(process.cwd(), 'uploads');
     if (!filePath.startsWith(uploadsDir)) {
       return res.status(403).json({ error: 'Access denied' });
     }
@@ -37,12 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ error: 'File type not allowed' });
     }
 
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found' });
-    }
-
-    // Get file info from database to check permissions
+    // Get file info from database first to check if project exists
     const db = await getDb();
     let project = await db.get(
       'SELECT * FROM projects WHERE file_path = ?',
@@ -57,11 +65,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
       
       if (!versionFile) {
+        // Try to find project by partial match (in case file_path has changed)
+        const allProjects = await db.all('SELECT id, title, file_path FROM projects WHERE file_path LIKE ?', [`%${path.basename(sanitizedFile)}%`]);
+        console.log('[api/files] File not found in database. Searched for:', sanitizedFile, 'Found similar:', allProjects);
         return res.status(404).json({ error: 'File not found in database' });
       }
       
       // Use version file data as project data
       project = versionFile;
+    }
+
+    // Check if file exists on disk
+    let exists = fs.existsSync(filePath);
+    let actualFilePath = filePath;
+    
+    // If file doesn't exist at exact path, try to find it by filename
+    if (!exists && project) {
+      const filename = path.basename(sanitizedFile);
+      const uploadsDir = path.join(process.cwd(), 'storage', 'uploads');
+      
+      // Try to find file by searching in uploads directory
+      try {
+        const files = fs.readdirSync(uploadsDir, { withFileTypes: true });
+        for (const file of files) {
+          if (file.isFile() && file.name === filename) {
+            actualFilePath = path.join(uploadsDir, file.name);
+            exists = true;
+            console.log('[api/files] Found file by filename search:', { requested: sanitizedFile, found: file.name, actualPath: actualFilePath });
+            break;
+          } else if (file.isDirectory()) {
+            // Search in subdirectories
+            try {
+              const subFiles = fs.readdirSync(path.join(uploadsDir, file.name), { withFileTypes: true });
+              for (const subFile of subFiles) {
+                if (subFile.isFile() && subFile.name === filename) {
+                  actualFilePath = path.join(uploadsDir, file.name, subFile.name);
+                  exists = true;
+                  console.log('[api/files] Found file in subdirectory:', { requested: sanitizedFile, found: path.join(file.name, subFile.name), actualPath: actualFilePath });
+                  break;
+                }
+              }
+              if (exists) break;
+            } catch {
+              // Skip subdirectory if can't read
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[api/files] Error searching for file:', err);
+      }
+    }
+    
+    // Debug logging
+    console.log('[api/files] request for:', { sanitizedFile, filePath, actualFilePath, exists, ext, projectId: project?.id, projectTitle: project?.title });
+    if (!exists) {
+      // File exists in database but not on disk - this is a data inconsistency
+      console.error('[api/files] File exists in database but not on disk:', { sanitizedFile, filePath, projectId: project?.id, projectTitle: project?.title });
+      return res.status(404).json({ error: 'File not found on server. The file may have been deleted.' });
     }
 
     // Check if project is public or user has access
@@ -89,12 +149,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Grant access if: public, owner, or folder member
     const hasAccess = project.is_public || isOwner || isFolderMember;
 
+    // Debug access decision
+    console.log('[api/files] db project:', project ? { id: project.id, user_id: project.user_id, is_public: project.is_public, folder_id: project.folder_id, for_sale: project.for_sale } : null, { userId, isOwner, isFolderMember, hasAccess });
     if (!hasAccess) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
     // Set secure headers
-    const stats = fs.statSync(filePath);
+    const stats = fs.statSync(actualFilePath);
     const fileSize = stats.size;
 
     // Content-Type based on extension (from CAD formats module)
@@ -115,7 +177,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader('Cache-Control', 'public, max-age=3600');
 
     // Stream file
-    const fileStream = fs.createReadStream(filePath);
+    const fileStream = fs.createReadStream(actualFilePath);
     fileStream.pipe(res);
     
   } catch (error) {

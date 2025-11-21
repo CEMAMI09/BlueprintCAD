@@ -1,6 +1,6 @@
 // Update user privacy setting
-import { getDb } from '../../../lib/db';
-import { getUserFromRequest } from '../../../lib/auth';
+import { getDb } from '../../../db/db';
+import { getUserFromRequest } from '../../../backend/lib/auth';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

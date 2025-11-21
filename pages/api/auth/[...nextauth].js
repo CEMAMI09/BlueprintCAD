@@ -2,8 +2,8 @@ import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { getDb } from '../../../lib/db';
-import { verifyPassword, generateToken } from '../../../lib/auth';
+import { getDb } from '../../../db/db';
+import { verifyPassword, generateToken } from '../../../backend/lib/auth';
 
 export const authOptions = {
   providers: [

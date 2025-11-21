@@ -1,7 +1,7 @@
 'use client';
 
-import InvitationsNotification from '../../components/InvitationsNotification';
-import NotificationsDropdown from '../../components/NotificationsDropdown';
+import InvitationsNotification from '@/components/InvitationsNotification';
+import NotificationsDropdown from '@/components/NotificationsDropdown';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';

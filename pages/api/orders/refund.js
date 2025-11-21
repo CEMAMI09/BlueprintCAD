@@ -3,8 +3,8 @@
  * POST /api/orders/refund
  */
 
-import { getDb } from '../../../lib/db';
-import { getUserFromRequest } from '../../../lib/auth';
+import { getDb } from '../../../db/db';
+import { getUserFromRequest } from '../../../backend/lib/auth';
 const { createRefund } = require('../../../lib/stripe-utils');
 const { sendEmail, emailTemplates } = require('../../../lib/email-templates');
 

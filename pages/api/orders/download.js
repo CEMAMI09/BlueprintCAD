@@ -3,7 +3,7 @@
  * GET /api/orders/download?token=xxx
  */
 
-import { getDb } from '../../../lib/db';
+import { getDb } from '../../../db/db';
 import fs from 'fs';
 import path from 'path';
 
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
     }
 
     // Check if file exists
-    const filePath = path.join(process.cwd(), 'uploads', order.file_path);
+    const filePath = path.join(process.cwd(), 'storage', 'uploads', order.file_path);
     
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'File not found' });

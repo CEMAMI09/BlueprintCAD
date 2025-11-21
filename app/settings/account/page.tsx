@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import Layout from '../../../components/Layout';
+import Layout from '@/components/Layout';
 
 interface ProviderInfo {
   connected: boolean;

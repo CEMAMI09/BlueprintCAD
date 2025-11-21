@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const filePath = path.join(process.cwd(), 'uploads', 'profiles', file);
+    const filePath = path.join(process.cwd(), 'storage', 'uploads', 'profiles', file);
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'File not found' });

@@ -4,13 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import { DrawingSystem, DrawingSheet, ViewType, OrthographicDirection } from '@/lib/cad/drawing-system';
+import { DrawingSystem, DrawingSheet, ViewType, OrthographicDirection } from '@/backend/lib/cad/drawing-system';
 import DrawingSheetViewer from '@/components/cad/DrawingSheetViewer';
 import DrawingControls from '@/components/cad/DrawingControls';
 import DimensionTools from '@/components/cad/DimensionTools';
-import { PDFExporter, DXFExporter } from '@/lib/cad/drawing-exporters';
-import { AnnotationStyle, STANDARD_ANNOTATION_STYLES } from '@/lib/cad/annotation-styles';
-import { GDTSymbolType } from '@/lib/cad/gdt-symbols';
+import { PDFExporter, DXFExporter } from '@/backend/lib/cad/drawing-exporters';
+import { AnnotationStyle, STANDARD_ANNOTATION_STYLES } from '@/backend/lib/cad/annotation-styles';
+import { GDTSymbolType } from '@/backend/lib/cad/gdt-symbols';
 
 export default function DrawingEditor() {
   const [darkMode, setDarkMode] = useState(true);

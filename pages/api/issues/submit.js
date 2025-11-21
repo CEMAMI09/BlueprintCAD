@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import db from '../../../lib/db';
+import db from '../../../db/db';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   try {
     // Parse form data with file upload
     const form = formidable({
-      uploadDir: path.join(process.cwd(), 'public', 'uploads', 'issues'),
+      uploadDir: path.join(process.cwd(), 'storage', 'uploads', 'issues'),
       keepExtensions: true,
       maxFileSize: 5 * 1024 * 1024, // 5MB max
       filter: function ({mimetype}) {
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     });
 
     // Ensure upload directory exists
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'issues');
+    const uploadDir = path.join(process.cwd(), 'storage', 'uploads', 'issues');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
