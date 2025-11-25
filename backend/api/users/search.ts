@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Search users by username (case-insensitive)
     const users = await db.all(`
-      SELECT id, username, bio, created_at
+      SELECT id, username, bio, profile_picture, created_at
       FROM users
       WHERE username LIKE ?
       LIMIT 20

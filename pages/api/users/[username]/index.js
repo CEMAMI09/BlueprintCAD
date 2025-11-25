@@ -8,7 +8,19 @@ export default async function handler(req, res) {
   }
 
   const { username } = req.query;
-  const db = await getDb();
+  
+  let db;
+  try {
+    db = await getDb();
+  } catch (dbError) {
+    console.error('Database connection error:', dbError);
+    return res.status(500).json({ error: 'Database connection failed' });
+  }
+
+  if (!db) {
+    console.error('Database is null');
+    return res.status(500).json({ error: 'Database connection failed' });
+  }
 
   try {
     const user = await db.get(
@@ -58,23 +70,66 @@ export default async function handler(req, res) {
     }
 
     // Get follower and following counts
-    const followerCount = await db.get(
-      'SELECT COUNT(*) as count FROM follows WHERE following_id = ? AND status = 1',
-      [user.id]
-    );
-    const followingCount = await db.get(
-      'SELECT COUNT(*) as count FROM follows WHERE follower_id = ? AND status = 1',
+    // Note: follows table may or may not have a status column
+    // Try querying without status first (since schema doesn't show status column)
+    let followerCount, followingCount;
+    try {
+      // First try without status (standard schema)
+      followerCount = await db.get(
+        'SELECT COUNT(*) as count FROM follows WHERE following_id = ?',
+        [user.id]
+      );
+      followingCount = await db.get(
+        'SELECT COUNT(*) as count FROM follows WHERE follower_id = ?',
+        [user.id]
+      );
+    } catch (err) {
+      // If that fails, try with status column (for migrated schemas)
+      if (err.message && !err.message.includes('no such column')) {
+        try {
+          followerCount = await db.get(
+            'SELECT COUNT(*) as count FROM follows WHERE following_id = ? AND (status = 1 OR status IS NULL)',
+            [user.id]
+          );
+          followingCount = await db.get(
+            'SELECT COUNT(*) as count FROM follows WHERE follower_id = ? AND (status = 1 OR status IS NULL)',
+            [user.id]
+          );
+        } catch (err2) {
+          throw err; // Re-throw original error
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    // Get total stars (likes) across all user's projects
+    const starsData = await db.get(
+      'SELECT COALESCE(SUM(likes), 0) as total FROM projects WHERE user_id = ?',
       [user.id]
     );
 
     // Check if viewer is following this user
     let isFollowing = false;
     if (viewerId && viewerId !== user.id) {
-      const followRecord = await db.get(
-        'SELECT status FROM follows WHERE follower_id = ? AND following_id = ?',
-        [viewerId, user.id]
-      );
-      isFollowing = followRecord?.status === 1;
+      try {
+        const followRecord = await db.get(
+          'SELECT status FROM follows WHERE follower_id = ? AND following_id = ?',
+          [viewerId, user.id]
+        );
+        isFollowing = followRecord && (followRecord.status === 1 || followRecord.status === null || followRecord.status === undefined);
+      } catch (err) {
+        // If status column doesn't exist, just check if record exists
+        if (err.message && err.message.includes('no such column: status')) {
+          const followRecord = await db.get(
+            'SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?',
+            [viewerId, user.id]
+          );
+          isFollowing = !!followRecord;
+        } else {
+          throw err;
+        }
+      }
     }
 
     // Parse visibility options
@@ -100,7 +155,10 @@ export default async function handler(req, res) {
       social_links: socialLinks,
       visibility_options: visibilityOptions,
       followers: followerCount.count,
+      followers_count: followerCount.count, // Also include as followers_count for compatibility
       following: followingCount.count,
+      following_count: followingCount.count, // Also include as following_count for compatibility
+      totalStars: starsData.total || 0,
       isFollowing,
       isOwner
     });

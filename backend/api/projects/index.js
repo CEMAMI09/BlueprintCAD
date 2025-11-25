@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const { username, for_sale } = req.query;
+      const { username, for_sale, search, sort } = req.query;
       
       // Get viewer's username
       let viewerUsername = null;
@@ -35,9 +35,29 @@ export default async function handler(req, res) {
 
       if (for_sale === 'true') {
         query += ' AND p.for_sale = 1';
+      } else if (for_sale === 'false') {
+        query += ' AND (p.for_sale = 0 OR p.for_sale IS NULL)';
       }
 
-      query += ' ORDER BY p.created_at DESC';
+      if (search) {
+        query += ' AND (p.title LIKE ? OR p.description LIKE ? OR p.tags LIKE ?)';
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm, searchTerm);
+      }
+
+      // Handle sorting
+      if (sort === 'recent') {
+        query += ' ORDER BY p.created_at DESC';
+      } else if (sort === 'popular') {
+        query += ' ORDER BY (p.likes * 2 + p.views) DESC, p.created_at DESC';
+      } else if (sort === 'trending') {
+        query += ` ORDER BY (
+          (p.views * 0.3 + p.likes * 0.7 + 
+           CASE WHEN p.updated_at > datetime('now', '-7 days') THEN 10 ELSE 0 END)
+        ) DESC, p.updated_at DESC`;
+      } else {
+        query += ' ORDER BY p.created_at DESC';
+      }
 
       const projects = await db.all(query, params);
       

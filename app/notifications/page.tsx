@@ -1,111 +1,182 @@
-/**
- * Notifications Page - GitHub Style
- * System notifications with filtering and grouping
- */
-
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ThreePanelLayout,
   CenterPanel,
-  RightPanel,
   PanelHeader,
   PanelContent,
 } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
-import { Button, Badge, Tabs, EmptyState } from '@/components/ui/UIComponents';
+import { Card, Button, EmptyState, Badge } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import {
-  Bell,
-  Check,
-  CheckCheck,
-  Star,
-  MessageCircle,
-  Download,
-  DollarSign,
-  GitBranch,
-  Heart,
-  User,
-  Settings,
-  Filter,
-} from 'lucide-react';
+import { Bell, UserPlus, Check, X, User, Heart, MessageCircle } from 'lucide-react';
 
 interface Notification {
-  id: string;
-  type: 'comment' | 'like' | 'download' | 'purchase' | 'follow' | 'version' | 'mention';
-  title: string;
-  description: string;
-  timestamp: string;
-  read: boolean;
-  link: string;
-  avatar?: string;
-  project?: string;
+  id: number;
+  type: string;
+  related_id: number | null;
+  message: string;
+  read: number;
+  created_at: string;
+  username?: string;
+  profile_picture?: string | null;
 }
 
 export default function NotificationsPage() {
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const router = useRouter();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const notifications: Notification[] = [];
+  useEffect(() => {
+    fetchNotifications();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
 
-  const getIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'comment':
-        return MessageCircle;
-      case 'like':
-        return Heart;
-      case 'download':
-        return Download;
-      case 'purchase':
-        return DollarSign;
-      case 'follow':
-        return User;
-      case 'version':
-        return GitBranch;
-      case 'mention':
-        return Star;
-      default:
-        return Bell;
+      const res = await fetch('/api/notifications', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getIconColor = (type: Notification['type']) => {
-    switch (type) {
-      case 'comment':
-        return DS.colors.primary.blue;
-      case 'like':
-        return DS.colors.accent.error;
-      case 'download':
-        return DS.colors.accent.cyan;
-      case 'purchase':
-        return DS.colors.accent.success;
-      case 'follow':
-        return DS.colors.accent.purple;
-      case 'version':
-        return DS.colors.accent.warning;
-      case 'mention':
-        return DS.colors.accent.warning;
-      default:
-        return DS.colors.text.secondary;
+  const markAsRead = async (id: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`/api/notifications/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, read: 1 } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
     }
   };
 
-  const filteredNotifications = notifications.filter(notif => {
-    if (showUnreadOnly && notif.read) return false;
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'mentions') return notif.type === 'mention' || notif.type === 'comment';
-    if (activeFilter === 'purchases') return notif.type === 'purchase';
-    return true;
-  });
+  const deleteNotification = async (id: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Get the notification before deleting to check if it was unread
+      const deletedNotification = notifications.find(n => n.id === id);
+      
+      // Optimistically remove from UI immediately
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      
+      // Update unread count if it was unread
+      if (deletedNotification && deletedNotification.read === 0) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+      
+      // Actually delete from server
+      const res = await fetch(`/api/notifications/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!res.ok) {
+        // If deletion failed, restore the notification
+        const errorText = await res.text();
+        console.error('Failed to delete notification:', errorText);
+        // Re-fetch to restore state
+        fetchNotifications();
+        alert('Failed to delete notification. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      // Re-fetch to restore state on error
+      fetchNotifications();
+      alert('Error deleting notification. Please try again.');
+    }
+  };
 
-  const markAllAsRead = () => {
-    // Implementation would mark all as read
-    console.log('Mark all as read');
+  const handleFollowRequest = async (followerId: number, action: 'accept' | 'reject') => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/users/follow-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ followerId, action })
+      });
+
+      if (res.ok) {
+        // Remove the notification
+        setNotifications(prev => prev.filter(n => 
+          !(n.type === 'follow_request' && n.related_id === followerId)
+        ));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+        // Refresh notifications to show the follow_accepted notification
+        setTimeout(fetchNotifications, 500);
+      }
+    } catch (error) {
+      console.error('Error handling follow request:', error);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'follow':
+      case 'follow_request':
+        return <UserPlus size={20} />;
+      case 'follow_accepted':
+        return <Check size={20} />;
+      case 'like':
+        return <Heart size={20} />;
+      case 'comment':
+        return <MessageCircle size={20} />;
+      default:
+        return <Bell size={20} />;
+    }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
+    return 'just now';
   };
 
   return (
@@ -116,138 +187,115 @@ export default function NotificationsPage() {
           <PanelHeader
             title="Notifications"
             actions={
-              <div className="flex items-center gap-2">
-                {unreadCount > 0 && (
-                  <Badge variant="primary" size="sm">
-                    {unreadCount} new
-                  </Badge>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<CheckCheck size={16} />}
-                  onClick={markAllAsRead}
-                >
-                  Mark all read
-                </Button>
-                <Button variant="ghost" size="sm" icon={<Settings size={16} />} />
-              </div>
+              unreadCount > 0 && (
+                <Badge variant="primary" size="sm">
+                  {unreadCount} new
+                </Badge>
+              )
             }
           />
           <PanelContent>
-            <div className="max-w-7xl mx-auto px-6 py-6">
-              {/* Filters */}
-              <div className="flex items-center justify-between mb-6">
-              <Tabs
-                tabs={[
-                  { id: 'all', label: 'All', badge: notifications.length },
-                  { id: 'mentions', label: 'Mentions', badge: notifications.filter(n => n.type === 'mention' || n.type === 'comment').length },
-                  { id: 'purchases', label: 'Purchases', badge: notifications.filter(n => n.type === 'purchase').length },
-                ]}
-                activeTab={activeFilter}
-                onTabChange={setActiveFilter}
-              />
-              <button
-                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                style={{
-                  backgroundColor: showUnreadOnly ? DS.colors.primary.blue : DS.colors.background.elevated,
-                  color: showUnreadOnly ? '#ffffff' : DS.colors.text.secondary,
-                }}
-                onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-              >
-                <Filter size={14} />
-                Unread only
-              </button>
-            </div>
-
-            {/* Notifications List */}
-            {filteredNotifications.length === 0 ? (
-              <div className="py-16">
+            <div className="max-w-4xl mx-auto px-6 py-6">
+              {loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                </div>
+              ) : notifications.length === 0 ? (
                 <EmptyState
-                  icon={<Bell />}
+                  icon={<Bell size={48} />}
                   title="No notifications"
-                  description={showUnreadOnly ? "You're all caught up!" : "You don't have any notifications yet"}
+                  description="You're all caught up!"
                 />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredNotifications.map((notif) => {
-                  const Icon = getIcon(notif.type);
-                  const iconColor = getIconColor(notif.type);
-                  const isSelected = selectedNotification?.id === notif.id;
-
-                  return (
-                    <Link
-                      key={notif.id}
-                      href={notif.link}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setSelectedNotification(notif);
+              ) : (
+                <div className="space-y-3">
+                  {notifications.map((notification) => (
+                    <Card
+                      key={notification.id}
+                      padding="md"
+                      className={notification.read === 0 ? 'border-l-4' : ''}
+                      style={{
+                        borderLeftColor: notification.read === 0 ? DS.colors.primary.blue : 'transparent'
                       }}
                     >
-                      <div
-                        className="flex items-start gap-4 p-4 rounded-lg border transition-all cursor-pointer"
-                        style={{
-                          backgroundColor: notif.read
-                            ? (isSelected ? DS.colors.background.elevated : DS.colors.background.card)
-                            : `${DS.colors.primary.blue}11`,
-                          borderColor: isSelected ? DS.colors.primary.blue : DS.colors.border.default,
-                        }}
-                      >
-                        {/* Icon */}
-                        <div
+                      <div className="flex items-start gap-4">
+                        <div 
                           className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: `${iconColor}22` }}
+                          style={{ backgroundColor: DS.colors.primary.blue + '20', color: DS.colors.primary.blue }}
                         >
-                          <Icon size={20} style={{ color: iconColor }} />
+                          {notification.profile_picture ? (
+                            <img
+                              src={`/api/users/profile-picture/${notification.profile_picture}`}
+                              alt={notification.username || ''}
+                              className="w-full h-full rounded-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const parent = e.currentTarget.parentElement;
+                                if (parent) {
+                                  parent.textContent = notification.username?.[0]?.toUpperCase() || '?';
+                                }
+                              }}
+                            />
+                          ) : (
+                            getNotificationIcon(notification.type)
+                          )}
                         </div>
 
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-1">
-                            <h3
-                              className="font-semibold"
-                              style={{ color: DS.colors.text.primary }}
-                            >
-                              {notif.title}
-                            </h3>
-                            {!notif.read && (
-                              <div
-                                className="w-2 h-2 rounded-full ml-2 mt-1.5"
-                                style={{ backgroundColor: DS.colors.primary.blue }}
-                              />
-                            )}
-                          </div>
-                          <p
-                            className="text-sm mb-2 line-clamp-2"
-                            style={{ color: DS.colors.text.secondary }}
-                          >
-                            {notif.description}
-                          </p>
-                          <div className="flex items-center gap-3 text-sm" style={{ color: DS.colors.text.tertiary }}>
-                            {notif.avatar && (
-                              <div
-                                className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                                style={{ backgroundColor: DS.colors.primary.blue, color: '#ffffff' }}
-                              >
-                                {notif.avatar}
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <p className="text-sm" style={{ color: DS.colors.text.primary }}>
+                                {notification.message}
+                              </p>
+                              <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
+                                {formatTimeAgo(notification.created_at)}
+                              </p>
+                            </div>
+
+                            {notification.type === 'follow_request' && notification.related_id && (
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  icon={<Check size={14} />}
+                                  onClick={() => handleFollowRequest(notification.related_id!, 'accept')}
+                                >
+                                  Accept
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  icon={<X size={14} />}
+                                  onClick={() => handleFollowRequest(notification.related_id!, 'reject')}
+                                >
+                                  Decline
+                                </Button>
                               </div>
                             )}
-                            <span>{notif.timestamp}</span>
-                            {notif.project && (
-                              <>
-                                <span>•</span>
-                                <span className="truncate">{notif.project}</span>
-                              </>
+
+                            {notification.read === 0 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => markAsRead(notification.id)}
+                              >
+                                Mark read
+                              </Button>
                             )}
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteNotification(notification.id)}
+                            >
+                              ×
+                            </Button>
                           </div>
                         </div>
                       </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </PanelContent>
         </CenterPanel>

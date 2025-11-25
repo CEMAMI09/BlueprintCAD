@@ -5,8 +5,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import {
@@ -19,10 +20,42 @@ import {
   ArrowRight,
   Github,
   Twitter,
+  LogOut,
 } from 'lucide-react';
 
 export default function HomePage() {
+  const router = useRouter();
   const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkUser = () => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      } else {
+        setUser(null);
+      }
+    };
+
+    checkUser();
+    const handleUserChange = () => checkUser();
+    window.addEventListener('userChanged', handleUserChange);
+    window.addEventListener('storage', handleUserChange);
+
+    return () => {
+      window.removeEventListener('userChanged', handleUserChange);
+      window.removeEventListener('storage', handleUserChange);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setUser(null);
+    window.dispatchEvent(new Event('userChanged'));
+    window.dispatchEvent(new Event('storage'));
+    window.location.href = '/';
+  };
 
   const stats = [
     { label: 'Active Designers', value: '50K+' },
@@ -112,12 +145,30 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" size="sm">Sign In</Button>
-            </Link>
-            <Link href="/register">
-              <Button variant="primary" size="sm">Get Started</Button>
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard">
+                  <Button variant="ghost" size="sm">Dashboard</Button>
+                </Link>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  icon={<LogOut size={16} />}
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm">Sign In</Button>
+                </Link>
+                <Link href="/register">
+                  <Button variant="primary" size="sm">Get Started</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>

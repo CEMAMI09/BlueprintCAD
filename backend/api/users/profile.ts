@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const userId = (user as any).userId;
+  const userId = user.userId;
 
   try {
     const form = formidable({
@@ -45,13 +45,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const bio = fields.bio?.[0] || '';
     const location = fields.location?.[0] || '';
     const website = fields.website?.[0] || '';
+    const username = fields.username?.[0] || '';
+    const profilePrivate = fields.profile_private?.[0] === 'true' || fields.profile_private?.[0] === '1';
     const socialLinks = fields.social_links?.[0] || '{}';
     const visibilityOptions = fields.visibility_options?.[0] || '{}';
     
     const db = await getDb();
 
-    // Get current profile picture and banner
-    const currentUser = await db.get('SELECT profile_picture, banner FROM users WHERE id = ?', [userId]);
+    // Get current user data
+    const currentUser = await db.get('SELECT username, profile_picture, banner FROM users WHERE id = ?', [userId]);
+
+    // Validate and update username if changed
+    if (username && username !== currentUser?.username) {
+      // Validate username format
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+        return res.status(400).json({ error: 'Username must be 3-20 characters and contain only letters, numbers, and underscores' });
+      }
+
+      // Check if username is already taken
+      const existingUser = await db.get('SELECT id FROM users WHERE username = ? AND id != ?', [username, userId]);
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username is already taken' });
+      }
+    }
 
     // Validate inputs
     if (bio.length > 500) {
@@ -139,26 +155,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Update user profile
+    const updateFields = [];
+    const updateValues = [];
+
+    if (username && username !== currentUser?.username) {
+      updateFields.push('username = ?');
+      updateValues.push(username);
+    }
+    if (bio !== undefined) {
+      updateFields.push('bio = ?');
+      updateValues.push(bio);
+    }
+    if (profilePicturePath !== null) {
+      updateFields.push('profile_picture = ?');
+      updateValues.push(profilePicturePath);
+    }
+    if (bannerPath !== null) {
+      updateFields.push('banner = ?');
+      updateValues.push(bannerPath);
+    }
+    if (location !== undefined) {
+      updateFields.push('location = ?');
+      updateValues.push(location);
+    }
+    if (website !== undefined) {
+      updateFields.push('website = ?');
+      updateValues.push(website);
+    }
+    updateFields.push('social_links = ?');
+    updateValues.push(JSON.stringify(parsedSocialLinks));
+    updateFields.push('visibility_options = ?');
+    updateValues.push(JSON.stringify(parsedVisibilityOptions));
+    updateFields.push('profile_private = ?');
+    updateValues.push(profilePrivate ? 1 : 0);
+
+    updateValues.push(userId);
+
     await db.run(
-      `UPDATE users SET 
-        bio = ?, 
-        profile_picture = ?, 
-        banner = ?,
-        location = ?,
-        website = ?,
-        social_links = ?,
-        visibility_options = ?
-      WHERE id = ?`,
-      [
-        bio, 
-        profilePicturePath, 
-        bannerPath,
-        location,
-        website,
-        JSON.stringify(parsedSocialLinks),
-        JSON.stringify(parsedVisibilityOptions),
-        userId
-      ]
+      `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`,
+      updateValues
     );
 
     const updatedUser = await db.get(

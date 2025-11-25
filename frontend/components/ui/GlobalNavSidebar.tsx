@@ -25,6 +25,7 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from 'lucide-react';
 
 interface NavItem {
@@ -32,7 +33,7 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
   href: string;
-  badge?: number;
+  badge?: number | string;
 }
 
 const baseNavItems: NavItem[] = [
@@ -54,23 +55,97 @@ export function GlobalNavSidebar() {
   const pathname = usePathname();
   const { leftPanelCollapsed, toggleLeftPanel } = useLayout();
   const [username, setUsername] = useState<string | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        setUsername(user.username);
-      } catch {
-        // Ignore parse errors
+    const checkUser = () => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          setUsername(user.username);
+        } catch {
+          setUsername(null);
+        }
+      } else {
+        setUsername(null);
       }
-    }
+    };
+
+    checkUser();
+    const handleUserChange = () => checkUser();
+    window.addEventListener('userChanged', handleUserChange);
+    window.addEventListener('storage', handleUserChange);
+
+    return () => {
+      window.removeEventListener('userChanged', handleUserChange);
+      window.removeEventListener('storage', handleUserChange);
+    };
   }, []);
 
-  // Update profile href with username if available
+  useEffect(() => {
+    if (!username) {
+      setUnreadNotifications(0);
+      setUnreadMessages(0);
+      return;
+    }
+
+    const fetchUnreadCounts = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        // Fetch unread notifications
+        const notificationsRes = await fetch('/api/notifications', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (notificationsRes.ok) {
+          const notificationsData = await notificationsRes.json();
+          const count = notificationsData.unreadCount || 0;
+          console.log('[GlobalNavSidebar] Unread notifications:', count);
+          setUnreadNotifications(count);
+        }
+
+        // Fetch unread messages
+        const messagesRes = await fetch('/api/messages/unread', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (messagesRes.ok) {
+          const messagesData = await messagesRes.json();
+          const count = messagesData.count || 0;
+          console.log('[GlobalNavSidebar] Unread messages:', count);
+          setUnreadMessages(count);
+        }
+      } catch (error) {
+        console.error('Error fetching unread counts:', error);
+      }
+    };
+
+    fetchUnreadCounts();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchUnreadCounts, 30000);
+    return () => clearInterval(interval);
+  }, [username]);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setUsername(null);
+    window.dispatchEvent(new Event('userChanged'));
+    window.dispatchEvent(new Event('storage'));
+    window.location.href = '/';
+  };
+
+  // Update profile href with username if available and add unread indicators
   const navItems = baseNavItems.map(item => {
     if (item.id === 'profile') {
       return { ...item, href: username ? `/profile/${username}` : '/profile' };
+    }
+    // Only show badge on Messages tab, not Notifications tab
+    if (item.id === 'messages') {
+      const badge = unreadMessages > 0 ? (unreadMessages > 9 ? '9+' : unreadMessages) : undefined;
+      console.log('[GlobalNavSidebar] Messages badge:', badge, 'unreadMessages:', unreadMessages);
+      return { ...item, badge };
     }
     return item;
   });
@@ -148,10 +223,10 @@ export function GlobalNavSidebar() {
                     <span className="flex-1 text-sm font-medium">{item.label}</span>
                     {item.badge && (
                       <span
-                        className="px-2 py-0.5 text-xs font-semibold rounded-full"
+                        className="px-2 py-0.5 text-xs font-semibold rounded-full min-w-[20px] text-center"
                         style={{
-                          backgroundColor: DS.colors.accent.cyan,
-                          color: DS.colors.text.inverse,
+                          backgroundColor: DS.colors.primary.blue,
+                          color: '#ffffff',
                         }}
                       >
                         {item.badge}
@@ -159,17 +234,53 @@ export function GlobalNavSidebar() {
                     )}
                   </>
                 )}
+                {/* Blue badge indicator for unread items when collapsed */}
                 {leftPanelCollapsed && item.badge && (
                   <span
-                    className="absolute top-1 right-1 w-2 h-2 rounded-full"
-                    style={{ backgroundColor: DS.colors.accent.cyan }}
-                  />
+                    className="absolute top-1 right-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-full min-w-[16px] text-center"
+                    style={{
+                      backgroundColor: DS.colors.primary.blue,
+                      color: '#ffffff',
+                    }}
+                  >
+                    {typeof item.badge === 'number' && item.badge > 9 ? '9+' : item.badge}
+                  </span>
                 )}
               </Link>
             );
           })}
         </div>
       </nav>
+
+      {/* User Section & Logout */}
+      {username && (
+        <div
+          className="flex-shrink-0 p-4 border-t"
+          style={{ borderColor: DS.colors.border.subtle }}
+        >
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
+            style={{
+              backgroundColor: DS.colors.background.panelHover,
+              color: DS.colors.text.secondary,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = DS.colors.background.elevated;
+              e.currentTarget.style.color = DS.colors.accent.error;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = DS.colors.background.panelHover;
+              e.currentTarget.style.color = DS.colors.text.secondary;
+            }}
+          >
+            <LogOut size={20} />
+            {!leftPanelCollapsed && (
+              <span className="text-sm font-medium">Logout</span>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Collapse Toggle */}
       <div

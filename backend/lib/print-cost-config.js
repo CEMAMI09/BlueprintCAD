@@ -8,7 +8,7 @@ module.exports = {
   materials: {
     PLA: {
       density: 1.24, // g/cm³
-      costPerKg: 20.20, // USD per kg (20 cents more than ABS)
+      costPerKg: 25.00, // USD per kg
       printSpeed: 55, // mm/s (slightly faster than ABS but not too much)
       bedTemp: 60, // °C
       nozzleTemp: 200, // °C
@@ -17,7 +17,7 @@ module.exports = {
     },
     ABS: {
       density: 1.04,
-      costPerKg: 20.00, // USD per kg
+      costPerKg: 22.00, // USD per kg (less dense and slightly cheaper)
       printSpeed: 50,
       bedTemp: 100,
       nozzleTemp: 240,
@@ -26,7 +26,7 @@ module.exports = {
     },
     PETG: {
       density: 1.27,
-      costPerKg: 23.00,
+      costPerKg: 28.00,
       printSpeed: 50,
       bedTemp: 80,
       nozzleTemp: 235,
@@ -35,7 +35,7 @@ module.exports = {
     },
     TPU: {
       density: 1.21,
-      costPerKg: 36.00,
+      costPerKg: 45.00,
       printSpeed: 25,
       bedTemp: 60,
       nozzleTemp: 220,
@@ -44,7 +44,7 @@ module.exports = {
     },
     Nylon: {
       density: 1.14,
-      costPerKg: 32.00,
+      costPerKg: 40.00,
       printSpeed: 45,
       bedTemp: 80,
       nozzleTemp: 250,
@@ -148,8 +148,8 @@ module.exports = {
 
   // Business factors
   business: {
-    targetMarginPercentage: 35, // 35% markup on costs
-    minimumOrderValue: 15.00, // USD
+    targetMarginPercentage: 30, // 30% markup on costs (reduced from 35%)
+    minimumOrderValue: 12.00, // USD (reduced from $15)
     bulkDiscounts: [
       { quantity: 5, discount: 0.10 }, // 10% off for 5+
       { quantity: 10, discount: 0.15 }, // 15% off for 10+

@@ -114,10 +114,22 @@ async function initSchema(database) {
       CREATE TABLE IF NOT EXISTS follows (
         follower_id INTEGER NOT NULL,
         following_id INTEGER NOT NULL,
+        status INTEGER DEFAULT 1, -- 0 = pending, 1 = accepted
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (follower_id, following_id),
         FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        related_id INTEGER,
+        message TEXT NOT NULL,
+        read INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );
 
       CREATE TABLE IF NOT EXISTS comments (
@@ -171,6 +183,19 @@ async function initSchema(database) {
     if (!hasThumbnailPath) {
       await database.exec(`
         ALTER TABLE projects ADD COLUMN thumbnail_path TEXT;
+      `);
+    }
+
+    // Add status column to follows table if it doesn't exist
+    const followsColumns = await database.all(`PRAGMA table_info(follows)`);
+    const hasStatus = followsColumns.some((c) => c.name === 'status');
+    if (!hasStatus) {
+      await database.exec(`
+        ALTER TABLE follows ADD COLUMN status INTEGER DEFAULT 1;
+      `);
+      // Update existing follows to be accepted
+      await database.exec(`
+        UPDATE follows SET status = 1 WHERE status IS NULL;
       `);
     }
 

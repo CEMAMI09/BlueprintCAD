@@ -52,6 +52,11 @@ class PrintCostEstimator {
 
       // Calculate material properties
       const materialConfig = config.materials[material] || config.materials.PLA;
+      console.log(`[Cost Estimator] Using material: ${material}, Config:`, {
+        density: materialConfig.density,
+        costPerKg: materialConfig.costPerKg,
+        printSpeed: materialConfig.printSpeed
+      });
       const techConfig = config.technologies[technology];
       const qualityConfig = techConfig.qualityLevels?.[quality] || techConfig.qualityLevels?.standard;
 
@@ -63,6 +68,17 @@ class PrintCostEstimator {
         z: dimensions.z * scaleFactor,
         volume: dimensions.volume * Math.pow(scaleFactor, 3)
       };
+      
+      // Validate dimensions are reasonable (catch unit conversion errors)
+      const maxDim = Math.max(scaledDimensions.x, scaledDimensions.y, scaledDimensions.z);
+      if (maxDim > 10000) {
+        console.warn(`[Cost Estimator] Suspiciously large dimensions detected (${maxDim.toFixed(2)}mm). Possible unit conversion error.`);
+      }
+      if (scaledDimensions.volume < 0 || scaledDimensions.volume > 1e12) {
+        console.warn(`[Cost Estimator] Suspicious volume detected (${scaledDimensions.volume.toFixed(2)}mm³). Possible calculation error.`);
+      }
+      
+      console.log(`[Cost Estimator] Scaled dimensions: ${scaledDimensions.x.toFixed(2)} x ${scaledDimensions.y.toFixed(2)} x ${scaledDimensions.z.toFixed(2)} mm, Volume: ${scaledDimensions.volume.toFixed(4)} mm³ (${(scaledDimensions.volume/1000).toFixed(6)} cm³)`);
 
       // Determine complexity
       const complexity = this.analyzeComplexity(dimensions, fileSizeMB, hasGeometryData);
@@ -119,12 +135,82 @@ class PrintCostEstimator {
       );
 
       // Build response
-      const subtotal = costs.total * quantity;
+      // For very small objects, reduce fixed costs proportionally
+      const maxDimension = Math.max(scaledDimensions.x, scaledDimensions.y, scaledDimensions.z);
+      const volumeCm3 = scaledDimensions.volume / 1000;
+      const isMicroObject = maxDimension < 5 || volumeCm3 < 0.1; // Less than 5mm or 0.1cm³
+      const isSmallObject = maxDimension < 100 && volumeCm3 < 500; // Less than 100mm or 500cm³
+      
+      let adjustedCosts = costs;
+      if (isMicroObject) {
+        // For micro objects, reduce labor and setup costs significantly
+        // They take less time to handle and can be batched
+        const microMultiplier = Math.max(0.2, Math.min(1.0, Math.max(maxDimension / 5, volumeCm3 * 20))); // Scale from 20% to 100%
+        adjustedCosts = {
+          material: costs.material,
+          machineTime: costs.machineTime,
+          labor: costs.labor * microMultiplier,
+          setup: costs.setup * microMultiplier,
+          overhead: costs.overhead * 0.4, // Much less overhead for tiny objects
+          qualityControl: costs.qualityControl * microMultiplier,
+          packaging: costs.packaging * 0.3, // Much smaller packaging
+          total: costs.material + costs.machineTime + 
+                 (costs.labor * microMultiplier) + 
+                 (costs.setup * microMultiplier) +
+                 (costs.overhead * 0.4) +
+                 (costs.qualityControl * microMultiplier) +
+                 (costs.packaging * 0.3)
+        };
+        console.log(`[Cost Estimator] Micro object detected (${maxDimension.toFixed(2)}mm max, ${volumeCm3.toFixed(6)}cm³). Applying micro multiplier: ${microMultiplier.toFixed(2)}`);
+        console.log(`[Cost Estimator] Original total: $${costs.total.toFixed(4)}, Adjusted total: $${adjustedCosts.total.toFixed(4)}`);
+      } else if (isSmallObject) {
+        // For small/medium objects (like 60mm cubes), reduce fixed costs more aggressively
+        // Scale reductions based on size - smaller objects get bigger discounts
+        // For 60mm objects, multiplier should be around 0.6 (60% of costs)
+        const sizeMultiplier = Math.max(0.3, Math.min(0.7, maxDimension / 100)); // 30-70% based on size
+        adjustedCosts = {
+          material: costs.material,
+          machineTime: costs.machineTime,
+          labor: costs.labor * sizeMultiplier, // 30-70% reduction for small objects
+          setup: costs.setup * sizeMultiplier,
+          overhead: costs.overhead * 0.5, // 50% reduction for small objects
+          qualityControl: costs.qualityControl * sizeMultiplier,
+          packaging: costs.packaging * 0.5, // 50% reduction for small objects
+          total: costs.material + costs.machineTime + 
+                 (costs.labor * sizeMultiplier) + 
+                 (costs.setup * sizeMultiplier) +
+                 (costs.overhead * 0.5) +
+                 (costs.qualityControl * sizeMultiplier) +
+                 (costs.packaging * 0.5)
+        };
+        console.log(`[Cost Estimator] Small object detected (${maxDimension.toFixed(2)}mm max, ${volumeCm3.toFixed(2)}cm³). Applying small object discounts with multiplier: ${sizeMultiplier.toFixed(2)}`);
+        console.log(`[Cost Estimator] Original total: $${costs.total.toFixed(2)}, Adjusted total: $${adjustedCosts.total.toFixed(2)}`);
+      }
+      
+      const subtotal = adjustedCosts.total * quantity;
       const markup = subtotal * config.business.targetMarginPercentage / 100;
       const discount = this.calculateBulkDiscount(quantity);
       const discountAmount = (subtotal + markup) * discount;
       const totalBeforeShipping = subtotal + markup - discountAmount;
-      const grandTotal = Math.max(totalBeforeShipping + shippingCost, config.business.minimumOrderValue);
+      
+      // For micro objects, use a lower minimum order value (but not less than $5)
+      // For small objects, don't force minimum if calculated is reasonable
+      let effectiveMinimum = config.business.minimumOrderValue;
+      if (isMicroObject) {
+        effectiveMinimum = Math.max(5.00, Math.min(15.00, totalBeforeShipping * 1.1));
+      } else if (isSmallObject) {
+        // For small objects, use a lower minimum (don't force $12 if calculated is lower)
+        effectiveMinimum = Math.max(8.00, totalBeforeShipping * 0.95); // Allow prices down to $8 for small objects
+      }
+      let grandTotal = Math.max(totalBeforeShipping + shippingCost, effectiveMinimum);
+      
+      // Safety cap: For small objects, never exceed $50 (should be much lower, but prevents runaway calculations)
+      if (isSmallObject && grandTotal > 50.00) {
+        console.warn(`[Cost Estimator] Small object total exceeded $50 ($${grandTotal.toFixed(2)}), capping at $50. Check print time calculation.`);
+        grandTotal = 50.00;
+      }
+      
+      console.log(`[Cost Estimator] Final calculation: Subtotal=$${subtotal.toFixed(2)}, Markup=$${markup.toFixed(2)}, Shipping=$${shippingCost.toFixed(2)}, Total=$${grandTotal.toFixed(2)}`);
 
       return {
         success: true,
@@ -135,14 +221,14 @@ class PrintCostEstimator {
           quantity: quantity
         },
         breakdown: {
-          material: costs.material,
-          machineTime: costs.machineTime,
-          labor: costs.labor,
-          setup: costs.setup,
-          overhead: costs.overhead,
-          qualityControl: costs.qualityControl,
-          packaging: costs.packaging,
-          subtotal: costs.total,
+          material: adjustedCosts.material,
+          machineTime: adjustedCosts.machineTime,
+          labor: adjustedCosts.labor,
+          setup: adjustedCosts.setup,
+          overhead: adjustedCosts.overhead,
+          qualityControl: adjustedCosts.qualityControl,
+          packaging: adjustedCosts.packaging,
+          subtotal: adjustedCosts.total,
           markup: markup,
           discount: discountAmount,
           shipping: shippingCost
@@ -184,11 +270,20 @@ class PrintCostEstimator {
     const volumeMm3 = dimensions.volume;
     const volumeCm3 = volumeMm3 / 1000;
 
+    console.log(`[Weight Calculation] Volume: ${volumeMm3.toFixed(2)} mm³ = ${volumeCm3.toFixed(4)} cm³`);
+
     // Calculate shell volume (walls + top/bottom)
-    const wallVolumeFraction = 0.15; // ~15% of bounding box is shell
+    // For a typical print: 2-3 perimeters (0.4mm nozzle) = ~0.8-1.2mm walls
+    // Top/bottom layers: typically 4-6 layers at 0.2mm = 0.8-1.2mm
+    // Shell typically represents 10-20% of bounding box volume
+    const wallVolumeFraction = 0.12; // ~12% of bounding box is shell (reduced from 15%)
 
     // Calculate infill volume
-    const infillVolumeFraction = (infill / 100) * 0.85; // 85% of interior can have infill
+    // Infill only applies to the interior (not the shell area)
+    // Interior volume = 100% - shell% = ~88%
+    // Infill density applies to that interior
+    const interiorVolumeFraction = 1.0 - wallVolumeFraction; // ~88% is interior
+    const infillVolumeFraction = (infill / 100) * interiorVolumeFraction; // Infill applies to interior
 
     // Total effective volume fraction
     let effectiveVolumeFraction = wallVolumeFraction + infillVolumeFraction;
@@ -201,6 +296,8 @@ class PrintCostEstimator {
     // Calculate weight
     const weight = volumeCm3 * materialConfig.density * effectiveVolumeFraction;
 
+    console.log(`[Weight Calculation] Shell: ${(wallVolumeFraction * 100).toFixed(1)}%, Infill: ${(infillVolumeFraction * 100).toFixed(1)}%, Effective: ${(effectiveVolumeFraction * 100).toFixed(1)}%, Density: ${materialConfig.density} g/cm³, Weight: ${weight.toFixed(2)}g`);
+
     return weight;
   }
 
@@ -208,7 +305,11 @@ class PrintCostEstimator {
    * Calculate accurate print time with proper overhead
    */
   calculateAccuratePrintTime(dimensions, layerHeight, printSpeed, complexity, technology) {
-    const layers = Math.ceil(dimensions.z / layerHeight);
+    // For very small objects, use a more accurate calculation
+    const maxDimension = Math.max(dimensions.x, dimensions.y, dimensions.z);
+    const isMicroObject = maxDimension < 5;
+    
+    const layers = Math.max(1, Math.ceil(dimensions.z / layerHeight));
     
     // Estimate perimeter length per layer (rough approximation)
     const avgPerimeterLength = 2 * (dimensions.x + dimensions.y);
@@ -220,26 +321,43 @@ class PrintCostEstimator {
     const infillPathLength = (layerArea * infillDensity) / infillSpacing;
     
     // Total extrusion path length
-    const pathLengthPerLayer = avgPerimeterLength * 2 + infillPathLength; // 2 perimeters
+    // Use 2 perimeters for outer walls, but reduce infill calculation for efficiency
+    const pathLengthPerLayer = avgPerimeterLength * 2 + (infillPathLength * 0.7); // Slightly reduce infill estimate
     const totalPathLength = pathLengthPerLayer * layers;
     
-    // Calculate print time
-    const printTimeSeconds = totalPathLength / printSpeed;
+    // Calculate print time (account for acceleration/deceleration)
+    // Real printers don't run at full speed constantly, so add efficiency factor
+    const efficiencyFactor = 0.80; // 80% efficiency (improved from 75%)
+    const printTimeSeconds = (totalPathLength / printSpeed) / efficiencyFactor;
     
     // Add overhead
     const firstLayerTime = avgPerimeterLength / config.printSettings.firstLayerSpeed;
-    const travelTime = totalPathLength * 0.3 / config.printSettings.travelSpeed; // 30% of path is travel
-    const retractTime = layers * 2; // 2 seconds per layer for retractions
+    const travelTime = totalPathLength * 0.20 / config.printSettings.travelSpeed; // 20% of path is travel (reduced from 25%)
+    const retractTime = layers * 1.0; // 1 second per layer (reduced from 1.5)
     
     // Total time in hours
     let totalTimeHours = (printTimeSeconds + firstLayerTime + travelTime + retractTime) / 3600;
     
-    // Apply complexity multiplier
-    totalTimeHours *= complexity.timeMultiplier;
+    console.log(`[Cost Estimator] Print time calculation: ${layers} layers, ${totalPathLength.toFixed(0)}mm path, ${totalTimeHours.toFixed(3)}h total`);
     
-    // Add setup time
+    // For micro objects, reduce complexity multiplier impact
+    // For small objects, also reduce complexity penalty
+    if (isMicroObject) {
+      totalTimeHours *= Math.max(0.7, complexity.timeMultiplier * 0.8); // Less complexity penalty for tiny objects
+    } else if (maxDimension < 100) {
+      // For small objects (< 100mm), reduce complexity multiplier
+      totalTimeHours *= Math.max(0.8, complexity.timeMultiplier * 0.9); // Less penalty for small objects
+    } else {
+      totalTimeHours *= complexity.timeMultiplier;
+    }
+    
+    // Add setup time (but less for micro objects that can be batched)
     const techConfig = config.technologies[technology];
-    totalTimeHours += techConfig.setupTime / 60;
+    const setupTimeHours = isMicroObject ? (techConfig.setupTime / 60) * 0.5 : (techConfig.setupTime / 60);
+    totalTimeHours += setupTimeHours;
+    
+    // Ensure minimum print time is reasonable (at least 1 minute for setup)
+    totalTimeHours = Math.max(totalTimeHours, 0.017); // Minimum 1 minute
     
     return totalTimeHours;
   }
@@ -248,33 +366,57 @@ class PrintCostEstimator {
    * Calculate detailed cost breakdown
    */
   calculateDetailedCosts(weight, printTime, materialConfig, techConfig, complexity, quantity) {
-    // Material cost
-    const materialCost = (weight / 1000) * materialConfig.costPerKg;
+    // Material cost - weight is in grams, convert to kg and multiply by cost per kg
+    // Ensure minimum material cost for very tiny objects (at least 0.1g worth)
+    const effectiveWeight = Math.max(weight, 0.1); // Minimum 0.1g
+    const materialCost = (effectiveWeight / 1000) * materialConfig.costPerKg;
+    
+    console.log(`[Cost Estimator] Material: ${materialConfig.name || 'Unknown'}, Weight: ${weight.toFixed(4)}g (effective: ${effectiveWeight.toFixed(4)}g), Cost/kg: $${materialConfig.costPerKg}, Material Cost: $${materialCost.toFixed(4)}`);
     
     // Machine time cost (includes power)
-    const machineTimeCost = printTime * techConfig.baseMachineHourlyCost;
+    // For very short prints (< 5 minutes), use a minimum time charge
+    const minPrintTime = 0.083; // 5 minutes minimum
+    const effectivePrintTime = Math.max(printTime, minPrintTime);
+    const machineTimeCost = effectivePrintTime * techConfig.baseMachineHourlyCost;
     
-    // Labor cost
+    console.log(`[Cost Estimator] Print time: ${printTime.toFixed(4)}h (effective: ${effectivePrintTime.toFixed(4)}h), Machine cost: $${machineTimeCost.toFixed(4)}`);
+    
+    // Labor cost - scale based on print time
     const laborTime = config.costFactors.laborTimePerPrint;
-    const laborCost = laborTime * config.costFactors.laborRate;
+    // Scale labor time based on actual print time (minimum 5 minutes, max 15 minutes)
+    const laborMultiplier = Math.min(1.0, Math.max(0.33, effectivePrintTime / 0.25)); // Scale from 33% to 100%
+    const laborCost = laborTime * config.costFactors.laborRate * laborMultiplier;
     
-    // Setup cost (amortized for quantity)
-    const setupCost = techConfig.setupCost / Math.min(quantity, 10);
+    // Setup cost (amortized for quantity, but with reasonable minimum)
+    // For small/medium prints, reduce setup cost
+    const baseSetupCost = techConfig.setupCost / Math.min(quantity, 10);
+    const setupMultiplier = effectivePrintTime < 2 ? 0.6 : 1.0; // 40% reduction for prints under 2 hours
+    const setupCost = Math.max(baseSetupCost * setupMultiplier, 1.00); // Minimum $1 setup
     
-    // Failure risk overhead
+    // Failure risk overhead - reduced for simple/small objects
     const failureRiskCost = (materialCost + machineTimeCost) * complexity.failureRisk;
     
-    // Quality control
-    const qcCost = config.costFactors.qcCost;
+    // Quality control - scale based on print time and complexity
+    const qcMultiplier = effectivePrintTime < 1 ? 0.4 : (effectivePrintTime < 2 ? 0.6 : 1.0);
+    const qcCost = config.costFactors.qcCost * qcMultiplier;
     
-    // Packaging
-    const packagingCost = config.costFactors.packagingCost;
+    // Packaging - scale based on weight
+    let packagingCost = config.costFactors.packagingCost;
+    if (weight < 10) {
+      packagingCost *= 0.4; // 60% reduction for < 10g
+    } else if (weight < 50) {
+      packagingCost *= 0.6; // 40% reduction for < 50g
+    } else if (weight < 200) {
+      packagingCost *= 0.8; // 20% reduction for < 200g
+    }
     
-    // Total overhead (electricity, facility, etc.)
-    const overheadCost = printTime * config.costFactors.electricityCostPerKWh * config.costFactors.printerPowerConsumption;
+    // Total overhead (electricity, facility, etc.) - proportional to print time
+    const overheadCost = effectivePrintTime * config.costFactors.electricityCostPerKWh * config.costFactors.printerPowerConsumption;
     
     const total = materialCost + machineTimeCost + laborCost + setupCost + 
                   failureRiskCost + qcCost + packagingCost + overheadCost;
+    
+    console.log(`[Cost Estimator] Cost breakdown: Material=$${materialCost.toFixed(2)}, Machine=$${machineTimeCost.toFixed(2)}, Labor=$${laborCost.toFixed(2)}, Setup=$${setupCost.toFixed(2)}, QC=$${qcCost.toFixed(2)}, Packaging=$${packagingCost.toFixed(2)}, Overhead=$${overheadCost.toFixed(2)}, Total=$${total.toFixed(2)}`);
     
     return {
       material: materialCost,

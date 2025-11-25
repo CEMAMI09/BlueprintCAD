@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await db.run('UPDATE forum_threads SET views = views + 1 WHERE id = ?', [id]);
       
       const thread = await db.get(
-        `SELECT t.*, u.username 
+        `SELECT t.*, u.username, u.profile_picture 
          FROM forum_threads t 
          JOIN users u ON t.user_id = u.id 
          WHERE t.id = ?`,
@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const replies = await db.all(
-        `SELECT r.*, u.username 
+        `SELECT r.*, u.username, u.profile_picture 
          FROM forum_replies r 
          JOIN users u ON r.user_id = u.id 
          WHERE r.thread_id = ? 
@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const reply = await db.get(
-        `SELECT r.*, u.username 
+        `SELECT r.*, u.username, u.profile_picture 
          FROM forum_replies r 
          JOIN users u ON r.user_id = u.id 
          WHERE r.id = ?`,

@@ -1,0 +1,17 @@
+"filename", "language", "TypeScript JSX", "JavaScript", "TypeScript", "Diff", "comment", "blank", "total"
+"/Users/user/Documents/BlueprintCAD/app/buy/page.tsx", "TypeScript JSX", 492, 0, 0, 0, 9, 38, 539
+"/Users/user/Documents/BlueprintCAD/app/dashboard/page.tsx", "TypeScript JSX", 6, 0, 0, 0, 0, 0, 6
+"/Users/user/Documents/BlueprintCAD/app/marketplace/page.tsx", "TypeScript JSX", 55, 0, 0, 0, 0, 0, 55
+"/Users/user/Documents/BlueprintCAD/app/messages/page.tsx", "TypeScript JSX", 322, 0, 0, 0, 7, 10, 339
+"/Users/user/Documents/BlueprintCAD/app/notifications/page.tsx", "TypeScript JSX", 12, 0, 0, 0, 7, 4, 23
+"/Users/user/Documents/BlueprintCAD/app/profile/[username]/page.tsx", "TypeScript JSX", 11, 0, 0, 0, 0, 0, 11
+"/Users/user/Documents/BlueprintCAD/app/project/[id]/page.tsx", "TypeScript JSX", 13, 0, 0, 0, 0, 1, 14
+"/Users/user/Documents/BlueprintCAD/app/quote/page.tsx", "TypeScript JSX", 52, 0, 0, 0, 6, 5, 63
+"/Users/user/Documents/BlueprintCAD/frontend/components/ui/GlobalNavSidebar.tsx", "TypeScript JSX", -5, 0, 0, 0, 1, 0, -4
+"/Users/user/Documents/BlueprintCAD/next.config.js", "JavaScript", 0, -5, 0, 0, 9, 0, 4
+"/Users/user/Documents/BlueprintCAD/pages/api/dashboard/stats.js", "JavaScript", 0, 0, 0, 0, -1, 0, -1
+"/Users/user/Documents/BlueprintCAD/pages/api/messages.ts", "TypeScript", 0, 0, 1, 0, 0, 0, 1
+"/Users/user/Documents/BlueprintCAD/pages/api/notifications.ts", "TypeScript", 0, 0, -50, 0, -4, -11, -65
+"/Users/user/Documents/BlueprintCAD/pages/api/users/following-list.js", "JavaScript", 0, 50, 0, 0, 2, 7, 59
+"/Users/user/Documents/BlueprintCAD/patches/next+13.5.6.patch", "Diff", 0, 0, 0, 1671, 0, 1, 1672
+"Total", "-", 958, 45, -49, 1671, 36, 55, 2716

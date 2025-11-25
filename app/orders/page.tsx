@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -33,37 +32,43 @@ interface Order {
 }
 
 export default function OrdersPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'purchases' | 'sales'>('purchases');
+  const [activeTab, setActiveTab] = useState<'purchases' | 'sales' | 'manufacturing'>('purchases');
   const [purchases, setPurchases] = useState<Order[]>([]);
   const [sales, setSales] = useState<Order[]>([]);
+  const [manufacturingOrders, setManufacturingOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalPurchases: 0,
     totalSales: 0,
+    totalManufacturingOrders: 0,
     totalSpent: 0,
     totalEarnings: 0,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      router.push('/login?redirect=/orders');
       return;
     }
 
-    if (status === 'authenticated') {
-      fetchOrders();
-    }
-  }, [status, router]);
+    fetchOrders();
+  }, [router]);
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch('/api/orders/my-orders?type=all');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/orders/my-orders?type=all', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setPurchases(data.purchases || []);
         setSales(data.sales || []);
+        setManufacturingOrders(data.manufacturingOrders || []);
         setStats(data.stats || {});
       }
     } catch (error) {
@@ -132,7 +137,7 @@ export default function OrdersPage() {
     return new Date(expiresAt) < new Date();
   };
 
-  const orders = activeTab === 'purchases' ? purchases : sales;
+  const orders = activeTab === 'purchases' ? purchases : activeTab === 'sales' ? sales : [];
 
   if (loading) {
     return (
@@ -156,7 +161,7 @@ export default function OrdersPage() {
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <p className="text-sm text-gray-400">Total Spent</p>
-            <p className="text-2xl font-bold text-red-500">${stats.totalSpent.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-red-500">${typeof stats.totalSpent === 'string' ? stats.totalSpent : stats.totalSpent.toFixed(2)}</p>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <p className="text-sm text-gray-400">Total Sales</p>
@@ -164,8 +169,14 @@ export default function OrdersPage() {
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <p className="text-sm text-gray-400">Total Earnings</p>
-            <p className="text-2xl font-bold text-green-500">${stats.totalEarnings.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-green-500">${typeof stats.totalEarnings === 'string' ? stats.totalEarnings : stats.totalEarnings.toFixed(2)}</p>
           </div>
+          {stats.totalManufacturingOrders > 0 && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+              <p className="text-sm text-gray-400">Manufacturing Orders</p>
+              <p className="text-2xl font-bold text-blue-500">{stats.totalManufacturingOrders}</p>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -190,10 +201,85 @@ export default function OrdersPage() {
           >
             Sales ({sales.length})
           </button>
+          {manufacturingOrders.length > 0 && (
+            <button
+              onClick={() => setActiveTab('manufacturing')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'manufacturing'
+                  ? 'text-blue-500 border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Manufacturing ({manufacturingOrders.length})
+            </button>
+          )}
         </div>
 
         {/* Orders List */}
-        {orders.length === 0 ? (
+        {activeTab === 'manufacturing' ? (
+          manufacturingOrders.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-gray-400 text-lg mb-4">
+                You haven't placed any manufacturing orders yet
+              </p>
+              <Link
+                href="/quote"
+                className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+              >
+                Get a Quote
+              </Link>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {manufacturingOrders.map((order: any) => (
+                <div
+                  key={order.id}
+                  className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-colors"
+                >
+                  <div className="flex flex-col md:flex-row gap-6">
+                    <div className="flex-1">
+                      <div className="flex flex-col md:flex-row justify-between mb-3">
+                        <div>
+                          <h3 className="text-xl font-bold mb-1">{order.file_name}</h3>
+                          <p className="text-sm text-gray-400">Order #{order.order_number}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-green-500 mb-1">{order.estimated_cost}</p>
+                          <p className="text-sm text-gray-400">Estimated Cost</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+                        <div>
+                          <p className="text-gray-400">Status</p>
+                          <p className="font-medium capitalize">{order.status}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Material</p>
+                          <p className="font-medium">{order.material || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Delivery</p>
+                          <p className="font-medium">{order.delivery_time || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Order Date</p>
+                          <p className="font-medium">{formatDate(order.created_at)}</p>
+                        </div>
+                      </div>
+                      
+                      {order.dimensions && (
+                        <div className="text-sm text-gray-400">
+                          <p>Dimensions: {order.dimensions}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : orders.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-gray-400 text-lg mb-4">
               {activeTab === 'purchases' 

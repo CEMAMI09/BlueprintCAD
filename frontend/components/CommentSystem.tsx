@@ -42,8 +42,10 @@ export default function CommentSystem({
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [editingComment, setEditingComment] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [mentionSuggestions, setMentionSuggestions] = useState<string[]>([]);
+  const [mentionSuggestions, setMentionSuggestions] = useState<Array<{id: number, username: string, avatar?: string}>>([]);
   const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -72,9 +74,13 @@ export default function CommentSystem({
   const handleSubmitComment = async (parentId?: number) => {
     const content = parentId ? (document.getElementById(`reply-${parentId}`) as HTMLTextAreaElement)?.value : newComment;
     
-    if (!content || content.trim().length === 0) return;
+    if (!content || content.trim().length === 0) {
+      console.log('[CommentSystem] Cannot submit empty comment');
+      return;
+    }
 
     try {
+      console.log('[CommentSystem] Submitting comment:', { entityType, entityId, content: content.substring(0, 50) });
       const res = await fetch(`/api/comments/on/${entityType}/${entityId}`, {
         method: 'POST',
         headers: {
@@ -88,12 +94,20 @@ export default function CommentSystem({
       });
 
       if (res.ok) {
+        const data = await res.json();
+        console.log('[CommentSystem] Comment posted successfully:', data);
         setNewComment('');
         setReplyingTo(null);
+        setShowMentions(false);
         fetchComments();
+      } else {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[CommentSystem] Failed to post comment:', res.status, errorData);
+        alert(`Failed to post comment: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Failed to post comment:', error);
+      console.error('[CommentSystem] Error posting comment:', error);
+      alert('Network error while posting comment. Please try again.');
     }
   };
 
@@ -153,15 +167,91 @@ export default function CommentSystem({
     }
   };
 
-  const detectMentions = (text: string) => {
-    const cursorPos = textareaRef.current?.selectionStart || 0;
-    const textBeforeCursor = text.substring(0, cursorPos);
+  const detectMentions = async (text: string, cursorPos?: number) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    // Use provided cursor position or get from textarea
+    const currentCursorPos = cursorPos !== undefined ? cursorPos : (textarea.selectionStart || 0);
+    const textBeforeCursor = text.substring(0, currentCursorPos);
     const lastAtSymbol = textBeforeCursor.lastIndexOf('@');
     
-    if (lastAtSymbol !== -1 && lastAtSymbol === cursorPos - 1) {
-      setShowMentions(true);
-      // In production, fetch actual user suggestions
-      setMentionSuggestions(['user1', 'user2', 'testuser']);
+    if (lastAtSymbol !== -1) {
+      // Check if there's a space after @ (meaning we're past the mention)
+      const textAfterAt = textBeforeCursor.substring(lastAtSymbol + 1);
+      if (textAfterAt.includes(' ') || textAfterAt.includes('\n')) {
+        setShowMentions(false);
+        return;
+      }
+
+      // Get the query after @
+      const query = textAfterAt.trim();
+      setMentionQuery(query);
+
+      // Calculate position for dropdown - place it right after the @ symbol
+      const textareaRect = textarea.getBoundingClientRect();
+      
+      // Create a temporary span to measure text width up to and including the @
+      const textUpToAt = textBeforeCursor.substring(0, lastAtSymbol + 1);
+      const measureDiv = document.createElement('span');
+      measureDiv.style.position = 'absolute';
+      measureDiv.style.visibility = 'hidden';
+      measureDiv.style.whiteSpace = 'pre';
+      measureDiv.style.font = window.getComputedStyle(textarea).font;
+      measureDiv.style.fontSize = window.getComputedStyle(textarea).fontSize;
+      measureDiv.style.fontFamily = window.getComputedStyle(textarea).fontFamily;
+      measureDiv.style.paddingLeft = window.getComputedStyle(textarea).paddingLeft;
+      measureDiv.style.paddingRight = window.getComputedStyle(textarea).paddingRight;
+      measureDiv.textContent = textUpToAt;
+      document.body.appendChild(measureDiv);
+      const atSymbolX = measureDiv.offsetWidth;
+      document.body.removeChild(measureDiv);
+
+      // Get line height to calculate vertical position
+      const lineHeight = parseFloat(window.getComputedStyle(textarea).lineHeight) || 20;
+      const paddingTop = parseFloat(window.getComputedStyle(textarea).paddingTop) || 12;
+      
+      // Calculate which line the cursor is on
+      const textBeforeCursorLines = textBeforeCursor.split('\n');
+      const currentLine = textBeforeCursorLines.length - 1;
+      const verticalOffset = paddingTop + (currentLine * lineHeight) + lineHeight + 5;
+
+      setMentionPosition({
+        top: textareaRect.top + verticalOffset,
+        left: textareaRect.left + parseFloat(window.getComputedStyle(textarea).paddingLeft) + atSymbolX - 10
+      });
+
+      // Fetch user suggestions (only from following users)
+      // When query is empty (just @), fetch all following users
+      // When query has text, filter following users
+      try {
+        const url = query.length > 0 
+          ? `/api/users/search?query=${encodeURIComponent(query)}&following=true`
+          : `/api/users/search?query=&following=true`;
+        
+        console.log('[CommentSystem] Fetching mentions from:', url);
+        const res = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (res.ok) {
+          const users = await res.json();
+          console.log('[CommentSystem] Fetched following users:', users.length, users);
+          setMentionSuggestions(users);
+          // Always show dropdown if we have users, or if query is empty (to show "no users" state)
+          setShowMentions(true);
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          console.error('[CommentSystem] Failed to fetch users:', res.status, errorData);
+          setShowMentions(false);
+        }
+      } catch (error) {
+        console.error('[CommentSystem] Error fetching user suggestions:', error);
+        setShowMentions(false);
+      }
     } else {
       setShowMentions(false);
     }
@@ -179,7 +269,54 @@ export default function CommentSystem({
     const newText = textBefore.substring(0, lastAtPos) + `@${username} ` + textAfter;
     setNewComment(newText);
     setShowMentions(false);
-    textarea.focus();
+    
+    // Set cursor position after the inserted mention
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = lastAtPos + username.length + 2; // +2 for @ and space
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
+  const renderContentWithMentions = (content: string) => {
+    // Replace @mentions with markdown links before passing to ReactMarkdown
+    const mentionRegex = /@(\w+)/g;
+    const processedContent = content.replace(mentionRegex, (match, username) => {
+      return `[@${username}](/profile/${username})`;
+    });
+
+    return (
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => <p className="text-sm text-gray-300 mb-2">{children}</p>,
+          code: ({ children }) => (
+            <code className="bg-gray-800 px-1.5 py-0.5 rounded text-xs">{children}</code>
+          ),
+          a: ({ href, children }) => {
+            // Check if this is a mention link
+            const isMention = href?.startsWith('/profile/') && String(children).startsWith('@');
+            return (
+              <a
+                href={href}
+                className={isMention ? "text-blue-400 hover:underline font-medium" : "text-blue-400 hover:underline"}
+                onClick={(e) => {
+                  if (isMention) {
+                    e.preventDefault();
+                    window.location.href = href || '#';
+                  }
+                }}
+                target={isMention ? undefined : "_blank"}
+                rel={isMention ? undefined : "noopener noreferrer"}
+              >
+                {children}
+              </a>
+            );
+          }
+        }}
+      >
+        {processedContent}
+      </ReactMarkdown>
+    );
   };
 
   const renderComment = (comment: Comment, depth: number = 0) => {
@@ -244,21 +381,7 @@ export default function CommentSystem({
               </div>
             ) : (
               <div className="prose prose-sm prose-invert max-w-none">
-                <ReactMarkdown
-                  components={{
-                    p: ({ children }) => <p className="text-sm text-gray-300 mb-2">{children}</p>,
-                    code: ({ children }) => (
-                      <code className="bg-gray-800 px-1.5 py-0.5 rounded text-xs">{children}</code>
-                    ),
-                    a: ({ href, children }) => (
-                      <a href={href} className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">
-                        {children}
-                      </a>
-                    )
-                  }}
-                >
-                  {comment.content}
-                </ReactMarkdown>
+                {renderContentWithMentions(comment.content)}
               </div>
             )}
 
@@ -361,8 +484,19 @@ export default function CommentSystem({
           ref={textareaRef}
           value={newComment}
           onChange={(e) => {
-            setNewComment(e.target.value);
-            detectMentions(e.target.value);
+            const value = e.target.value;
+            const cursorPos = e.target.selectionStart || 0;
+            setNewComment(value);
+            // Use setTimeout to ensure cursor position is updated
+            setTimeout(() => {
+              detectMentions(value, cursorPos);
+            }, 0);
+          }}
+          onKeyUp={(e) => {
+            // Also check on keyup to catch @ key press
+            const value = e.currentTarget.value;
+            const cursorPos = e.currentTarget.selectionStart || 0;
+            detectMentions(value, cursorPos);
           }}
           placeholder="Write a comment... (Markdown supported, use @username to mention)"
           className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
@@ -370,17 +504,37 @@ export default function CommentSystem({
         />
         
         {/* Mention Suggestions */}
-        {showMentions && mentionSuggestions.length > 0 && (
-          <div className="absolute z-10 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-            {mentionSuggestions.map((username) => (
-              <button
-                key={username}
-                onClick={() => insertMention(username)}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm"
-              >
-                @{username}
-              </button>
-            ))}
+        {showMentions && (
+          <div 
+            className="absolute z-[100] bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-40 overflow-y-auto min-w-[200px]"
+            style={{ 
+              top: `${mentionPosition.top}px`, 
+              left: `${mentionPosition.left}px`,
+              position: 'fixed'
+            }}
+          >
+            {mentionSuggestions.length > 0 ? (
+              mentionSuggestions.map((user) => (
+                <button
+                  key={user.id}
+                  onClick={() => insertMention(user.username)}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm flex items-center gap-2"
+                >
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.username} className="w-5 h-5 rounded-full" />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                      {user.username[0].toUpperCase()}
+                    </div>
+                  )}
+                  <span>@{user.username}</span>
+                </button>
+              ))
+            ) : (
+              <div className="px-4 py-2 text-sm text-gray-400">
+                No users found
+              </div>
+            )}
           </div>
         )}
 

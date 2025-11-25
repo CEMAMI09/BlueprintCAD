@@ -41,7 +41,12 @@ export default async function handler(
       const userId = user && typeof user !== 'string' ? (user as any).userId : 0;
       const params: any[] = user ? [userId, userId, userId, userId] : [0, 0];
 
-      if (parent_id) {
+      // If all=true, return all folders regardless of parent_id
+      const { all } = req.query;
+      if (all === 'true') {
+        // Return all folders (including subfolders)
+        // No parent_id filter needed
+      } else if (parent_id) {
         query += ' AND f.parent_id = ?';
         params.push(parent_id);
       } else {

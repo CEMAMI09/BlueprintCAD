@@ -24,7 +24,7 @@ import {
   Eye,
   ShoppingCart,
   Filter,
-  Grid,
+  Grid3x3,
   List,
   TrendingUp,
   Award,
@@ -34,7 +34,6 @@ import {
   GitBranch,
   Calendar,
 } from 'lucide-react';
-import ThreeDViewer from '@/components/ThreeDViewer';
 
 interface Listing {
   id: string;
@@ -43,6 +42,7 @@ interface Listing {
   price: number;
   currency: string;
   thumbnail: string;
+  thumbnailUrl?: string | null;
   seller: {
     username: string;
     avatar: string;
@@ -57,6 +57,7 @@ interface Listing {
   versions: { version: string; date: string; notes: string }[];
   license: string;
   featured: boolean;
+  createdAt: string;
   fileUrl?: string | null;
   fileType?: string | null;
 }
@@ -65,11 +66,12 @@ export default function MarketplacePage() {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [sortBy, setSortBy] = useState('popular');
+  const [sliderRef, setSliderRef] = useState<HTMLInputElement | null>(null);
 
-  const categories = ['All Categories', 'Electronics', 'Mechanical', '3D Printing', 'Robotics', 'IoT', 'Automotive'];
+  const categories = ['All Categories', 'Electronics', 'Mechanical', '3D Printing', 'Robotics', 'IoT', 'Automotive', 'Other'];
   
 
   const [listings, setListings] = useState<Listing[]>([]);
@@ -92,9 +94,17 @@ export default function MarketplacePage() {
             price: p.price || 0,
             currency: 'USD',
             thumbnail: p.thumbnail_path || '',
+            thumbnailUrl: p.thumbnail_path ? (() => {
+              const thumbnailPath = String(p.thumbnail_path);
+              const filename = thumbnailPath.includes('/') 
+                ? thumbnailPath.split('/').pop() 
+                : thumbnailPath;
+              // Add cache-busting query parameter to ensure fresh images
+              return `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
+            })() : null,
             seller: {
               username: p.username,
-              avatar: '',
+              avatar: p.profile_picture || '',
               verified: !!p.seller_verified,
               rating: p.seller_rating || 0,
             },
@@ -103,6 +113,7 @@ export default function MarketplacePage() {
             rating: p.rating || 0,
             reviews: p.review_count || 0,
             downloads: p.downloads || 0,
+            createdAt: p.created_at || p.createdAt || new Date().toISOString(),
             versions: p.versions || [],
             license: p.license || '',
             featured: !!p.featured,
@@ -127,12 +138,39 @@ export default function MarketplacePage() {
     fetchListings();
   }, []);
 
-  const filteredListings = listings.filter(listing => {
+  // Filter listings
+  let filteredListings = listings.filter(listing => {
     const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          listing.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || listing.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'All Categories' || 
+                           listing.category === selectedCategory ||
+                           (selectedCategory === 'Other' && !categories.slice(1, -1).includes(listing.category));
     const matchesPrice = listing.price >= priceRange[0] && listing.price <= priceRange[1];
     return matchesSearch && matchesCategory && matchesPrice;
+  });
+
+  // Sort listings
+  filteredListings = [...filteredListings].sort((a, b) => {
+    switch (sortBy) {
+      case 'popular':
+        // Sort by downloads + reviews (popularity)
+        const popularityA = (a.downloads || 0) + (a.reviews || 0) * 10;
+        const popularityB = (b.downloads || 0) + (b.reviews || 0) * 10;
+        return popularityB - popularityA;
+      case 'recent':
+        // Sort by creation date (most recent first)
+        const dateA = new Date(a.createdAt || 0).getTime();
+        const dateB = new Date(b.createdAt || 0).getTime();
+        return dateB - dateA;
+      case 'price_low':
+        return a.price - b.price;
+      case 'price_high':
+        return b.price - a.price;
+      case 'rating':
+        return (b.rating || 0) - (a.rating || 0);
+      default:
+        return 0;
+    }
   });
 
   return (
@@ -155,20 +193,62 @@ export default function MarketplacePage() {
                     Upload Design
                   </Button>
                 </Link>
-                <Button
-                  variant={viewMode === 'grid' ? 'primary' : 'secondary'}
-                  size="sm"
-                  icon={<Grid size={16} />}
-                  onClick={() => setViewMode('grid')}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[Marketplace] Clicked grid button, current viewMode:', viewMode);
+                    setViewMode('grid');
+                  }}
+                  className="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200"
+                  style={{
+                    backgroundColor: viewMode === 'grid' ? DS.colors.primary.blue : DS.colors.background.elevated,
+                    color: viewMode === 'grid' ? '#ffffff' : DS.colors.text.primary,
+                    border: viewMode === 'grid' ? 'none' : `1px solid ${DS.colors.border.default}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (viewMode !== 'grid') {
+                      e.currentTarget.style.backgroundColor = DS.colors.background.panelHover;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (viewMode !== 'grid') {
+                      e.currentTarget.style.backgroundColor = DS.colors.background.elevated;
+                    }
+                  }}
                   aria-label="Grid View"
-                />
-                <Button
-                  variant={viewMode === 'list' ? 'primary' : 'secondary'}
-                  size="sm"
-                  icon={<List size={16} />}
-                  onClick={() => setViewMode('list')}
+                >
+                  <Grid3x3 size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[Marketplace] Clicked list button, current viewMode:', viewMode);
+                    setViewMode('list');
+                  }}
+                  className="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200"
+                  style={{
+                    backgroundColor: viewMode === 'list' ? DS.colors.primary.blue : DS.colors.background.elevated,
+                    color: viewMode === 'list' ? '#ffffff' : DS.colors.text.primary,
+                    border: viewMode === 'list' ? 'none' : `1px solid ${DS.colors.border.default}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (viewMode !== 'list') {
+                      e.currentTarget.style.backgroundColor = DS.colors.background.panelHover;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (viewMode !== 'list') {
+                      e.currentTarget.style.backgroundColor = DS.colors.background.elevated;
+                    }
+                  }}
                   aria-label="List View"
-                />
+                >
+                  <List size={16} />
+                </button>
               </div>
             }
           />
@@ -207,13 +287,13 @@ export default function MarketplacePage() {
                       {categories.map((category) => (
                         <button
                           key={category}
-                          onClick={() => setSelectedCategory(category.toLowerCase().replace(' ', '_'))}
+                          onClick={() => setSelectedCategory(category)}
                           className="w-full text-left px-3 py-2 rounded-lg transition-colors"
                           style={{
-                            backgroundColor: selectedCategory === category.toLowerCase().replace(' ', '_')
+                            backgroundColor: selectedCategory === category
                               ? DS.colors.primary.blue + '20'
                               : 'transparent',
-                            color: selectedCategory === category.toLowerCase().replace(' ', '_')
+                            color: selectedCategory === category
                               ? DS.colors.primary.blue
                               : DS.colors.text.primary,
                           }}
@@ -231,13 +311,67 @@ export default function MarketplacePage() {
                     </h3>
                     <div className="space-y-3">
                       <input
+                        ref={(el) => {
+                          if (el && !sliderRef) {
+                            setSliderRef(el);
+                            const value = parseInt(el.value);
+                            const percentage = (value / 1000) * 100;
+                            el.style.background = `linear-gradient(to right, ${DS.colors.primary.blue} 0%, ${DS.colors.primary.blue} ${percentage}%, ${DS.colors.background.elevated} ${percentage}%, ${DS.colors.background.elevated} 100%)`;
+                          }
+                        }}
                         type="range"
                         min="0"
                         max="1000"
                         value={priceRange[1]}
-                        onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          setPriceRange([0, value]);
+                          const target = e.target as HTMLInputElement;
+                          const percentage = (value / 1000) * 100;
+                          target.style.background = `linear-gradient(to right, ${DS.colors.primary.blue} 0%, ${DS.colors.primary.blue} ${percentage}%, ${DS.colors.background.elevated} ${percentage}%, ${DS.colors.background.elevated} 100%)`;
+                        }}
                         className="w-full"
+                        style={{
+                          accentColor: DS.colors.primary.blue,
+                          WebkitAppearance: 'none',
+                          appearance: 'none',
+                          height: '6px',
+                          borderRadius: '3px',
+                          background: `linear-gradient(to right, ${DS.colors.primary.blue} 0%, ${DS.colors.primary.blue} ${(priceRange[1] / 1000) * 100}%, ${DS.colors.background.elevated} ${(priceRange[1] / 1000) * 100}%, ${DS.colors.background.elevated} 100%)`,
+                          outline: 'none',
+                        }}
                       />
+                      <style dangerouslySetInnerHTML={{__html: `
+                        input[type="range"]::-webkit-slider-thumb {
+                          -webkit-appearance: none;
+                          appearance: none;
+                          width: 18px;
+                          height: 18px;
+                          border-radius: 50%;
+                          background: ${DS.colors.primary.blue};
+                          cursor: pointer;
+                          border: 2px solid ${DS.colors.background.panel};
+                          margin-top: -6px;
+                          transform: translateY(-0.25px);
+                        }
+                        input[type="range"]::-moz-range-thumb {
+                          width: 18px;
+                          height: 18px;
+                          border-radius: 50%;
+                          background: ${DS.colors.primary.blue};
+                          cursor: pointer;
+                          border: 2px solid ${DS.colors.background.panel};
+                        }
+                        input[type="range"]::-webkit-slider-runnable-track {
+                          height: 6px;
+                          border-radius: 3px;
+                        }
+                        input[type="range"]::-moz-range-track {
+                          height: 6px;
+                          border-radius: 3px;
+                          background: ${DS.colors.background.elevated};
+                        }
+                      `}} />
                       <div className="flex justify-between text-sm" style={{ color: DS.colors.text.secondary }}>
                         <span>${priceRange[0]}</span>
                         <span>${priceRange[1]}</span>
@@ -301,8 +435,38 @@ export default function MarketplacePage() {
                               </h3>
                               <div className="flex items-center gap-2 mb-2">
                                 <Badge variant="primary" size="sm">Featured</Badge>
-                                <span className="text-lg font-bold" style={{ color: DS.colors.primary.blue }}>
+                                <Badge variant="primary" size="sm">
                                   ${listing.price}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div 
+                                  className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                                  style={{ 
+                                    backgroundColor: listing.seller.avatar ? 'transparent' : DS.colors.primary.blue,
+                                    color: '#ffffff'
+                                  }}
+                                >
+                                  {listing.seller.avatar ? (
+                                    <img
+                                      src={`/api/users/profile-picture/${listing.seller.avatar}`}
+                                      alt={listing.seller.username}
+                                      className="w-full h-full rounded-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        const parent = e.currentTarget.parentElement;
+                                        if (parent) {
+                                          parent.style.backgroundColor = DS.colors.primary.blue;
+                                          parent.textContent = listing.seller.username.substring(0, 2).toUpperCase();
+                                        }
+                                      }}
+                                    />
+                                  ) : (
+                                    listing.seller.username.substring(0, 2).toUpperCase()
+                                  )}
+                                </div>
+                                <span className="text-xs" style={{ color: DS.colors.text.secondary }}>
+                                  @{listing.seller.username}
                                 </span>
                               </div>
                               <div className="flex items-center gap-3 text-sm" style={{ color: DS.colors.text.secondary }}>
@@ -336,20 +500,45 @@ export default function MarketplacePage() {
                             borderColor: selectedListing?.id === listing.id ? DS.colors.primary.blue : DS.colors.border.default,
                           }}
                         >
-                          <div className="aspect-video rounded-t-lg overflow-hidden bg-[#181818] relative">
-                            {listing.fileUrl && listing.fileType ? (
-                              <div className="absolute inset-0 w-full h-full">
-                                <ThreeDViewer
-                                  fileUrl={listing.fileUrl}
-                                  fileName={listing.title}
-                                  fileType={listing.fileType}
-                                  preset="card"
-                                />
-                              </div>
+                          <div className="aspect-video rounded-t-lg overflow-hidden relative" style={{ backgroundColor: DS.colors.background.panel, minHeight: '180px' }}>
+                            {listing.thumbnailUrl ? (
+                              <img
+                                key={`thumb-${listing.id}-${listing.thumbnailUrl}`}
+                                src={listing.thumbnailUrl}
+                                alt={listing.title}
+                                className="design-thumbnail"
+                                loading="lazy"
+                                style={{ 
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  display: 'block'
+                                }}
+                                onError={(e) => {
+                                  console.error(`[Marketplace] Failed to load thumbnail for ${listing.id}:`, listing.thumbnailUrl, e);
+                                  const img = e.currentTarget;
+                                  img.style.display = 'none';
+                                  const container = img.parentElement;
+                                  if (container) {
+                                    let fallback = container.querySelector('.thumbnail-fallback') as HTMLElement;
+                                    if (!fallback) {
+                                      fallback = document.createElement('div');
+                                      fallback.className = 'thumbnail-fallback flex flex-col items-center justify-center w-full h-full absolute inset-0';
+                                      fallback.style.zIndex = '1';
+                                      fallback.innerHTML = '<span class="text-5xl mb-2">📦</span><span class="text-xs">No thumbnail available</span>';
+                                      container.appendChild(fallback);
+                                    }
+                                    fallback.style.display = 'flex';
+                                  }
+                                }}
+                                onLoad={() => {
+                                  console.log(`[Marketplace] Successfully loaded thumbnail for ${listing.id}:`, listing.thumbnailUrl);
+                                }}
+                              />
                             ) : (
                               <div className="flex flex-col items-center justify-center w-full h-full">
                                 <span className="text-5xl mb-2">📦</span>
-                                <span className="text-xs text-gray-500">No 3D file available</span>
+                                <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>No thumbnail available</span>
                               </div>
                             )}
                           </div>
@@ -358,10 +547,40 @@ export default function MarketplacePage() {
                               {listing.title}
                             </h3>
                             <div className="flex items-center justify-between mb-3">
-                              <span className="text-xl font-bold" style={{ color: DS.colors.primary.blue }}>
+                              <Badge variant="primary" size="sm">
                                 ${listing.price}
-                              </span>
+                              </Badge>
                               <Badge variant="default" size="sm">{listing.category}</Badge>
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <div 
+                                className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                                style={{ 
+                                  backgroundColor: listing.seller.avatar ? 'transparent' : DS.colors.primary.blue,
+                                  color: '#ffffff'
+                                }}
+                              >
+                                {listing.seller.avatar ? (
+                                  <img
+                                    src={`/api/users/profile-picture/${listing.seller.avatar}`}
+                                    alt={listing.seller.username}
+                                    className="w-full h-full rounded-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      const parent = e.currentTarget.parentElement;
+                                      if (parent) {
+                                        parent.style.backgroundColor = DS.colors.primary.blue;
+                                        parent.textContent = listing.seller.username.substring(0, 2).toUpperCase();
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  listing.seller.username.substring(0, 2).toUpperCase()
+                                )}
+                              </div>
+                              <span className="text-xs" style={{ color: DS.colors.text.secondary }}>
+                                @{listing.seller.username}
+                              </span>
                             </div>
                             <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.secondary }}>
                               <span className="flex items-center gap-1">
@@ -396,15 +615,31 @@ export default function MarketplacePage() {
                         }}
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-24 h-24 rounded-lg flex-shrink-0" style={{ backgroundColor: DS.colors.background.panelHover }} />
+                          <div className="w-24 h-24 rounded-lg flex-shrink-0 overflow-hidden" style={{ backgroundColor: DS.colors.background.panelHover }}>
+                            {listing.thumbnailUrl ? (
+                              <img
+                                src={listing.thumbnailUrl}
+                                alt={listing.title}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-2xl">
+                                📦
+                              </div>
+                            )}
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between mb-2">
                               <h3 className="font-semibold" style={{ color: DS.colors.text.primary }}>
                                 {listing.title}
                               </h3>
-                              <span className="text-xl font-bold ml-4" style={{ color: DS.colors.primary.blue }}>
+                              <Badge variant="primary" size="sm" className="ml-4">
                                 ${listing.price}
-                              </span>
+                              </Badge>
                             </div>
                             <p className="text-sm mb-3 line-clamp-2" style={{ color: DS.colors.text.secondary }}>
                               {listing.description}
@@ -459,21 +694,29 @@ export default function MarketplacePage() {
               <div className="space-y-6">
                 {/* Preview */}
                 <div className="rounded-lg overflow-hidden" style={{ backgroundColor: DS.colors.background.panelHover }}>
-                  {selectedListing.fileUrl ? (
-                    <ThreeDViewer
-                      fileUrl={selectedListing.fileUrl}
-                      fileName={selectedListing.title}
-                      fileType={selectedListing.fileType || undefined}
-                      preset="detail"
+                  {selectedListing.thumbnailUrl ? (
+                    <img
+                      src={selectedListing.thumbnailUrl}
+                      alt={selectedListing.title}
+                      className="design-thumbnail w-full h-full object-cover"
+                      style={{ maxHeight: '400px' }}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.nextElementSibling;
+                        if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                      }}
                     />
-                  ) : (
-                    <div className="aspect-video flex items-center justify-center">
-                      <div className="flex flex-col items-center justify-center w-full h-full">
-                        <span className="text-5xl mb-2">📦</span>
-                        <span className="text-xs text-gray-500">No 3D file available</span>
-                      </div>
+                  ) : null}
+                  <div 
+                    className="aspect-video flex items-center justify-center"
+                    style={{ display: selectedListing.thumbnailUrl ? 'none' : 'flex' }}
+                  >
+                    <div className="flex flex-col items-center justify-center w-full h-full">
+                      <span className="text-5xl mb-2">📦</span>
+                      <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>No thumbnail available</span>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Title & Price */}
@@ -482,9 +725,9 @@ export default function MarketplacePage() {
                     {selectedListing.title}
                   </h2>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-3xl font-bold" style={{ color: DS.colors.primary.blue }}>
+                    <Badge variant="primary" size="sm" className="text-lg">
                       ${selectedListing.price}
-                    </span>
+                    </Badge>
                     {selectedListing.featured && <Badge variant="primary">Featured</Badge>}
                   </div>
                   <Button variant="primary" icon={<ShoppingCart size={18} />} className="w-full mb-3">
@@ -559,7 +802,31 @@ export default function MarketplacePage() {
                     Seller Information
                   </h3>
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full" style={{ backgroundColor: DS.colors.background.panelHover }} />
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                      style={{ 
+                        backgroundColor: selectedListing.seller.avatar ? 'transparent' : DS.colors.primary.blue,
+                        color: '#ffffff'
+                      }}
+                    >
+                      {selectedListing.seller.avatar ? (
+                        <img
+                          src={`/api/users/profile-picture/${selectedListing.seller.avatar}`}
+                          alt={selectedListing.seller.username}
+                          className="w-full h-full rounded-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              parent.style.backgroundColor = DS.colors.primary.blue;
+                              parent.textContent = selectedListing.seller.username.substring(0, 2).toUpperCase();
+                            }
+                          }}
+                        />
+                      ) : (
+                        selectedListing.seller.username.substring(0, 2).toUpperCase()
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold" style={{ color: DS.colors.text.primary }}>

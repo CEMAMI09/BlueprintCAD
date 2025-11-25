@@ -107,19 +107,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (is3DFile) {
         try {
-          const { generatePlaceholderThumbnail } = require('../../../../backend/lib/thumbnailGeneratorSimple');
-          const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
-          if (!fs.existsSync(thumbsDir)) {
-            fs.mkdirSync(thumbsDir, { recursive: true });
+          const { generateThumbnailForDesign } = require('../../../../backend/lib/generateThumbnail');
+          const fullFilePath = path.join(process.cwd(), 'storage', 'uploads', filePath);
+          
+          if (fs.existsSync(fullFilePath)) {
+            // Use project ID for thumbnail naming
+            thumbnailPath = await generateThumbnailForDesign(fullFilePath, id, {
+              width: 800,
+              height: 600,
+            });
           }
-
-          const basename = path.basename(filePath, ext);
-          const thumbPath = path.join(thumbsDir, `${basename}_thumb.png`);
-
-          await generatePlaceholderThumbnail(filePath, thumbPath);
-          thumbnailPath = `thumbnails/${basename}_thumb.png`;
         } catch (thumbError: any) {
           console.warn('Thumbnail generation failed (non-fatal):', thumbError?.message);
+          // Fallback to placeholder
+          try {
+            const { generatePlaceholderThumbnail } = require('../../../../backend/lib/generateThumbnail');
+            const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
+            if (!fs.existsSync(thumbsDir)) {
+              fs.mkdirSync(thumbsDir, { recursive: true });
+            }
+            const basename = path.basename(filePath, ext);
+            const thumbPath = path.join(thumbsDir, `${id}_thumb.png`);
+            await generatePlaceholderThumbnail(filePath, thumbPath);
+            thumbnailPath = `thumbnails/${id}_thumb.png`;
+          } catch (fallbackError: any) {
+            console.warn('Placeholder generation also failed:', fallbackError?.message);
+          }
         }
       }
 

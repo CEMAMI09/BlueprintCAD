@@ -24,7 +24,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             WHEN m.sender_id = ? THEN m.receiver_id
             ELSE m.sender_id
           END as other_user_id,
-          u.username as other_username
+          u.username as other_username,
+          u.profile_picture as other_profile_picture
         FROM messages m
         INNER JOIN (
           SELECT 

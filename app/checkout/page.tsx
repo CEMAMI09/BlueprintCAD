@@ -4,7 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import Layout from '@/components/Layout';
+import {
+  ThreePanelLayout,
+  CenterPanel,
+  RightPanel,
+  PanelHeader,
+  PanelContent,
+} from '@/components/ui/ThreePanelLayout';
+import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
+import { Card, Button } from '@/components/ui/UIComponents';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_dummy');
 
@@ -84,7 +93,10 @@ function CheckoutForm() {
         const checkoutRes = await fetch('/api/orders/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId: checkoutData.projectId }),
+          body: JSON.stringify({ 
+            projectId: checkoutData.projectId,
+            totalPrice: totalPrice // Use calculated total price with platform fee
+          }),
         });
 
         if (!checkoutRes.ok) {
@@ -170,51 +182,97 @@ function CheckoutForm() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="inline-block w-8 h-8 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
-        </div>
-      </Layout>
+      <ThreePanelLayout
+        leftPanel={<GlobalNavSidebar />}
+        centerPanel={
+          <CenterPanel>
+            <PanelHeader title="Loading..." />
+            <PanelContent>
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2" style={{ borderColor: DS.colors.primary.blue }}></div>
+              </div>
+            </PanelContent>
+          </CenterPanel>
+        }
+      />
     );
   }
 
   if (!checkoutData) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Invalid Checkout Session</h1>
-            <p className="text-gray-400 mb-6">No checkout data found.</p>
-            <button
-              onClick={() => router.push('/explore')}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-            >
-              Return to Explore
-            </button>
-          </div>
-        </div>
-      </Layout>
+      <ThreePanelLayout
+        leftPanel={<GlobalNavSidebar />}
+        centerPanel={
+          <CenterPanel>
+            <PanelHeader title="Invalid Checkout Session" />
+            <PanelContent>
+              <div className="px-4 md:px-10 py-8">
+                <Card padding="lg">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
+                      No checkout data found
+                    </h3>
+                    <p className="text-sm mb-6" style={{ color: DS.colors.text.secondary }}>
+                      Please start your purchase from the design page.
+                    </p>
+                    <Button
+                      variant="primary"
+                      onClick={() => router.push('/explore')}
+                    >
+                      Return to Explore
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+            </PanelContent>
+          </CenterPanel>
+        }
+      />
     );
   }
 
-  return (
-    <Layout>
-      <div className="min-h-screen py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <button
-              onClick={() => router.back()}
-              className="text-gray-400 hover:text-white mb-4 inline-flex items-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </button>
-            <h1 className="text-3xl font-bold">Checkout</h1>
-          </div>
+  // Platform fee only applies to digital purchases
+  let basePrice = 0;
+  let platformFee = 0;
+  let totalPrice = 0;
 
-          <div className="grid lg:grid-cols-2 gap-8">
+  if (checkoutData.type === 'digital') {
+    // If basePrice is provided, use it; otherwise calculate from price (assuming price might be total)
+    if ((checkoutData as any).basePrice) {
+      basePrice = (checkoutData as any).basePrice;
+      platformFee = (checkoutData as any).platformFee || (basePrice * 0.05);
+      totalPrice = basePrice + platformFee;
+    } else {
+      // If no basePrice, assume price is base and calculate fee
+      basePrice = checkoutData.price || 0;
+      platformFee = basePrice * 0.05;
+      totalPrice = basePrice + platformFee;
+    }
+  } else {
+    // Manufacturing orders have no platform fee
+    totalPrice = checkoutData.price || 0;
+  }
+
+  return (
+    <ThreePanelLayout
+      leftPanel={<GlobalNavSidebar />}
+      centerPanel={
+        <CenterPanel>
+          <PanelHeader
+            title="Checkout"
+            actions={
+              <button
+                onClick={() => router.back()}
+                style={{ color: DS.colors.primary.blue }}
+                className="hover:underline"
+              >
+                &larr; Back
+              </button>
+            }
+          />
+          <PanelContent>
+            <div className="px-4 md:px-10 py-8">
+              <div className="grid lg:grid-cols-2 gap-8">
             {/* Order Summary */}
             <div className="space-y-6">
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -241,16 +299,16 @@ function CheckoutForm() {
 
                     <div className="border-t border-gray-800 pt-4">
                       <div className="flex justify-between mb-2">
-                        <span className="text-gray-400">Subtotal</span>
-                        <span className="text-white">${checkoutData.price?.toFixed(2)}</span>
+                        <span className="text-gray-400">Design Price</span>
+                        <span className="text-white">${basePrice.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between mb-2">
-                        <span className="text-gray-400">Platform Fee (10%)</span>
-                        <span className="text-white">${((checkoutData.price || 0) * 0.1).toFixed(2)}</span>
+                        <span className="text-gray-400">Platform Fee (5%)</span>
+                        <span className="text-white">${platformFee.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-lg font-bold mt-4 pt-4 border-t border-gray-800">
                         <span>Total</span>
-                        <span className="text-emerald-400">${checkoutData.price?.toFixed(2)}</span>
+                        <span className="text-emerald-400">${(basePrice + platformFee).toFixed(2)}</span>
                       </div>
                     </div>
                   </>
@@ -404,7 +462,7 @@ function CheckoutForm() {
                   {processing 
                     ? 'Processing...' 
                     : checkoutData.type === 'digital' 
-                      ? `Pay $${checkoutData.price?.toFixed(2)}` 
+                      ? `Pay $${(basePrice + platformFee).toFixed(2)}` 
                       : 'Submit Order Request'}
                 </button>
 
@@ -442,10 +500,12 @@ function CheckoutForm() {
                 </ul>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </Layout>
+              </div>
+            </div>
+          </PanelContent>
+        </CenterPanel>
+      }
+    />
   );
 }
 

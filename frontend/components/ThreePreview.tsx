@@ -9,6 +9,7 @@ type ThreePreviewProps = {
 export default function ThreePreview({ file }: ThreePreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const seqRef = useRef(0);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
     let animationId: number | null = null;
     let objectUrl: string | null = null;
     let disposed = false;
+    let onResize: (() => void) | null = null;
 
     const seq = ++seqRef.current;
     async function init() {
@@ -33,8 +35,12 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
         
         if (!viewableFormats.includes(ext)) {
           setError(`${ext.toUpperCase()} format cannot be previewed in 3D viewer. Download the file to view in specialized CAD software.`);
+          setLoading(false);
           return;
         }
+        
+        setLoading(true);
+        setError(null);
 
         const [{
           Scene,
@@ -134,22 +140,8 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
           const scale = 0.8 / maxDim;
           const center = box.getCenter(new Vector3());
           objectToAdd.scale.setScalar(scale);
-          // Center the model at origin
+          // Center the model at origin (0, 0, 0)
           objectToAdd.position.sub(center.multiplyScalar(scale));
-
-          // Adding debug logs to verify model position and camera settings
-          console.log('Model position before adjustment:', objectToAdd.position);
-
-          // Explicitly raising the model's position after centering
-          const raiseAmount = 10; // Raise the model by 10 units
-          objectToAdd.position.y += raiseAmount; // Ensure the model is visibly higher on the grid
-          console.log('Model position after adjustment:', objectToAdd.position);
-
-          // Adjusting the camera to align with the raised model
-          camera.position.set(30, 30, 30); // Further zoom-out for a broader view
-          camera.lookAt(0, raiseAmount, 0); // Focus on the raised model
-          console.log('Camera position:', camera.position);
-          console.log('Camera lookAt:', { x: 0, y: raiseAmount, z: 0 });
 
           // Remove previous meshes
           const toRemove: any[] = [];
@@ -159,14 +151,25 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
           toRemove.forEach((obj) => scene.remove(obj));
 
           scene.add(objectToAdd);
-          // Position camera to view the centered model
-          camera.position.set(20, 20, 20); // Maximum zoom-out for a comprehensive view
-          camera.lookAt(0, raiseAmount, 0); // Adjusted to look even higher at the model
+          
+          // Calculate optimal camera distance to fit the entire model in view
+          const boxSize = Math.max(size.x, size.y, size.z) * scale;
+          // Calculate distance needed to fit model in viewport (with padding)
+          // Using FOV of 50 degrees, we need distance = (boxSize/2) / tan(FOV/2) * padding
+          const fovRad = (50 * Math.PI) / 180;
+          const distance = (boxSize / 2) / Math.tan(fovRad / 2) * 1.8; // 1.8x padding for good fit
+          
+          // Position camera with standard 3/4 view angle (centered, not too high)
+          camera.position.set(distance * 0.7, distance * 0.5, distance * 0.7);
+          camera.lookAt(0, 0, 0); // Look at the center where the model is positioned
+          
           // Update controls target to center
           if (controls) {
             controls.target.set(0, 0, 0);
             controls.update();
           }
+          
+          setLoading(false);
         };
 
         // Load appropriate format
@@ -178,6 +181,7 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
               loader.load(objectUrl, handleLoadedObject, undefined, (err: any) => {
                 console.error('STL load error', err);
                 setError('Failed to load STL file');
+                setLoading(false);
               });
               break;
             }
@@ -187,6 +191,7 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
               loader.load(objectUrl, handleLoadedObject, undefined, (err: any) => {
                 console.error('OBJ load error', err);
                 setError('Failed to load OBJ file');
+                setLoading(false);
               });
               break;
             }
@@ -196,6 +201,7 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
               loader.load(objectUrl, handleLoadedObject, undefined, (err: any) => {
                 console.error('FBX load error', err);
                 setError('Failed to load FBX file');
+                setLoading(false);
               });
               break;
             }
@@ -206,6 +212,7 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
               loader.load(objectUrl, handleLoadedObject, undefined, (err: any) => {
                 console.error('GLTF load error', err);
                 setError('Failed to load GLTF/GLB file');
+                setLoading(false);
               });
               break;
             }
@@ -215,6 +222,7 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
               loader.load(objectUrl, handleLoadedObject, undefined, (err: any) => {
                 console.error('PLY load error', err);
                 setError('Failed to load PLY file');
+                setLoading(false);
               });
               break;
             }
@@ -225,18 +233,21 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
               loader.load(objectUrl, (result: any) => handleLoadedObject(result.scene), undefined, (err: any) => {
                 console.error('COLLADA load error', err);
                 setError('Failed to load COLLADA file');
+                setLoading(false);
               });
               break;
             }
             default:
               setError(`${ext.toUpperCase()} format not supported for preview`);
+              setLoading(false);
           }
         } catch (loaderError) {
           console.error('Loader import error:', loaderError);
           setError('Failed to load 3D viewer');
+          setLoading(false);
         }
 
-        const onResize = () => {
+        onResize = () => {
           if (!containerRef.current || !renderer || !camera) return;
           const container = containerRef.current;
           const w = container.clientWidth || container.offsetWidth || 800;
@@ -259,33 +270,28 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
           }
         };
         animate();
-
-        return () => {
-          disposed = true;
-          if (animationId) cancelAnimationFrame(animationId);
-          window.removeEventListener('resize', onResize);
-          try {
-            if (renderer) {
-              renderer.dispose();
-              if (renderer.domElement && renderer.domElement.parentNode) {
-                renderer.domElement.parentNode.removeChild(renderer.domElement);
-              }
-            }
-          } catch {}
-          if (objectUrl) URL.revokeObjectURL(objectUrl);
-        };
       } catch (e) {
         console.error(e);
         setError('3D preview initialization failed');
+        setLoading(false);
       }
     }
 
-    let cleanupFn: (() => void) | null = null;
-    init().then((fn) => {
-      if (typeof fn === 'function') cleanupFn = fn;
-    });
+    init();
+    
     return () => {
-      if (cleanupFn) cleanupFn();
+      disposed = true;
+      if (animationId) cancelAnimationFrame(animationId);
+      if (onResize) window.removeEventListener('resize', onResize);
+      try {
+        if (renderer) {
+          renderer.dispose();
+          if (renderer.domElement && renderer.domElement.parentNode) {
+            renderer.domElement.parentNode.removeChild(renderer.domElement);
+          }
+        }
+      } catch {}
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [file]);
 
@@ -298,7 +304,15 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
         {file.name}
       </div>
       <div className="relative w-full" style={{ aspectRatio: '16/9', minHeight: '300px' }}>
-        <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+        <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ minHeight: '300px' }} />
+        {loading && !error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm z-10">
+            <div className="text-center">
+              <div className="inline-block w-8 h-8 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin mb-3"></div>
+              <p className="text-gray-400 text-sm">Loading 3D preview...</p>
+            </div>
+          </div>
+        )}
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/90 z-50">
             <div className="text-center px-4">

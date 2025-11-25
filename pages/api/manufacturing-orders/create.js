@@ -1,9 +1,5 @@
-import jwt from 'jsonwebtoken';
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
-import path from 'path';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import { getDb } from '../../../db/db';
+import { getUserFromRequest } from '../../../backend/lib/auth';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,18 +8,12 @@ export default async function handler(req, res) {
 
   try {
     // Verify authentication
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) {
+    const user = getUserFromRequest(req);
+    if (!user || typeof user === 'string') {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    let userId;
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      userId = decoded.userId;
-    } catch (err) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
+    const userId = user.userId;
 
     const {
       fileName,
@@ -44,11 +34,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Open database
-    const db = await open({
-      filename: path.resolve('./forge.db'),
-      driver: sqlite3.Database
-    });
+    // Get database connection
+    const db = await getDb();
 
     // Create manufacturing_orders table if it doesn't exist
     await db.exec(`
@@ -103,8 +90,6 @@ export default async function handler(req, res) {
         JSON.stringify(breakdown)
       ]
     );
-
-    await db.close();
 
     res.status(200).json({
       success: true,

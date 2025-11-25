@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       const infill = Array.isArray(fields.infill) ? parseInt(fields.infill[0]) : parseInt(fields.infill) || 20;
       const quantity = Array.isArray(fields.quantity) ? parseInt(fields.quantity[0]) : parseInt(fields.quantity) || 1;
 
+      console.log('[Estimate API] Request parameters:', { scale, material, quality, infill, quantity });
       
       try {
         // Use the advanced cost estimator
@@ -50,6 +51,8 @@ export default async function handler(req, res) {
           quantity,
           shipping: 'standard'
         });
+        
+        console.log('[Estimate API] Material used:', material, 'Material cost:', result.breakdown.material, 'Total:', result.estimate.totalPrice);
 
         // Format response for frontend compatibility
         const response = {

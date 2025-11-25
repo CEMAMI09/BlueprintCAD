@@ -131,9 +131,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Owner always has access
     const isOwner = userId && userId === project.user_id;
     
-    // If project is for sale, only the owner can download
-    if (project.for_sale && project.price > 0 && !isOwner) {
-      return res.status(403).json({ error: 'This file is for sale. Purchase required to download.' });
+    // Check if user has purchased the design (for for_sale items)
+    let hasPurchased = false;
+    if (project.for_sale && project.price > 0 && userId && !isOwner) {
+      const purchase = await db.get(
+        `SELECT id FROM orders 
+         WHERE buyer_id = ? AND project_id = ? AND payment_status = 'succeeded'`,
+        [userId, project.id]
+      );
+      hasPurchased = !!purchase;
     }
     
     // Check folder membership if in a folder
@@ -146,8 +152,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       isFolderMember = !!membership;
     }
     
-    // Grant access if: public, owner, or folder member
-    const hasAccess = project.is_public || isOwner || isFolderMember;
+    // Grant access if: public, owner, folder member, or purchased
+    // Note: For 3D preview, we allow viewing even for for_sale items (download is restricted separately)
+    const hasAccess = project.is_public || isOwner || isFolderMember || hasPurchased;
 
     // Debug access decision
     console.log('[api/files] db project:', project ? { id: project.id, user_id: project.user_id, is_public: project.is_public, folder_id: project.folder_id, for_sale: project.for_sale } : null, { userId, isOwner, isFolderMember, hasAccess });

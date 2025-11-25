@@ -22,8 +22,38 @@ export default async function handler(req, res) {
 
     const db = await getDb();
 
+    // Create manufacturing_orders table if it doesn't exist
+    try {
+      await db.exec(`
+        CREATE TABLE IF NOT EXISTS manufacturing_orders (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          order_number TEXT UNIQUE NOT NULL,
+          file_name TEXT NOT NULL,
+          manufacturing_option TEXT NOT NULL,
+          estimated_cost TEXT NOT NULL,
+          delivery_time TEXT,
+          material TEXT,
+          scale_percentage INTEGER,
+          dimensions TEXT,
+          weight_grams REAL,
+          print_time_hours REAL,
+          ai_estimate TEXT,
+          breakdown TEXT,
+          status TEXT DEFAULT 'pending',
+          notes TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      `);
+    } catch (err) {
+      console.log('Error creating manufacturing_orders table:', err);
+    }
+
     let purchases = [];
     let sales = [];
+    let manufacturingOrders = [];
 
     if (type === 'purchases' || type === 'all') {
       purchases = await db.all(
@@ -58,6 +88,24 @@ export default async function handler(req, res) {
       );
     }
 
+    // Get manufacturing orders (only for the current user - private)
+    try {
+      manufacturingOrders = await db.all(
+        `SELECT 
+          id, order_number, file_name, manufacturing_option, estimated_cost,
+          delivery_time, material, scale_percentage, dimensions, weight_grams,
+          print_time_hours, status, created_at, updated_at
+        FROM manufacturing_orders
+        WHERE user_id = ?
+        ORDER BY created_at DESC`,
+        [userId]
+      );
+    } catch (err) {
+      // Table might not exist yet, that's okay
+      console.log('Error fetching manufacturing orders:', err);
+      manufacturingOrders = [];
+    }
+
     // Calculate totals
     const totalEarnings = sales
       .filter(s => s.payment_status === 'succeeded')
@@ -70,9 +118,11 @@ export default async function handler(req, res) {
     res.status(200).json({
       purchases,
       sales,
+      manufacturingOrders,
       stats: {
         totalPurchases: purchases.length,
         totalSales: sales.length,
+        totalManufacturingOrders: manufacturingOrders.length,
         totalSpent: totalSpent.toFixed(2),
         totalEarnings: totalEarnings.toFixed(2),
       }

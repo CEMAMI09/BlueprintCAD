@@ -7,8 +7,8 @@ import ThreePreview from '@/components/ThreePreview';
 import { Folder } from '@/types';
 import { ThreePanelLayout, LeftPanel, CenterPanel, RightPanel, PanelHeader, PanelContent } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
-import { Upload as UploadIcon, FolderIcon, Globe, Lock, DollarSign } from 'lucide-react';
-import * as DS from '@/backend/lib/ui/design-system';
+import { Upload as UploadIcon, Globe, Lock, DollarSign, ChevronRight, ChevronDown, Folder as FolderIcon } from 'lucide-react';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 
 interface FormData {
   title: string;
@@ -67,30 +67,109 @@ export default function Upload() {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
   const [folders, setFolders] = useState<Folder[]>([]);
+  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
 
 useEffect(() => {
   // Read ?folder= param in App Router
   const folderId = searchParams ? searchParams.get('folder') : null;
   if (folderId) {
-    setSelectedFolderId(Number(folderId));
+    const folderIdNum = Number(folderId);
+    setSelectedFolderId(folderIdNum);
+    console.log('[Upload] Folder ID from URL:', folderIdNum);
   } else {
     setSelectedFolderId(null);
   }
   // Fetch user's folders
   fetchFolders();
+  // Fetch available tags
+  fetchTags();
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [searchParams]);
 
+const fetchTags = async (searchTerm?: string) => {
+  try {
+    const url = searchTerm 
+      ? `/api/tags?search=${encodeURIComponent(searchTerm)}`
+      : '/api/tags';
+    const res = await fetch(url);
+    if (res.ok) {
+      const tags = await res.json();
+      if (!searchTerm) {
+        // Only update availableTags when fetching all tags
+        setAvailableTags(tags);
+      }
+      return tags;
+    }
+  } catch (error) {
+    console.error('Error fetching tags:', error);
+  }
+  return [];
+};
+
 const fetchFolders = async () => {
   try {
-    const res = await fetch('/api/folders', {
+    // Fetch all folders (including subfolders) using the all=true parameter
+    const res = await fetch('/api/folders?all=true', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     });
+    
     if (res.ok) {
-      const data = await res.json();
-      setFolders(data);
+      const allFolders = await res.json();
+      setFolders(allFolders);
+      
+      // After folders are loaded, ensure the folder from URL is still selected
+      const folderId = searchParams ? searchParams.get('folder') : null;
+      if (folderId) {
+        const folderIdNum = Number(folderId);
+        // Verify the folder exists in the list
+        const folderExists = allFolders.some((f: Folder) => f.id === folderIdNum);
+        if (folderExists) {
+          setSelectedFolderId(folderIdNum);
+          // Expand parent folders to show the selected folder
+          const expandParents = (folderId: number) => {
+            const folder = allFolders.find(f => f.id === folderId);
+            if (folder && folder.parent_id) {
+              setExpandedFolders(prev => new Set([...prev, folder.parent_id!]));
+              expandParents(folder.parent_id);
+            }
+          };
+          expandParents(folderIdNum);
+          console.log('[Upload] Folder confirmed in list:', folderIdNum);
+        } else {
+          // If folder not found, try to fetch it directly (might be a subfolder we don't have access to)
+          console.warn('[Upload] Folder not found in user folders, fetching directly:', folderIdNum);
+          try {
+            const folderRes = await fetch(`/api/folders/${folderIdNum}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            if (folderRes.ok) {
+              const folderData = await folderRes.json();
+              // Add the folder to the list if it exists and user has access
+              if (folderData && !allFolders.some((f: Folder) => f.id === folderIdNum)) {
+                allFolders.push(folderData);
+                setFolders(allFolders);
+              }
+              setSelectedFolderId(folderIdNum);
+              // Expand parent folders
+              if (folderData.parent_id) {
+                setExpandedFolders(prev => new Set([...prev, folderData.parent_id]));
+              }
+              console.log('[Upload] Folder fetched and added to list:', folderIdNum);
+            }
+          } catch (err) {
+            console.error('[Upload] Failed to fetch folder directly:', err);
+          }
+        }
+      }
     }
   } catch (error) {
     console.error('Failed to fetch folders:', error);
@@ -186,13 +265,34 @@ const fetchFolders = async () => {
       }
 
       const uploadData = await uploadRes.json();
-      const { filePath, thumbnailPath, dimensions, volume } = uploadData;
+      const { filePath, dimensions, volume } = uploadData;
 
+      // Prepare tags - use selectedTags if available, otherwise fall back to formData.tags
+      const tagsToSave = selectedTags.length > 0 
+        ? selectedTags.join(', ') 
+        : formData.tags;
+
+      // Save new tags to the tags table
+      if (selectedTags.length > 0) {
+        try {
+          await fetch('/api/tags', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tags: selectedTags })
+          });
+        } catch (err) {
+          console.error('Error saving tags:', err);
+        }
+      }
+
+      // Don't send thumbnail_path - let the API generate it automatically
       const projectData = {
         ...formData,
+        tags: tagsToSave,
         file_path: filePath,
         file_type: file.name.split('.').pop(),
-        thumbnail: thumbnailPath || null,
         dimensions: dimensions || null,
         price: formData.for_sale ? parseFloat(formData.price) || null : null,
         folder_id: selectedFolderId || null
@@ -213,7 +313,26 @@ const fetchFolders = async () => {
       }
 
       const project = await projectRes.json();
-      router.push(`/project/${project.id}`);
+      console.log('[Upload] Project created:', { 
+        id: project.id, 
+        title: project.title,
+        thumbnail_path: project.thumbnail_path,
+        file_path: project.file_path,
+        hasThumbnail: !!project.thumbnail_path,
+        thumbnailUrl: project.thumbnail_path ? `/api/thumbnails/${project.thumbnail_path.replace('thumbnails/', '')}` : null
+      });
+      
+      if (!project.thumbnail_path) {
+        console.warn('[Upload] WARNING: Project created without thumbnail_path!');
+      } else {
+        console.log('[Upload] Thumbnail path:', project.thumbnail_path);
+      }
+      
+      // Wait a moment for thumbnail generation to complete, then redirect
+      // The thumbnail generation happens asynchronously in the API
+      setTimeout(() => {
+        router.push(`/project/${project.id}`);
+      }, 1000);
     } catch (err: any) {
       setError(err.message || 'Upload failed. Please try again.');
       setLoading(false);
@@ -228,6 +347,128 @@ const fetchFolders = async () => {
   };
 
   if (!user) return null;
+
+  // Build folder tree structure
+  const buildFolderTree = (folders: Folder[]): Array<Folder & { children?: Folder[] }> => {
+    const folderMap = new Map<number, Folder & { children?: Folder[] }>();
+    const rootFolders: Array<Folder & { children?: Folder[] }> = [];
+
+    // Create map of all folders
+    folders.forEach(folder => {
+      folderMap.set(folder.id, { ...folder, children: [] });
+    });
+
+    // Build tree structure
+    folders.forEach(folder => {
+      const folderNode = folderMap.get(folder.id)!;
+      if (folder.parent_id === null || folder.parent_id === 0) {
+        rootFolders.push(folderNode);
+      } else {
+        const parent = folderMap.get(folder.parent_id);
+        if (parent) {
+          if (!parent.children) parent.children = [];
+          parent.children.push(folderNode);
+        }
+      }
+    });
+
+    // Sort folders by name
+    const sortFolders = (folders: Array<Folder & { children?: Folder[] }>) => {
+      folders.sort((a, b) => a.name.localeCompare(b.name));
+      folders.forEach(folder => {
+        if (folder.children) {
+          sortFolders(folder.children);
+        }
+      });
+    };
+    sortFolders(rootFolders);
+
+    return rootFolders;
+  };
+
+  // Get folder path for display
+  const getFolderPath = (folders: Folder[], folderId: number): string => {
+    const folder = folders.find(f => f.id === folderId);
+    if (!folder) return 'selected folder';
+    
+    const path: string[] = [folder.name];
+    let currentId = folder.parent_id;
+    
+    while (currentId) {
+      const parent = folders.find(f => f.id === currentId);
+      if (parent) {
+        path.unshift(parent.name);
+        currentId = parent.parent_id;
+      } else {
+        break;
+      }
+    }
+    
+    return path.join(' / ');
+  };
+
+  // Folder tree item component
+  interface FolderTreeItemProps {
+    folder: Folder & { children?: Folder[] };
+    level: number;
+    selectedFolderId: number | null;
+    expandedFolders: Set<number>;
+    onSelect: (folderId: number | null) => void;
+    onToggleExpand: (folderId: number) => void;
+  }
+
+  const FolderTreeItem = ({ folder, level, selectedFolderId, expandedFolders, onSelect, onToggleExpand }: FolderTreeItemProps) => {
+    const hasChildren = folder.children && folder.children.length > 0;
+    const isExpanded = expandedFolders.has(folder.id);
+    const isSelected = selectedFolderId === folder.id;
+
+    return (
+      <>
+        <div
+          onClick={() => onSelect(folder.id)}
+          className="px-4 py-2 cursor-pointer hover:bg-gray-800 transition-colors flex items-center gap-2"
+          style={{
+            backgroundColor: isSelected ? DS.colors.primary.blue + '20' : 'transparent',
+            paddingLeft: `${16 + level * 20}px`
+          }}
+        >
+          {hasChildren ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpand(folder.id);
+              }}
+              className="flex items-center justify-center w-4 h-4"
+              style={{ color: DS.colors.text.secondary }}
+            >
+              {isExpanded ? (
+                <ChevronDown size={14} />
+              ) : (
+                <ChevronRight size={14} />
+              )}
+            </button>
+          ) : (
+            <div className="w-4" />
+          )}
+          <FolderIcon size={16} style={{ color: DS.colors.text.secondary }} />
+          <span className="text-sm flex-1" style={{ color: DS.colors.text.primary }}>
+            {folder.name}
+          </span>
+        </div>
+        {hasChildren && isExpanded && folder.children!.map(child => (
+          <FolderTreeItem
+            key={child.id}
+            folder={child}
+            level={level + 1}
+            selectedFolderId={selectedFolderId}
+            expandedFolders={expandedFolders}
+            onSelect={onSelect}
+            onToggleExpand={onToggleExpand}
+          />
+        ))}
+      </>
+    );
+  };
 
   return (
     <ThreePanelLayout
@@ -350,33 +591,174 @@ const fetchFolders = async () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Tags (comma separated)</label>
+                <div className="relative">
+                  <label className="block text-sm font-medium mb-2">Tags</label>
+                  
+                  {/* Selected Tags */}
+                  {selectedTags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {selectedTags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm"
+                          style={{
+                            backgroundColor: DS.colors.primary.blue + '20',
+                            color: DS.colors.primary.blue,
+                            border: `1px solid ${DS.colors.primary.blue}`
+                          }}
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTags(selectedTags.filter((_, i) => i !== idx));
+                            }}
+                            className="hover:opacity-70"
+                            style={{ color: DS.colors.primary.blue }}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Tag Input */}
                   <input
                     type="text"
-                    value={formData.tags}
-                    onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                    value={tagInput}
+                    onChange={async (e) => {
+                      const value = e.target.value;
+                      setTagInput(value);
+                      
+                      if (value.trim()) {
+                        const searchTerm = value.trim();
+                        // Fetch tags from API with search term (API handles sorting - tags starting with search term first)
+                        const fetchedTags = await fetchTags(searchTerm);
+                        // Filter out already selected tags
+                        const filtered = fetchedTags.filter(tag => !selectedTags.includes(tag));
+                        setTagSuggestions(filtered.slice(0, 15)); // Show more suggestions
+                        setShowTagSuggestions(filtered.length > 0);
+                      } else {
+                        // If input is empty, hide suggestions
+                        setShowTagSuggestions(false);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && tagInput.trim()) {
+                        e.preventDefault();
+                        const newTag = tagInput.trim().toLowerCase();
+                        if (!selectedTags.includes(newTag)) {
+                          setSelectedTags([...selectedTags, newTag]);
+                        }
+                        setTagInput('');
+                        setShowTagSuggestions(false);
+                      } else if (e.key === 'Backspace' && tagInput === '' && selectedTags.length > 0) {
+                        setSelectedTags(selectedTags.slice(0, -1));
+                      }
+                    }}
+                    onFocus={async () => {
+                      if (tagInput.trim()) {
+                        const searchTerm = tagInput.trim();
+                        // Fetch tags from API with search term
+                        const fetchedTags = await fetchTags(searchTerm);
+                        const filtered = fetchedTags.filter(tag => !selectedTags.includes(tag));
+                        setTagSuggestions(filtered.slice(0, 15));
+                        setShowTagSuggestions(filtered.length > 0);
+                      } else {
+                        // Show popular tags when focused
+                        await fetchTags();
+                        const filtered = availableTags.filter(tag => !selectedTags.includes(tag));
+                        setTagSuggestions(filtered.slice(0, 15));
+                        setShowTagSuggestions(filtered.length > 0);
+                      }
+                    }}
+                    onBlur={() => {
+                      // Delay hiding to allow clicking on suggestions
+                      setTimeout(() => setShowTagSuggestions(false), 200);
+                    }}
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="3d-printing, mechanical, arduino, prototype"
+                    placeholder="Type to search tags or press Enter to add"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Help others find your design with relevant tags</p>
+
+                  {/* Tag Suggestions */}
+                  {showTagSuggestions && tagSuggestions.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      {tagSuggestions.map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            if (!selectedTags.includes(tag)) {
+                              setSelectedTags([...selectedTags, tag]);
+                            }
+                            setTagInput('');
+                            setShowTagSuggestions(false);
+                          }}
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500 mt-1">Select from existing tags or create new ones</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Folder (optional)</label>
-                  <select
-                    value={selectedFolderId || ''}
-                    onChange={(e) => setSelectedFolderId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  <div 
+                    className="w-full border border-gray-700 rounded-lg overflow-hidden"
+                    style={{ 
+                      backgroundColor: DS.colors.background.panelLight,
+                      maxHeight: '300px',
+                      overflowY: 'auto'
+                    }}
                   >
-                    <option value="">No folder (root level)</option>
-                    {folders.map((folder) => (
-                      <option key={folder.id} value={folder.id}>
-                        {folder.name}
-                      </option>
+                    {/* Root level option */}
+                    <div
+                      onClick={() => setSelectedFolderId(null)}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-800 transition-colors flex items-center gap-2"
+                      style={{
+                        backgroundColor: selectedFolderId === null ? DS.colors.primary.blue + '20' : 'transparent'
+                      }}
+                    >
+                      <FolderIcon size={16} style={{ color: DS.colors.text.secondary }} />
+                      <span className="text-sm" style={{ color: DS.colors.text.primary }}>
+                        No folder (root level)
+                      </span>
+                    </div>
+                    
+                    {/* Folder tree */}
+                    {buildFolderTree(folders).map(folder => (
+                      <FolderTreeItem
+                        key={folder.id}
+                        folder={folder}
+                        level={0}
+                        selectedFolderId={selectedFolderId}
+                        expandedFolders={expandedFolders}
+                        onSelect={setSelectedFolderId}
+                        onToggleExpand={(folderId) => {
+                          const newExpanded = new Set(expandedFolders);
+                          if (newExpanded.has(folderId)) {
+                            newExpanded.delete(folderId);
+                          } else {
+                            newExpanded.add(folderId);
+                          }
+                          setExpandedFolders(newExpanded);
+                        }}
+                      />
                     ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">Organize your file into a folder</p>
+                  </div>
+                  {selectedFolderId && (
+                    <p className="text-xs text-blue-400 mt-1">
+                      ✓ File will be uploaded to: {getFolderPath(folders, selectedFolderId)}
+                    </p>
+                  )}
+                  {!selectedFolderId && (
+                    <p className="text-xs text-gray-500 mt-1">Organize your file into a folder</p>
+                  )}
                 </div>
               </div>
 

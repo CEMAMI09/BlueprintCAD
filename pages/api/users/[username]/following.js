@@ -47,32 +47,69 @@ export default async function handler(req, res) {
       }
     }
 
-    // Get total count
-    const countResult = await db.get(
-      `SELECT COUNT(*) as count 
-       FROM follows 
-       WHERE follower_id = ? AND status = 1`,
-      [user.id]
-    );
+    // Get total count (handle missing status column)
+    let countResult;
+    try {
+      countResult = await db.get(
+        `SELECT COUNT(*) as count 
+         FROM follows 
+         WHERE follower_id = ? AND (status = 1 OR status IS NULL)`,
+        [user.id]
+      );
+    } catch (err) {
+      if (err.message && err.message.includes('no such column: status')) {
+        countResult = await db.get(
+          `SELECT COUNT(*) as count 
+           FROM follows 
+           WHERE follower_id = ?`,
+          [user.id]
+        );
+      } else {
+        throw err;
+      }
+    }
 
     const total = countResult.count;
 
-    // Get following users with pagination
-    const followingData = await db.all(
-      `SELECT 
-        u.id,
-        u.username,
-        u.profile_picture,
-        u.bio,
-        u.profile_private,
-        (SELECT COUNT(*) FROM follows WHERE following_id = u.id AND status = 1) as followers
-       FROM follows f
-       JOIN users u ON f.following_id = u.id
-       WHERE f.follower_id = ? AND f.status = 1
-       ORDER BY f.created_at DESC
-       LIMIT ? OFFSET ?`,
-      [user.id, limit, offset]
-    );
+    // Get following users with pagination (handle missing status column)
+    let followingData;
+    try {
+      followingData = await db.all(
+        `SELECT 
+          u.id,
+          u.username,
+          u.profile_picture,
+          u.bio,
+          u.profile_private,
+          (SELECT COUNT(*) FROM follows WHERE following_id = u.id AND (status = 1 OR status IS NULL)) as followers
+         FROM follows f
+         JOIN users u ON f.following_id = u.id
+         WHERE f.follower_id = ? AND (f.status = 1 OR f.status IS NULL)
+         ORDER BY f.created_at DESC
+         LIMIT ? OFFSET ?`,
+        [user.id, limit, offset]
+      );
+    } catch (err) {
+      if (err.message && err.message.includes('no such column: status')) {
+        followingData = await db.all(
+          `SELECT 
+            u.id,
+            u.username,
+            u.profile_picture,
+            u.bio,
+            u.profile_private,
+            (SELECT COUNT(*) FROM follows WHERE following_id = u.id) as followers
+           FROM follows f
+           JOIN users u ON f.following_id = u.id
+           WHERE f.follower_id = ?
+           ORDER BY f.created_at DESC
+           LIMIT ? OFFSET ?`,
+          [user.id, limit, offset]
+        );
+      } else {
+        throw err;
+      }
+    }
 
     // Check visibility for each followed user
     const following = await Promise.all(

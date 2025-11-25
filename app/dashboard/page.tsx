@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ThreePanelLayout,
@@ -29,32 +29,113 @@ import {
   Users,
   HardDrive,
   Crown,
+  Upload,
 } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [stats, setStats] = useState<any>(null);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [trending, setTrending] = useState<any[]>([]);
+  const [userInfo, setUserInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [storage, setStorage] = useState<{ used: number; max: number; percentage: number } | null>(null);
 
-  // Mock data
-  const stats = [
-    { label: 'Total Projects', value: '24', icon: Folder, color: DS.colors.primary.blue },
-    { label: 'Active Versions', value: '12', icon: GitBranch, color: DS.colors.accent.success },
-    { label: 'Total Earnings', value: '$1,245', icon: DollarSign, color: DS.colors.accent.cyan },
-    { label: 'Total Views', value: '8.2k', icon: Eye, color: DS.colors.accent.purple },
-  ];
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  const recentActivity = [
-    { id: 1, type: 'version', project: 'Drone Frame v3', action: 'New version uploaded', time: '2 hours ago', user: 'You' },
-    { id: 2, type: 'purchase', project: 'Modular Enclosure', action: 'Purchased by @john_maker', time: '5 hours ago', amount: '$15' },
-    { id: 3, type: 'comment', project: 'Gear Assembly', action: 'New comment from @sarah_cad', time: '1 day ago', user: '@sarah_cad' },
-    { id: 4, type: 'fork', project: 'Robot Arm', action: 'Forked by @tech_labs', time: '2 days ago', user: '@tech_labs' },
-    { id: 5, type: 'star', project: 'Parametric Box', action: 'Starred by 3 users', time: '3 days ago', count: 3 },
-  ];
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
-  const trending = [
-    { id: 1, title: 'Modular Shelf System', author: '@design_pro', stars: 234, downloads: 1200, thumbnail: '🏠' },
-    { id: 2, title: 'Parametric Hinge', author: '@mechanic_ai', stars: 189, downloads: 890, thumbnail: '🔧' },
-    { id: 3, title: 'Cable Management', author: '@organizer', stars: 156, downloads: 670, thumbnail: '🔌' },
+      // Fetch stats
+      const statsRes = await fetch('/api/dashboard/stats', { headers });
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats(statsData);
+        setUserInfo(statsData.user);
+      }
+
+      // Fetch recent activity
+      const activityRes = await fetch('/api/dashboard/activity', { headers });
+      if (activityRes.ok) {
+        const activityData = await activityRes.json();
+        setRecentActivity(activityData);
+      }
+
+      // Fetch trending designs
+      const trendingRes = await fetch('/api/dashboard/trending');
+      if (trendingRes.ok) {
+        const trendingData = await trendingRes.json();
+        setTrending(trendingData);
+      }
+
+      // Fetch storage usage
+      const storageRes = await fetch('/api/dashboard/storage', { headers });
+      if (storageRes.ok) {
+        const storageData = await storageRes.json();
+        setStorage(storageData);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'k';
+    }
+    return num.toString();
+  };
+
+  const formatEarnings = (amount: string) => {
+    const num = parseFloat(amount);
+    if (num >= 1000) {
+      return '$' + (num / 1000).toFixed(1) + 'k';
+    }
+    return '$' + num.toFixed(2);
+  };
+
+  const formatStorage = (bytes: number) => {
+    if (bytes === -1) return 'Unlimited';
+    if (bytes >= 1024 * 1024 * 1024) {
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    } else if (bytes >= 1024 * 1024) {
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    } else if (bytes >= 1024) {
+      return (bytes / 1024).toFixed(2) + ' KB';
+    }
+    return bytes + ' B';
+  };
+
+  const getInitials = (username: string) => {
+    if (!username) return 'U';
+    const parts = username.split(' ');
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return username.substring(0, 2).toUpperCase();
+  };
+
+  // Default stats while loading
+  const displayStats = stats ? [
+    { label: 'Total Projects', value: stats.totalProjects.toString(), icon: Folder, color: DS.colors.primary.blue },
+    { label: 'Active Versions', value: stats.activeVersions.toString(), icon: GitBranch, color: DS.colors.accent.success },
+    { label: 'Total Earnings', value: formatEarnings(stats.totalEarnings), icon: DollarSign, color: DS.colors.accent.cyan },
+    { label: 'Total Views', value: formatNumber(stats.totalViews), icon: Eye, color: DS.colors.accent.purple },
+  ] : [
+    { label: 'Total Projects', value: '0', icon: Folder, color: DS.colors.primary.blue },
+    { label: 'Active Versions', value: '0', icon: GitBranch, color: DS.colors.accent.success },
+    { label: 'Total Earnings', value: '$0', icon: DollarSign, color: DS.colors.accent.cyan },
+    { label: 'Total Views', value: '0', icon: Eye, color: DS.colors.accent.purple },
   ];
 
   return (
@@ -72,16 +153,27 @@ export default function DashboardPage() {
                   Welcome back! Here's what's happening.
                 </p>
               </div>
-              <Button variant="primary" icon={<Folder size={18} />} onClick={() => router.push('/cad-editor')}>
-                New Project
+              <Button 
+                variant="ghost" 
+                icon={<Upload size={18} />} 
+                onClick={() => router.push('/upload')}
+                className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+              >
+                Upload Design
               </Button>
             </div>
           </PanelHeader>
 
           <PanelContent className="p-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-4 gap-4 mb-8">
-              {stats.map((stat, index) => {
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <>
+                {/* Stats Grid */}
+                <div className="grid grid-cols-4 gap-4 mb-8">
+                  {displayStats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
                   <Card key={index} hover padding="md">
@@ -106,14 +198,19 @@ export default function DashboardPage() {
               })}
             </div>
 
-            {/* Recent Activity */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                Recent Activity
-              </h2>
-              <Card padding="none">
-                <div className="divide-y" style={{ borderColor: DS.colors.border.subtle }}>
-                  {recentActivity.map((activity) => (
+                {/* Recent Activity */}
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
+                    Recent Activity
+                  </h2>
+                  <Card padding="none">
+                    {recentActivity.length === 0 ? (
+                      <div className="p-8 text-center" style={{ color: DS.colors.text.secondary }}>
+                        No recent activity
+                      </div>
+                    ) : (
+                      <div className="divide-y" style={{ borderColor: DS.colors.border.subtle }}>
+                        {recentActivity.map((activity) => (
                     <div
                       key={activity.id}
                       className="p-4 hover:bg-opacity-50 cursor-pointer transition-colors"
@@ -141,46 +238,108 @@ export default function DashboardPage() {
                           <Badge variant="success">{activity.amount}</Badge>
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
-
-            {/* Trending Designs */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                Trending Designs
-              </h2>
-              <div className="grid grid-cols-3 gap-4">
-                {trending.map((design) => (
-                  <Card key={design.id} hover padding="md">
-                    <div
-                      className="w-full h-32 rounded-lg flex items-center justify-center text-4xl mb-4"
-                      style={{ backgroundColor: DS.colors.background.elevated }}
-                    >
-                      {design.thumbnail}
-                    </div>
-                    <h3 className="font-semibold mb-1" style={{ color: DS.colors.text.primary }}>
-                      {design.title}
-                    </h3>
-                    <p className="text-sm mb-3" style={{ color: DS.colors.text.secondary }}>
-                      by {design.author}
-                    </p>
-                    <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.tertiary }}>
-                      <div className="flex items-center gap-1">
-                        <Star size={14} />
-                        {design.stars}
+                        </div>
+                      ))}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Download size={14} />
-                        {design.downloads}
-                      </div>
-                    </div>
+                    )}
                   </Card>
-                ))}
-              </div>
-            </div>
+                </div>
+
+                {/* Trending Designs */}
+                <div>
+                  <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
+                    Trending Designs
+                  </h2>
+                  {trending.length === 0 ? (
+                    <div className="p-8 text-center" style={{ color: DS.colors.text.secondary }}>
+                      No trending designs
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-4">
+                      {trending.map((design) => (
+                  <Card 
+                        key={design.id} 
+                        hover 
+                        padding="none"
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/project/${design.id}`)}
+                      >
+                        {/* Thumbnail */}
+                        <div className="aspect-video rounded-t-lg overflow-hidden relative" style={{ backgroundColor: DS.colors.background.panel, minHeight: '180px' }}>
+                          {design.thumbnail ? (
+                            <img 
+                              src={(() => {
+                                const thumbnailPath = String(design.thumbnail);
+                                const filename = thumbnailPath.includes('/') 
+                                  ? thumbnailPath.split('/').pop() || thumbnailPath
+                                  : thumbnailPath;
+                                // Add cache-busting query parameter to ensure fresh images
+                                const url = `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
+                                console.log(`[Dashboard] Loading thumbnail for ${design.id}: ${url}`);
+                                return url;
+                              })()}
+                              alt={design.title}
+                              className="design-thumbnail"
+                              loading="lazy"
+                              style={{ 
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                display: 'block'
+                              }}
+                              onError={(e) => {
+                                console.error(`[Dashboard] Failed to load thumbnail for ${design.id}:`, e);
+                                e.currentTarget.style.display = 'none';
+                                const container = e.currentTarget.parentElement;
+                                if (container) {
+                                  let fallback = container.querySelector('.thumbnail-fallback') as HTMLElement;
+                                  if (!fallback) {
+                                    fallback = document.createElement('div');
+                                    fallback.className = 'thumbnail-fallback flex flex-col items-center justify-center w-full h-full absolute inset-0';
+                                    fallback.style.zIndex = '1';
+                                    fallback.innerHTML = '<span class="text-5xl mb-2">📦</span><span class="text-xs">No thumbnail available</span>';
+                                    container.appendChild(fallback);
+                                  }
+                                  fallback.style.display = 'flex';
+                                }
+                              }}
+                              onLoad={() => {
+                                console.log(`[Dashboard] Successfully loaded thumbnail for ${design.id}`);
+                              }}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center w-full h-full">
+                              <span className="text-5xl mb-2">📦</span>
+                              <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>No thumbnail available</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Content */}
+                        <div className="p-4">
+                          <h3 className="font-semibold mb-1" style={{ color: DS.colors.text.primary }}>
+                            {design.title}
+                          </h3>
+                          <p className="text-sm mb-3" style={{ color: DS.colors.text.secondary }}>
+                            by {design.author}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.tertiary }}>
+                            <div className="flex items-center gap-1">
+                              <Star size={14} />
+                              {design.stars}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Eye size={14} />
+                              {formatNumber(design.views || 0)}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </PanelContent>
         </CenterPanel>
       }
@@ -190,22 +349,40 @@ export default function DashboardPage() {
           <PanelContent className="p-6">
             {/* User Quick Profile */}
             <div className="text-center mb-6">
+              {userInfo?.profile_picture ? (
+                <img
+                  src={`/api/users/profile-picture/${userInfo.profile_picture}`}
+                  alt={userInfo.username}
+                  className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+              ) : null}
               <div
                 className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold"
-                style={{ backgroundColor: DS.colors.primary.blue, color: '#ffffff' }}
+                style={{ 
+                  backgroundColor: DS.colors.primary.blue, 
+                  color: '#ffffff',
+                  display: userInfo?.profile_picture ? 'none' : 'flex'
+                }}
               >
-                JD
+                {userInfo ? getInitials(userInfo.username) : 'U'}
               </div>
               <h3 className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                John Designer
+                {userInfo?.username || 'Loading...'}
               </h3>
               <p className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                @john_designer
+                @{userInfo?.username || 'user'}
               </p>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <Crown size={16} style={{ color: DS.colors.accent.warning }} />
-                <Badge variant="warning" size="sm">Pro Member</Badge>
-              </div>
+              {stats && (
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <Crown size={16} style={{ color: DS.colors.accent.warning }} />
+                  <Badge variant="warning" size="sm">Member</Badge>
+                </div>
+              )}
             </div>
 
             {/* Storage Usage */}
@@ -215,7 +392,7 @@ export default function DashboardPage() {
                   Storage
                 </span>
                 <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                  4.2 GB / 10 GB
+                  {storage ? `${formatStorage(storage.used)} / ${formatStorage(storage.max)}` : 'Loading...'}
                 </span>
               </div>
               <div
@@ -223,52 +400,64 @@ export default function DashboardPage() {
                 style={{ backgroundColor: DS.colors.background.elevated }}
               >
                 <div
-                  className="h-full rounded-full"
-                  style={{ width: '42%', backgroundColor: DS.colors.primary.blue }}
+                  className="h-full rounded-full transition-all"
+                  style={{ 
+                    width: storage ? `${Math.min(storage.percentage, 100)}%` : '0%', 
+                    backgroundColor: storage && storage.percentage > 90 ? DS.colors.accent.error : DS.colors.primary.blue 
+                  }}
                 />
               </div>
             </div>
 
             {/* Quick Stats */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Folder size={16} style={{ color: DS.colors.text.tertiary }} />
-                  <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                    Projects
+            {stats && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Folder size={16} style={{ color: DS.colors.text.tertiary }} />
+                    <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
+                      Projects
+                    </span>
+                  </div>
+                  <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                    {stats.totalProjects}
                   </span>
                 </div>
-                <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                  24
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users size={16} style={{ color: DS.colors.text.tertiary }} />
-                  <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                    Followers
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users size={16} style={{ color: DS.colors.text.tertiary }} />
+                    <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
+                      Followers
+                    </span>
+                  </div>
+                  <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                    {stats.followers}
                   </span>
                 </div>
-                <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                  342
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Star size={16} style={{ color: DS.colors.text.tertiary }} />
-                  <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                    Total Stars
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Star size={16} style={{ color: DS.colors.text.tertiary }} />
+                    <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
+                      Total Stars
+                    </span>
+                  </div>
+                  <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                    {stats.totalStars}
                   </span>
                 </div>
-                <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                  1,234
-                </span>
               </div>
-            </div>
+            )}
 
-            <Button variant="secondary" fullWidth className="mt-6">
-              View Full Profile
-            </Button>
+            {userInfo && (
+              <Button 
+                variant="secondary" 
+                fullWidth 
+                className="mt-6"
+                onClick={() => router.push(`/profile/${userInfo.username}`)}
+              >
+                View Full Profile
+              </Button>
+            )}
           </PanelContent>
         </RightPanel>
       }

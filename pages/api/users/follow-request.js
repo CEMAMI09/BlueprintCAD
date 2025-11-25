@@ -26,10 +26,23 @@ export default async function handler(req, res) {
 
   try {
     // Verify the follow request exists and is pending
-    const followRequest = await db.get(
-      'SELECT * FROM follows WHERE follower_id = ? AND following_id = ? AND status = 0',
-      [followerId, user.userId]
-    );
+    let followRequest;
+    try {
+      followRequest = await db.get(
+        'SELECT * FROM follows WHERE follower_id = ? AND following_id = ? AND (status = 0 OR status IS NULL)',
+        [followerId, user.userId]
+      );
+    } catch (err) {
+      if (err.message && err.message.includes('no such column: status')) {
+        // Fallback if status column doesn't exist
+        followRequest = await db.get(
+          'SELECT * FROM follows WHERE follower_id = ? AND following_id = ?',
+          [followerId, user.userId]
+        );
+      } else {
+        throw err;
+      }
+    }
 
     if (!followRequest) {
       return res.status(404).json({ error: 'Follow request not found' });

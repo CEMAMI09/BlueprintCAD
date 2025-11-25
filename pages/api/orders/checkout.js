@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     }
 
     const buyerId = user.userId;
-    const { projectId } = req.body;
+    const { projectId, totalPrice } = req.body;
 
     if (!projectId) {
       return res.status(400).json({ error: 'Project ID required' });
@@ -57,7 +57,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'You have already purchased this project' });
     }
 
-    const amount = parseFloat(project.price);
+    // Use total price with platform fee if provided, otherwise use base price
+    const amount = totalPrice ? parseFloat(totalPrice) : parseFloat(project.price);
     
     // Generate order number
     const orderNumber = `BLU-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;

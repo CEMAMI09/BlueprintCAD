@@ -1,0 +1,150 @@
+// Download project file and increment download count
+import { getDb } from '../../../../db/db';
+import { getUserFromRequest } from '../../../../backend/lib/auth';
+import fs from 'fs';
+import path from 'path';
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { id } = req.query;
+  if (!id) {
+    return res.status(400).json({ error: 'Missing project id' });
+  }
+
+  try {
+    let db;
+    try {
+      db = await getDb();
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return res.status(500).json({ error: 'Database connection failed' });
+    }
+    
+    if (!db) {
+      console.error('Database is null');
+      return res.status(500).json({ error: 'Database connection failed' });
+    }
+    
+    // Get project
+    const project = await db.get(
+      `SELECT p.*, u.username 
+       FROM projects p 
+       JOIN users u ON p.user_id = u.id 
+       WHERE p.id = ?`,
+      [id]
+    );
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Check if project is public or user has access
+    const user = getUserFromRequest(req);
+    const userId = user && typeof user !== 'string' ? user.userId : null;
+    
+    const isOwner = userId && userId === project.user_id;
+    
+    // If project is for sale, only owner or purchasers can download
+    if (project.for_sale && project.price > 0 && !isOwner) {
+      // Check if user has purchased this project
+      if (userId) {
+        const purchase = await db.get(
+          `SELECT id FROM orders 
+           WHERE buyer_id = ? AND project_id = ? 
+           AND payment_status = 'succeeded' 
+           AND status != 'refunded'`,
+          [userId, id]
+        );
+        if (!purchase) {
+          return res.status(403).json({ error: 'This file is for sale. Purchase required to download.' });
+        }
+      } else {
+        return res.status(403).json({ error: 'This file is for sale. Purchase required to download.' });
+      }
+    }
+    
+    // Check folder membership if in a folder
+    let isFolderMember = false;
+    if (project.folder_id && userId) {
+      const membership = await db.get(
+        'SELECT id FROM folder_members WHERE folder_id = ? AND user_id = ?',
+        [project.folder_id, userId]
+      );
+      isFolderMember = !!membership;
+    }
+    
+    // Grant access if: public, owner, or folder member
+    const hasAccess = project.is_public || isOwner || isFolderMember;
+    
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Get file path
+    const filePath = path.join(process.cwd(), 'storage', 'uploads', project.file_path);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Increment download count in projects table
+    // First, check if downloads column exists, if not we'll add it
+    try {
+      await db.run(
+        `UPDATE projects SET downloads = COALESCE(downloads, 0) + 1 WHERE id = ?`,
+        [id]
+      );
+    } catch (err) {
+      // If downloads column doesn't exist, add it and try again
+      if (err.message && err.message.includes('no such column')) {
+        try {
+          await db.run(`ALTER TABLE projects ADD COLUMN downloads INTEGER DEFAULT 0`);
+          await db.run(`UPDATE projects SET downloads = 1 WHERE id = ?`, [id]);
+        } catch (alterErr) {
+          console.error('Failed to add downloads column:', alterErr);
+          // Continue anyway - download will still work
+        }
+      } else {
+        console.error('Failed to increment download count:', err);
+        // Continue anyway - download will still work
+      }
+    }
+
+    // Get file stats
+    const stats = fs.statSync(filePath);
+    const fileSize = stats.size;
+
+    // Determine content type based on file extension
+    const ext = path.extname(project.file_path).toLowerCase();
+    const contentTypes = {
+      '.stl': 'application/octet-stream',
+      '.obj': 'application/octet-stream',
+      '.step': 'application/octet-stream',
+      '.stp': 'application/octet-stream',
+      '.3mf': 'application/octet-stream',
+      '.ply': 'application/octet-stream',
+      '.gltf': 'model/gltf+json',
+      '.glb': 'model/gltf-binary',
+      '.fbx': 'application/octet-stream',
+      '.dae': 'application/xml',
+    };
+    const contentType = contentTypes[ext] || 'application/octet-stream';
+
+    // Set headers for download
+    const fileName = path.basename(project.file_path);
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', fileSize);
+
+    // Stream the file
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error('Download error:', error);
+    res.status(500).json({ error: 'Failed to download file' });
+  }
+}
+

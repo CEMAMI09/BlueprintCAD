@@ -79,7 +79,7 @@ export default async function handler(req, res) {
           
           // For STL files, use the STL-specific parser
           if (ext === 'stl') {
-            const { getSTLDimensions } = require('../../backend/lib/stl-utils'));
+            const { getSTLDimensions } = require('../../backend/lib/stl-utils');
             console.log('Extracting STL dimensions from:', fullFilePath);
             const dimData = getSTLDimensions(fullFilePath);
             console.log('Extracted dimension data:', dimData);
@@ -105,23 +105,8 @@ export default async function handler(req, res) {
         }
       }
       
-      if (is3DFile) {
-        try {
-          const { generatePlaceholderThumbnail } = require('../../backend/lib/thumbnailGeneratorSimple');
-          const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
-          if (!fs.existsSync(thumbsDir)) {
-            fs.mkdirSync(thumbsDir, { recursive: true });
-          }
-          
-          const basename = path.basename(filePath, ext);
-          const thumbPath = path.join(thumbsDir, `${basename}_thumb.png`);
-          
-          await generatePlaceholderThumbnail(filePath, thumbPath);
-          thumbnailPath = `thumbnails/${basename}_thumb.png`;
-        } catch (thumbError) {
-          console.warn('Thumbnail generation failed (non-fatal):', thumbError.message);
-        }
-      }
+      // Thumbnail will be generated after project creation with the project ID
+      // This is handled in the projects POST route
       
       res.status(200).json({ 
         filePath,

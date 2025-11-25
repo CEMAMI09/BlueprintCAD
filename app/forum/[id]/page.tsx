@@ -2,8 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Layout from '@/components/layout';
 import Link from 'next/link';
+import {
+  ThreePanelLayout,
+  CenterPanel,
+  RightPanel,
+  PanelHeader,
+  PanelContent,
+} from '@/components/ui/ThreePanelLayout';
+import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
+import { Button, Card, Badge } from '@/components/ui/UIComponents';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import {
+  ArrowLeft,
+  MessageSquare,
+  Eye,
+  ThumbsUp,
+  Clock,
+  Pin,
+  Lock,
+  User,
+  Crown,
+  Shield,
+  Trash2,
+} from 'lucide-react';
 
 interface Reply {
   id: number;
@@ -17,6 +39,7 @@ interface Thread {
   title: string;
   content: string;
   username: string;
+  profile_picture?: string | null;
   user_id: number;
   category: string;
   views: number;
@@ -24,6 +47,14 @@ interface Thread {
   is_locked: number;
   created_at: string;
   replies: Reply[];
+}
+
+interface Reply {
+  id: number;
+  content: string;
+  username: string;
+  profile_picture?: string | null;
+  created_at: string;
 }
 
 export default function ThreadDetail() {
@@ -128,158 +159,361 @@ export default function ThreadDetail() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const formatTimeAgo = (dateString: string) => {
+    if (!dateString) return 'Just now';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    if (diffDays < 7) return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+    return date.toLocaleDateString();
   };
 
   if (loading) {
     return (
-      <Layout>
-        <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
-        </div>
-      </Layout>
+      <ThreePanelLayout
+        leftPanel={<GlobalNavSidebar />}
+        centerPanel={
+          <CenterPanel>
+            <PanelContent>
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+              </div>
+            </PanelContent>
+          </CenterPanel>
+        }
+      />
     );
   }
 
   if (!thread) {
     return (
-      <Layout>
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold mb-4">Thread Not Found</h1>
-          <Link href="/forum" className="text-blue-400 hover:text-blue-300">
-            Back to Forum
-          </Link>
-        </div>
-      </Layout>
+      <ThreePanelLayout
+        leftPanel={<GlobalNavSidebar />}
+        centerPanel={
+          <CenterPanel>
+            <PanelContent>
+              <div className="text-center py-12">
+                <h1 className="text-2xl font-bold mb-4" style={{ color: DS.colors.text.primary }}>
+                  Thread Not Found
+                </h1>
+                <Link href="/forum" style={{ color: DS.colors.primary.blue }}>
+                  Back to Forum
+                </Link>
+              </div>
+            </PanelContent>
+          </CenterPanel>
+        }
+      />
     );
   }
 
   return (
-    <Layout>
-      <div className="max-w-5xl mx-auto py-8 px-4">
-        {/* Back Button */}
-        <Link href="/forum" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Forum
-        </Link>
-
-        {/* Thread Header */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                {thread.is_pinned === 1 && (
-                  <span className="px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs rounded">PINNED</span>
-                )}
-                {thread.is_locked === 1 && (
-                  <span className="px-2 py-1 bg-gray-700 text-gray-400 text-xs rounded">LOCKED</span>
-                )}
-                {thread.category && (
-                  <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-xs rounded">{thread.category}</span>
-                )}
-              </div>
-              <h1 className="text-3xl font-bold mb-3">{thread.title}</h1>
-              <div className="flex items-center gap-4 text-sm text-gray-400">
-                <Link href={`/profile/${thread.username}`} className="hover:text-white">
-                  by {thread.username}
-                </Link>
-                <span>•</span>
-                <span>{formatDate(thread.created_at)}</span>
-                <span>•</span>
-                <span>{thread.views} views</span>
-                <span>•</span>
-                <span>{thread.replies.length} replies</span>
-              </div>
-            </div>
-            {user?.userId === thread.user_id && (
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition"
-              >
-                Delete
-              </button>
-            )}
-          </div>
-
-          {/* Thread Content */}
-          <div className="prose prose-invert max-w-none mt-6">
-            <p className="text-gray-300 whitespace-pre-wrap">{thread.content}</p>
-          </div>
-        </div>
-
-        {/* Replies */}
-        <div className="space-y-4 mb-6">
-          {thread.replies.map((reply) => (
-            <div key={reply.id} className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-3">
-                <Link href={`/profile/${reply.username}`} className="font-medium text-blue-400 hover:text-blue-300">
-                  {reply.username}
-                </Link>
-                <span className="text-sm text-gray-500">{formatDate(reply.created_at)}</span>
-              </div>
-              <p className="text-gray-300 whitespace-pre-wrap">{reply.content}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Reply Form */}
-        {thread.is_locked !== 1 && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 className="text-xl font-bold mb-4">Post a Reply</h2>
-            {user ? (
-              <form onSubmit={handleReply}>
-                {error && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm mb-4">
-                    {error}
-                  </div>
-                )}
-                <textarea
-                  value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
-                  rows={6}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none mb-4"
-                  placeholder="Write your reply..."
+    <ThreePanelLayout
+      leftPanel={<GlobalNavSidebar />}
+      centerPanel={
+        <CenterPanel>
+          <PanelHeader 
+            title={
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<ArrowLeft size={18} />}
+                  onClick={() => router.push('/forum')}
                 />
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition disabled:opacity-50"
-                >
-                  {submitting ? 'Posting...' : 'Post Reply'}
-                </button>
-              </form>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-400 mb-4">You must be logged in to reply</p>
-                <button
-                  onClick={() => router.push('/login')}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition"
-                >
-                  Login
-                </button>
+                <span>{thread.title}</span>
               </div>
-            )}
-          </div>
-        )}
+            }
+            actions={
+              user?.userId === thread.user_id && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Trash2 size={18} />}
+                  onClick={handleDelete}
+                  style={{ color: DS.colors.accent.error }}
+                >
+                  Delete
+                </Button>
+              )
+            }
+          />
+          <PanelContent>
+            <div className="max-w-4xl mx-auto px-4 md:px-8 lg:px-12 py-6">
+              {/* Thread Header */}
+              <Card padding="lg" className="mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  {thread.is_pinned === 1 && (
+                    <Badge variant="warning" size="sm">
+                      <Pin size={12} className="mr-1" />
+                      Pinned
+                    </Badge>
+                  )}
+                  {thread.is_locked === 1 && (
+                    <Badge variant="default" size="sm">
+                      <Lock size={12} className="mr-1" />
+                      Locked
+                    </Badge>
+                  )}
+                  {thread.category && (
+                    <Badge variant="default" size="sm">{thread.category}</Badge>
+                  )}
+                </div>
 
-        {thread.is_locked === 1 && (
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 text-center">
-            <svg className="w-12 h-12 text-gray-500 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
-            </svg>
-            <p className="text-gray-400">This thread is locked. No new replies can be posted.</p>
-          </div>
-        )}
-      </div>
-    </Layout>
+                {/* Author Info */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                    style={{ 
+                      backgroundColor: thread.profile_picture ? 'transparent' : DS.colors.primary.blue,
+                      color: '#ffffff'
+                    }}
+                  >
+                    {thread.profile_picture ? (
+                      <img
+                        src={`/api/users/profile-picture/${thread.profile_picture}`}
+                        alt={thread.username}
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            parent.style.backgroundColor = DS.colors.primary.blue;
+                            parent.textContent = thread.username.substring(0, 2).toUpperCase();
+                          }
+                        }}
+                      />
+                    ) : (
+                      thread.username.substring(0, 2).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Link 
+                        href={`/profile/${thread.username}`}
+                        className="font-semibold text-sm hover:underline"
+                        style={{ color: DS.colors.primary.blue }}
+                      >
+                        @{thread.username}
+                      </Link>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} />
+                        {formatTimeAgo(thread.created_at)}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Eye size={12} />
+                        {thread.views} views
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <MessageSquare size={12} />
+                        {thread.replies.length} replies
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Thread Content */}
+                <div className="prose prose-invert max-w-none">
+                  <p className="whitespace-pre-wrap leading-relaxed" style={{ color: DS.colors.text.secondary }}>
+                    {thread.content}
+                  </p>
+                </div>
+              </Card>
+
+              {/* Replies */}
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: DS.colors.text.primary }}>
+                  <MessageSquare size={18} />
+                  Replies ({thread.replies.length})
+                </h2>
+                <div className="space-y-4">
+                  {thread.replies.length > 0 ? (
+                    thread.replies.map((reply) => (
+                      <Card key={reply.id} padding="md">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div 
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                            style={{ 
+                              backgroundColor: reply.profile_picture ? 'transparent' : DS.colors.primary.blue,
+                              color: '#ffffff'
+                            }}
+                          >
+                            {reply.profile_picture ? (
+                              <img
+                                src={`/api/users/profile-picture/${reply.profile_picture}`}
+                                alt={reply.username}
+                                className="w-full h-full rounded-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const parent = e.currentTarget.parentElement;
+                                  if (parent) {
+                                    parent.style.backgroundColor = DS.colors.primary.blue;
+                                    parent.textContent = reply.username.substring(0, 2).toUpperCase();
+                                  }
+                                }}
+                              />
+                            ) : (
+                              reply.username.substring(0, 2).toUpperCase()
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <Link 
+                                href={`/profile/${reply.username}`}
+                                className="font-semibold text-sm hover:underline"
+                                style={{ color: DS.colors.primary.blue }}
+                              >
+                                @{reply.username}
+                              </Link>
+                            </div>
+                            <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
+                              {formatTimeAgo(reply.created_at)}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: DS.colors.text.secondary }}>
+                          {reply.content}
+                        </p>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="text-center py-8" style={{ color: DS.colors.text.tertiary }}>
+                      <MessageSquare size={32} className="mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No replies yet. Be the first to reply!</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Reply Form */}
+              {thread.is_locked !== 1 && (
+                <Card padding="lg">
+                  <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
+                    Post a Reply
+                  </h2>
+                  {user ? (
+                    <form onSubmit={handleReply}>
+                      {error && (
+                        <div 
+                          className="p-3 mb-4 rounded-lg text-sm"
+                          style={{ 
+                            backgroundColor: DS.colors.accent.error + '22',
+                            borderColor: DS.colors.accent.error + '44',
+                            color: DS.colors.accent.error 
+                          }}
+                        >
+                          {error}
+                        </div>
+                      )}
+                      <textarea
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        rows={6}
+                        placeholder="Write your reply..."
+                        className="w-full px-4 py-3 border rounded-lg mb-4"
+                        style={{
+                          backgroundColor: DS.colors.background.panel,
+                          borderColor: DS.colors.border.default,
+                          color: DS.colors.text.primary,
+                        }}
+                      />
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={submitting || !replyContent.trim()}
+                      >
+                        {submitting ? 'Posting...' : 'Post Reply'}
+                      </Button>
+                    </form>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="mb-4" style={{ color: DS.colors.text.secondary }}>
+                        You must be logged in to reply
+                      </p>
+                      <Button
+                        variant="primary"
+                        onClick={() => router.push('/login')}
+                      >
+                        Login
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              )}
+
+              {thread.is_locked === 1 && (
+                <Card padding="lg">
+                  <div className="text-center py-8">
+                    <Lock size={48} className="mx-auto mb-3 opacity-50" style={{ color: DS.colors.text.tertiary }} />
+                    <p style={{ color: DS.colors.text.secondary }}>
+                      This thread is locked. No new replies can be posted.
+                    </p>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </PanelContent>
+        </CenterPanel>
+      }
+      rightPanel={
+        <RightPanel>
+          <PanelHeader title="Thread Info" />
+          <PanelContent>
+            <div className="space-y-4">
+              <Card padding="md" style={{ borderRadius: 0 }}>
+                <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
+                  Statistics
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span style={{ color: DS.colors.text.secondary }}>Views</span>
+                    <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                      {thread.views}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span style={{ color: DS.colors.text.secondary }}>Replies</span>
+                    <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                      {thread.replies.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span style={{ color: DS.colors.text.secondary }}>Category</span>
+                    <Badge variant="default" size="sm">{thread.category}</Badge>
+                  </div>
+                </div>
+              </Card>
+
+              <Card padding="md" style={{ borderRadius: 0 }}>
+                <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
+                  Author
+                </h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full" style={{ backgroundColor: DS.colors.background.panelHover }} />
+                  <Link 
+                    href={`/profile/${thread.username}`}
+                    className="font-semibold text-sm hover:underline"
+                    style={{ color: DS.colors.primary.blue }}
+                  >
+                    @{thread.username}
+                  </Link>
+                </div>
+              </Card>
+            </div>
+          </PanelContent>
+        </RightPanel>
+      }
+    />
   );
 }

@@ -112,30 +112,36 @@ export function Card({ children, hover = false, padding = 'md', className = '', 
 // Badge Component
 interface BadgeProps {
   children: ReactNode;
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error';
-  size?: 'sm' | 'md';
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+  size?: 'sm' | 'md' | 'lg';
+  style?: React.CSSProperties;
 }
 
-export function Badge({ children, variant = 'default', size = 'md' }: BadgeProps) {
+export function Badge({ children, variant = 'default', size = 'md', style }: BadgeProps) {
   const variantStyles = {
     default: { bg: DS.colors.background.elevated, color: DS.colors.text.secondary },
     primary: { bg: DS.colors.primary.blue, color: '#ffffff' },
+    secondary: { bg: DS.colors.background.elevated, color: DS.colors.text.secondary },
     success: { bg: DS.colors.accent.success, color: '#ffffff' },
     warning: { bg: DS.colors.accent.warning, color: '#ffffff' },
     error: { bg: DS.colors.accent.error, color: '#ffffff' },
   };
 
   const sizeStyles = {
-    sm: 'px-2 py-0.5 text-xs',
-    md: 'px-2.5 py-1 text-sm',
+    sm: 'px-3 py-1 text-xs',
+    md: 'px-4 py-1.5 text-sm',
+    lg: 'px-5 py-2 text-base',
   };
+
+  const selectedVariant = variantStyles[variant] || variantStyles.default;
 
   return (
     <span
       className={`inline-flex items-center font-medium rounded-full ${sizeStyles[size]}`}
       style={{
-        backgroundColor: variantStyles[variant].bg,
-        color: variantStyles[variant].color,
+        backgroundColor: selectedVariant.bg,
+        color: selectedVariant.color,
+        ...style,
       }}
     >
       {children}

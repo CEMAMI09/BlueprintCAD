@@ -132,7 +132,7 @@ export default function ThreeDViewer({
       )}
 
       {/* Viewer */}
-      <div className={`${finalHeight} w-full relative`}>
+      <div className={`${finalHeight} w-full relative`} style={{ minHeight: '400px' }}>
         <Suspense
           fallback={
             <div className="w-full h-full bg-gray-900 flex items-center justify-center">

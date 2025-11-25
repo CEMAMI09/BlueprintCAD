@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ThreePanelLayout,
   CenterPanel,
@@ -18,6 +18,7 @@ import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import ThreePreview from '@/components/ThreePreview';
+import ThreeDViewer from '@/frontend/components/ThreeDViewer';
 import SaveProjectModal from '@/components/SaveProjectModal';
 import {
   Upload,
@@ -30,6 +31,7 @@ import {
   Scale,
   Clock,
   Weight,
+  ShoppingCart,
 } from 'lucide-react';
 
 interface PrintabilityAnalysis {
@@ -74,12 +76,15 @@ interface AIEstimate {
 
 export default function QuotePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [projectFileUrl, setProjectFileUrl] = useState<string | null>(null);
   const [aiEstimate, setAiEstimate] = useState<AIEstimate | null>(null);
   const [printability, setPrintability] = useState<PrintabilityAnalysis | null>(null);
   const [dimensions, setDimensions] = useState<Dimensions | null>(null);
   const [scalePercentage, setScalePercentage] = useState(100);
+  const [scaleInputValue, setScaleInputValue] = useState('100');
   const [material, setMaterial] = useState('PLA');
   const [weightGrams, setWeightGrams] = useState<number>(0);
   const [printTimeHours, setPrintTimeHours] = useState<number>(0);
@@ -87,19 +92,170 @@ export default function QuotePage() {
   const [estimating, setEstimating] = useState(false);
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
-  const [selectedManufacturing, setSelectedManufacturing] = useState<string | null>(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
       setUser(JSON.parse(userData));
     }
+
+    // Check if projectId is provided in URL
+    const projectId = searchParams.get('projectId');
+    if (projectId) {
+      loadProjectFile(projectId);
+    }
+  }, [searchParams]);
+
+  const loadProjectFile = async (projectId: string) => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch project');
+      }
+      const project = await res.json();
+      
+      if (project.file_path) {
+        // Set the file URL for the 3D viewer
+        setProjectFileUrl(`/api/files/${encodeURIComponent(project.file_path)}`);
+        
+        // If dimensions are available, set them
+        if (project.dimensions) {
+          try {
+            const dims = JSON.parse(project.dimensions);
+            if (dims.x && dims.y && dims.z) {
+              setDimensions({
+                x: dims.x,
+                y: dims.y,
+                z: dims.z,
+                volume: dims.volume || (dims.x * dims.y * dims.z)
+              });
+            }
+          } catch (e) {
+            // Dimensions not in JSON format, ignore
+          }
+        }
+        
+        // If there's an existing estimate, use it
+        if (project.ai_estimate) {
+          try {
+            const estimate = JSON.parse(project.ai_estimate);
+            setAiEstimate(estimate);
+          } catch (e) {
+            // Estimate not in JSON format, ignore
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error loading project file:', err);
+      setError('Failed to load project file');
+    }
+  };
+
+  // Recalculate printability when scale or material changes
+  const recalculatePrintability = useCallback((scaledDims: Dimensions, materialType: string) => {
+    if (!scaledDims) return null;
+
+    const issues: string[] = [];
+    const warnings: string[] = [];
+    const recommendations: string[] = [];
+
+    // Check scaled dimensions
+    const minDimension = Math.min(scaledDims.x, scaledDims.y, scaledDims.z);
+    const maxDimension = Math.max(scaledDims.x, scaledDims.y, scaledDims.z);
+
+    // Size checks based on scaled dimensions
+    if (minDimension < 0.5) {
+      issues.push(`Very thin walls detected (${minDimension.toFixed(2)}mm). May not print reliably.`);
+      recommendations.push('Consider increasing scale or wall thickness to at least 0.8mm for FDM printing');
+    } else if (minDimension < 1.0) {
+      warnings.push(`Thin features detected (${minDimension.toFixed(2)}mm). Print with care.`);
+      recommendations.push('Use a 0.2mm or smaller nozzle for better detail');
+    }
+
+    // Check if too large for common build volumes
+    const commonBuildVolume = 220; // 220x220x250 is common (Ender 3, etc.)
+    if (maxDimension > commonBuildVolume) {
+      warnings.push(`Design exceeds common printer build volume (${maxDimension.toFixed(0)}mm). May need to be split or scaled down.`);
+      recommendations.push(`Consider scaling down to fit ${commonBuildVolume}mm build plate`);
+    }
+
+    // Check if too small
+    if (maxDimension < 5) {
+      warnings.push('Very small object. Requires precision printing.');
+      recommendations.push('Use slower print speeds (20-30mm/s)');
+      recommendations.push('Ensure bed is perfectly leveled');
+      recommendations.push('Consider scaling up for easier printing');
+    }
+
+    // Check volume - very small objects are tricky
+    if (scaledDims.volume < 100) { // Less than 100mm³
+      warnings.push('Very small volume. Requires precision printing.');
+      recommendations.push('Use slower print speeds (20-30mm/s)');
+      recommendations.push('Consider scaling up for better printability');
+    }
+
+    // Aspect ratio checks
+    const aspectRatioXY = Math.max(scaledDims.x, scaledDims.y) / Math.min(scaledDims.x, scaledDims.y);
+    const aspectRatioZ = scaledDims.z / Math.min(scaledDims.x, scaledDims.y);
+
+    if (aspectRatioZ > 10) {
+      warnings.push('Very tall and thin object. May be unstable during printing.');
+      recommendations.push('Add a brim or raft for better bed adhesion');
+      recommendations.push('Print slowly to avoid tipping');
+    }
+
+    if (aspectRatioXY > 20) {
+      warnings.push('Extremely elongated shape detected.');
+      recommendations.push('Orient diagonally on build plate if possible');
+    }
+
+    // Material-specific recommendations
+    const materialWarnings: { [key: string]: string[] } = {
+      'ABS': ['Requires heated bed (100°C) and enclosure to prevent warping', 'Print in a well-ventilated area'],
+      'PETG': ['Requires heated bed (80°C)', 'More flexible than PLA, good for functional parts'],
+      'TPU': ['Requires slow printing (25mm/s)', 'Flexible material, ensure proper bed adhesion'],
+      'Nylon': ['Requires heated bed (80°C) and dry storage', 'Very strong but absorbs moisture'],
+    };
+
+    if (materialWarnings[materialType]) {
+      materialWarnings[materialType].forEach(warning => {
+        recommendations.push(warning);
+      });
+    }
+
+    // General recommendations
+    if (recommendations.length === 0) {
+      recommendations.push('Use 0.2mm layer height for good quality/speed balance');
+      recommendations.push('Add supports if design has overhangs greater than 45°');
+      recommendations.push('Consider part orientation to minimize support material');
+    }
+
+    // Determine printability
+    const isPrintable = issues.length === 0;
+    let confidence = 'high';
+    
+    if (issues.length > 0) {
+      confidence = 'low';
+    } else if (warnings.length > 2) {
+      confidence = 'medium';
+    } else if (warnings.length > 0) {
+      confidence = 'good';
+    }
+
+    return {
+      isPrintable,
+      confidence,
+      issues,
+      warnings,
+      recommendations: recommendations.slice(0, 5) // Limit to 5 recommendations
+    };
   }, []);
 
   // Calculate weight and print time when dimensions, scale, or material changes
   useEffect(() => {
-    if (dimensions) {
+    if (dimensions && dimensions.volume > 0) {
       const densities: { [key: string]: number } = {
         'PLA': 1.24,
         'ABS': 1.04,
@@ -109,27 +265,85 @@ export default function QuotePage() {
       };
 
       const density = densities[material] || 1.24;
+      // Calculate volume from dimensions if not provided or seems wrong
+      // Sometimes volume might be stored incorrectly, so recalculate it
+      const calculatedVolume = dimensions.x * dimensions.y * dimensions.z;
+      const volumeToUse = (dimensions.volume && dimensions.volume > 0 && 
+                           Math.abs(dimensions.volume - calculatedVolume) / Math.max(dimensions.volume, calculatedVolume) < 0.1) 
+                          ? dimensions.volume : calculatedVolume;
+      
+      // Volume scales by cube of scale factor (volume is 3D)
       const scaleFactor = Math.pow(scalePercentage / 100, 3);
-      const scaledVolume = dimensions.volume * scaleFactor;
-      const volumeCm3 = scaledVolume / 1000;
-      const infill = 0.20;
-      const effectiveDensity = density * (infill * 0.85 + 0.15);
-      const newWeight = volumeCm3 * effectiveDensity;
+      
+      // Volume is in mm³, convert to cm³
+      const scaledVolumeMm3 = volumeToUse * scaleFactor;
+      const volumeCm3 = scaledVolumeMm3 / 1000;
+      
+      // Calculate weight with proper infill and shell
+      const infillPercent = 20; // 20% infill
+      const wallVolumeFraction = 0.12; // Shell walls (~12% of bounding box)
+      const interiorVolumeFraction = 1.0 - wallVolumeFraction; // ~88% is interior
+      const infillVolumeFraction = (infillPercent / 100) * interiorVolumeFraction; // Infill applies to interior
+      const effectiveVolumeFraction = wallVolumeFraction + infillVolumeFraction;
+      const newWeight = volumeCm3 * density * effectiveVolumeFraction;
       setWeightGrams(newWeight);
+      
+      console.log(`[Frontend Weight] Dimensions: ${dimensions.x.toFixed(2)} x ${dimensions.y.toFixed(2)} x ${dimensions.z.toFixed(2)} mm`);
+      console.log(`[Frontend Weight] Stored volume: ${dimensions.volume?.toFixed(2) || 'N/A'} mm³, Calculated volume: ${calculatedVolume.toFixed(2)} mm³, Using: ${volumeToUse.toFixed(2)} mm³`);
+      console.log(`[Frontend Weight] Scale: ${scalePercentage}%, Scaled volume: ${scaledVolumeMm3.toFixed(2)} mm³ = ${volumeCm3.toFixed(4)} cm³`);
+      console.log(`[Frontend Weight] Effective fraction: ${(effectiveVolumeFraction * 100).toFixed(1)}%, Density: ${density} g/cm³, Weight: ${newWeight.toFixed(2)}g`);
 
+      // Calculate print time more accurately
+      const scaledX = dimensions.x * (scalePercentage / 100);
+      const scaledY = dimensions.y * (scalePercentage / 100);
       const scaledZ = dimensions.z * (scalePercentage / 100);
+      
       const layerHeight = 0.2;
-      const printSpeed = 50;
+      const printSpeed = 50; // mm/s
       const layers = Math.ceil(scaledZ / layerHeight);
-      const avgPerimeter = 2 * ((dimensions.x * scalePercentage / 100) + (dimensions.y * scalePercentage / 100));
-      const infillDensity = 0.2;
-      const infillPathLength = (dimensions.x * scalePercentage / 100) * (dimensions.y * scalePercentage / 100) * infillDensity / layerHeight;
-      const totalPathLength = layers * (avgPerimeter + infillPathLength);
-      const timeSeconds = totalPathLength / printSpeed;
-      const newPrintTime = (timeSeconds / 3600) * 1.15;
+      
+      // Perimeter length (2 perimeters)
+      const avgPerimeter = 2 * (scaledX + scaledY);
+      
+      // Infill path length per layer
+      const layerArea = scaledX * scaledY;
+      const infillSpacing = 2; // mm between infill lines
+      const infillPathLength = (layerArea * infillPercent / 100) / infillSpacing;
+      
+      // Total path length
+      const pathLengthPerLayer = avgPerimeter * 2 + infillPathLength;
+      const totalPathLength = pathLengthPerLayer * layers;
+      
+      // Base print time
+      const printTimeSeconds = totalPathLength / printSpeed;
+      
+      // Add overhead (first layer slower, travel time, retractions)
+      const firstLayerTime = avgPerimeter / 20; // First layer at 20mm/s
+      const travelTime = totalPathLength * 0.3 / 150; // 30% travel at 150mm/s
+      const retractTime = layers * 2; // 2 seconds per layer
+      
+      // Total time in hours
+      const totalTimeSeconds = printTimeSeconds + firstLayerTime + travelTime + retractTime;
+      const newPrintTime = (totalTimeSeconds / 3600) * 1.15; // 15% safety margin
       setPrintTimeHours(newPrintTime);
+
+      // Recalculate printability with scaled dimensions
+      const scaledDimensions: Dimensions = {
+        x: scaledX,
+        y: scaledY,
+        z: scaledZ,
+        volume: scaledVolumeMm3
+      };
+      const newPrintability = recalculatePrintability(scaledDimensions, material);
+      if (newPrintability) {
+        setPrintability(newPrintability);
+      }
+    } else if (dimensions) {
+      // If volume is 0 or missing, set defaults
+      setWeightGrams(0);
+      setPrintTimeHours(0);
     }
-  }, [scalePercentage, material, dimensions]);
+  }, [scalePercentage, material, dimensions, recalculatePrintability]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -170,6 +384,7 @@ export default function QuotePage() {
     setPrintability(null);
     setDimensions(null);
     setScalePercentage(100);
+    setScaleInputValue('100');
     setWeightGrams(0);
     setPrintTimeHours(0);
 
@@ -189,11 +404,18 @@ export default function QuotePage() {
         const data = await res.json();
         if (data.dimensions && data.volume) {
           const parts = data.dimensions.replace(' mm', '').split('x').map(parseFloat);
+          // Ensure volume is in mm³ (if it's in cm³, multiply by 1000)
+          let volume = data.volume;
+          const calculatedVolume = parts[0] * parts[1] * parts[2];
+          // If volume is much smaller than calculated, it's likely in cm³
+          if (volume < calculatedVolume / 10 && calculatedVolume > 0) {
+            volume = volume * 1000; // Convert cm³ to mm³
+          }
           setDimensions({
             x: parts[0],
             y: parts[1],
             z: parts[2],
-            volume: data.volume
+            volume: volume || calculatedVolume
           });
         }
         if (data.printability) {
@@ -216,6 +438,12 @@ export default function QuotePage() {
       formData.append('file', file);
       formData.append('scale', scalePercentage.toString());
       formData.append('material', material);
+      
+      console.log('[Quote] Requesting estimate with:', { 
+        scale: scalePercentage, 
+        material, 
+        fileSize: file.size 
+      });
 
       const token = localStorage.getItem('token');
       const res = await fetch('/api/projects/estimate', {
@@ -237,16 +465,41 @@ export default function QuotePage() {
             deliveryTime: '5-7 business days',
             description: 'Professional manufacturing with quality guarantee',
             recommended: true
-          },
-          {
-            name: 'Local Manufacturing',
-            price: `$${localPrice.toFixed(2)}`,
-            deliveryTime: '7-10 business days',
-            description: 'Estimated cost for local manufacturing (20% more than Blueprint)',
-            recommended: false
           }
         ];
 
+        // Parse weight and print time from API response if available
+        let apiWeight = weightGrams;
+        let apiPrintTime = printTimeHours;
+        
+        if (data.weight) {
+          const weightMatch = data.weight.match(/([\d.]+)\s*g/);
+          if (weightMatch) {
+            apiWeight = parseFloat(weightMatch[1]);
+          }
+        }
+        
+        if (data.printTime) {
+          // Parse time like "2h 30m" or "150 minutes"
+          const timeMatch = data.printTime.match(/(\d+)\s*h/);
+          const minMatch = data.printTime.match(/(\d+)\s*m/);
+          if (timeMatch || minMatch) {
+            const hours = timeMatch ? parseFloat(timeMatch[1]) : 0;
+            const minutes = minMatch ? parseFloat(minMatch[1]) : 0;
+            apiPrintTime = hours + (minutes / 60);
+          } else {
+            const minOnly = data.printTime.match(/(\d+)\s*minutes?/);
+            if (minOnly) {
+              apiPrintTime = parseFloat(minOnly[1]) / 60;
+            }
+          }
+        }
+        
+        // Don't overwrite frontend-calculated weight with API weight
+        // The frontend calculation is more accurate and reactive to scale/material changes
+        // Only use API print time (it's calculated from actual file analysis)
+        if (apiPrintTime > 0) setPrintTimeHours(apiPrintTime);
+        
         setAiEstimate({
           ...data,
           material: material,
@@ -286,6 +539,54 @@ export default function QuotePage() {
     // Only depend on scalePercentage and material, not aiEstimate or handleGetEstimate
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scalePercentage, material]);
+
+  const handleOrderManufacturing = async () => {
+    if (!file || !aiEstimate) {
+      setError('Please ensure you have an estimate');
+      return;
+    }
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    setProcessing(true);
+    setError('');
+
+    try {
+      // Prepare order data
+      const orderData = {
+        fileName: file.name,
+        manufacturingOption: 'Blueprint Manufacturing',
+        estimatedCost: aiEstimate.estimate,
+        deliveryTime: '5-7 business days',
+        material: material,
+        scalePercentage: scalePercentage,
+        dimensions: dimensions ? JSON.stringify({
+          x: dimensions.x * scalePercentage / 100,
+          y: dimensions.y * scalePercentage / 100,
+          z: dimensions.z * scalePercentage / 100,
+          volume: dimensions.volume * Math.pow(scalePercentage / 100, 3)
+        }) : null,
+        weight: weightGrams,
+        printTime: printTimeHours,
+        aiEstimate: JSON.stringify(aiEstimate),
+        breakdown: aiEstimate.breakdown ? JSON.stringify(aiEstimate.breakdown) : null
+      };
+
+      // Store order data and redirect directly to order page
+      sessionStorage.setItem('manufacturingOrder', JSON.stringify({
+        ...orderData,
+        price: parseFloat(aiEstimate.estimate.replace(/[^0-9.]/g, ''))
+      }));
+
+      router.push('/order');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create order');
+      setProcessing(false);
+    }
+  };
 
   const handleSaveProject = async (projectData: {
     title: string;
@@ -577,24 +878,34 @@ export default function QuotePage() {
                                     type="number"
                                     min="10"
                                     max="500"
-                                    value={scalePercentage}
+                                    value={scaleInputValue}
                                     onChange={(e) => {
                                       const value = e.target.value;
+                                      setScaleInputValue(value);
+                                      // Allow empty input while typing
                                       if (value === '') {
-                                        setScalePercentage(100);
                                         return;
                                       }
                                       const numValue = parseInt(value);
                                       if (!isNaN(numValue)) {
-                                        setScalePercentage(Math.max(10, Math.min(500, numValue)));
+                                        const clampedValue = Math.max(10, Math.min(500, numValue));
+                                        setScalePercentage(clampedValue);
+                                        // Update input value if it was clamped
+                                        if (numValue !== clampedValue) {
+                                          setScaleInputValue(clampedValue.toString());
+                                        }
                                       }
                                     }}
                                     onBlur={(e) => {
-                                      const value = parseInt(e.target.value);
-                                      if (isNaN(value) || value < 10) {
+                                      const value = e.target.value;
+                                      if (value === '' || isNaN(parseInt(value))) {
+                                        setScaleInputValue('100');
                                         setScalePercentage(100);
-                                      } else if (value > 500) {
-                                        setScalePercentage(500);
+                                      } else {
+                                        const numValue = parseInt(value);
+                                        const clampedValue = Math.max(10, Math.min(500, numValue));
+                                        setScaleInputValue(clampedValue.toString());
+                                        setScalePercentage(clampedValue);
                                       }
                                     }}
                                     className="w-20 px-3 py-1 rounded text-center font-semibold"
@@ -612,7 +923,16 @@ export default function QuotePage() {
                                 min="10"
                                 max="500"
                                 value={scalePercentage}
-                                onChange={(e) => setScalePercentage(parseInt(e.target.value))}
+                                onChange={(e) => {
+                                  const newValue = parseInt(e.target.value);
+                                  setScalePercentage(newValue);
+                                  setScaleInputValue(newValue.toString());
+                                }}
+                                onMouseUp={(e) => {
+                                  // Sync input value when slider is released
+                                  const newValue = parseInt((e.target as HTMLInputElement).value);
+                                  setScaleInputValue(newValue.toString());
+                                }}
                                 className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                                 style={{
                                   backgroundColor: DS.colors.background.elevated,
@@ -626,46 +946,6 @@ export default function QuotePage() {
                               </div>
                             </div>
 
-                            {/* Scaled Dimensions */}
-                            <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: DS.colors.background.panel }}>
-                              <div className="flex items-center justify-between mb-3">
-                                <p className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                                  Scaled Dimensions
-                                </p>
-                                {scalePercentage !== 100 && (
-                                  <Badge variant="primary" size="sm">
-                                    {scalePercentage > 100 ? '+' : ''}
-                                    {(scalePercentage - 100).toFixed(0)}%
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                  <p className="text-xs mb-1" style={{ color: DS.colors.text.tertiary }}>
-                                    Width (X)
-                                  </p>
-                                  <p className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                                    {(dimensions.x * scalePercentage / 100).toFixed(2)} mm
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs mb-1" style={{ color: DS.colors.text.tertiary }}>
-                                    Depth (Y)
-                                  </p>
-                                  <p className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                                    {(dimensions.y * scalePercentage / 100).toFixed(2)} mm
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs mb-1" style={{ color: DS.colors.text.tertiary }}>
-                                    Height (Z)
-                                  </p>
-                                  <p className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                                    {(dimensions.z * scalePercentage / 100).toFixed(2)} mm
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
 
                             {/* Material Type */}
                             <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: DS.colors.background.panel }}>
@@ -775,21 +1055,76 @@ export default function QuotePage() {
                       {/* Right Column - 3D Preview, AI Estimate, Manufacturing Options */}
                       <div className="space-y-6">
                         {file && (
-                          <Card padding="lg">
-                            <h3 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                              3D Preview
-                            </h3>
-                            <div
-                              className="w-full rounded-lg overflow-hidden relative"
-                              style={{ 
-                                backgroundColor: DS.colors.background.panel,
-                                aspectRatio: '16/9',
-                                minHeight: '300px'
-                              }}
-                            >
-                              <ThreePreview file={file} />
-                            </div>
-                          </Card>
+                          <>
+                            <Card padding="lg">
+                              <h3 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
+                                3D Preview
+                              </h3>
+                              <div
+                                className="w-full rounded-lg overflow-hidden relative"
+                                style={{ 
+                                  backgroundColor: DS.colors.background.panel,
+                                  aspectRatio: '16/9',
+                                  minHeight: '300px'
+                                }}
+                              >
+                                {projectFileUrl ? (
+                                  <ThreeDViewer
+                                    fileUrl={projectFileUrl}
+                                    fileName={projectFileUrl.split('/').pop() || 'model'}
+                                    fileType=".stl"
+                                    preset="detail"
+                                  />
+                                ) : (
+                                  <ThreePreview file={file} />
+                                )}
+                              </div>
+                            </Card>
+
+                            {/* Current Dimensions */}
+                            {dimensions && (
+                              <Card padding="lg">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <Scale size={20} style={{ color: DS.colors.primary.blue }} />
+                                  <h3 className="text-lg font-semibold" style={{ color: DS.colors.text.primary }}>
+                                    Current Dimensions
+                                  </h3>
+                                  {scalePercentage !== 100 && (
+                                    <Badge variant="primary" size="sm">
+                                      {scalePercentage > 100 ? '+' : ''}
+                                      {(scalePercentage - 100).toFixed(0)}%
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="grid grid-cols-3 gap-3">
+                                  <div>
+                                    <p className="text-xs mb-1" style={{ color: DS.colors.text.tertiary }}>
+                                      Width (X)
+                                    </p>
+                                    <p className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                                      {(dimensions.x * scalePercentage / 100).toFixed(2)} mm
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs mb-1" style={{ color: DS.colors.text.tertiary }}>
+                                      Depth (Y)
+                                    </p>
+                                    <p className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                                      {(dimensions.y * scalePercentage / 100).toFixed(2)} mm
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs mb-1" style={{ color: DS.colors.text.tertiary }}>
+                                      Height (Z)
+                                    </p>
+                                    <p className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                                      {(dimensions.z * scalePercentage / 100).toFixed(2)} mm
+                                    </p>
+                                  </div>
+                                </div>
+                              </Card>
+                            )}
+                          </>
                         )}
 
                         {/* AI Estimate & Manufacturing Options */}
@@ -859,105 +1194,64 @@ export default function QuotePage() {
                               </div>
                             </div>
 
-                            {/* Cost Breakdown */}
-                            <div className="border-t pt-4" style={{ borderColor: DS.colors.border.default }}>
-                              <h4 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
-                                Cost Breakdown
-                              </h4>
-                              <div className="space-y-2 text-xs">
-                                <div className="flex justify-between">
-                                  <span style={{ color: DS.colors.text.secondary }}>Material</span>
-                                  <span style={{ color: DS.colors.text.primary }}>
-                                    {aiEstimate.breakdown.materialCost}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: DS.colors.text.secondary }}>Labor</span>
-                                  <span style={{ color: DS.colors.text.primary }}>{aiEstimate.breakdown.laborCost}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: DS.colors.text.secondary }}>Machine</span>
-                                  <span style={{ color: DS.colors.text.primary }}>
-                                    {aiEstimate.breakdown.machineTime}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: DS.colors.text.secondary }}>Markup</span>
-                                  <span style={{ color: DS.colors.text.primary }}>{aiEstimate.breakdown.markup}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span style={{ color: DS.colors.text.secondary }}>Shipping</span>
-                                  <span style={{ color: DS.colors.text.primary }}>{aiEstimate.breakdown.shipping}</span>
-                                </div>
-                              </div>
-                            </div>
                           </Card>
 
-                          {/* Manufacturing Options */}
-                          <Card padding="lg">
-                            <h3 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                              Manufacturing Options
-                            </h3>
-                            <div className="space-y-3">
-                              {aiEstimate.manufacturingOptions.map((option, index) => (
-                                <div
-                                  key={index}
-                                  onClick={() => setSelectedManufacturing(option.name)}
-                                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                                    selectedManufacturing === option.name
-                                      ? 'border-blue-500 bg-blue-500/10'
-                                      : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
-                                  } ${option.recommended ? 'ring-2 ring-emerald-500/30' : ''}`}
-                                  style={{
-                                    borderColor:
-                                      selectedManufacturing === option.name
-                                        ? DS.colors.primary.blue
-                                        : DS.colors.border.default,
-                                    backgroundColor:
-                                      selectedManufacturing === option.name
-                                        ? DS.colors.primary.blue + '10'
-                                        : DS.colors.background.panel
-                                  }}
-                                >
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="font-semibold text-sm" style={{ color: DS.colors.text.primary }}>
-                                          {option.name}
-                                        </h4>
-                                        {option.recommended && (
-                                          <Badge variant="success" size="sm">
-                                            Recommended
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <p className="text-xs mb-2" style={{ color: DS.colors.text.secondary }}>
-                                        {option.description}
-                                      </p>
-                                      {option.deliveryTime && (
-                                        <div className="flex items-center gap-1 text-xs" style={{ color: DS.colors.text.tertiary }}>
-                                          <Clock size={12} />
-                                          {option.deliveryTime}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="text-right ml-4">
-                                      {(option.price || option.estimatedCost) && (
-                                        <p className="text-lg font-bold" style={{ color: DS.colors.primary.blue }}>
-                                          {option.price || option.estimatedCost}
-                                        </p>
-                                      )}
-                                      {option.priceRange && (
-                                        <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>
-                                          {option.priceRange}
-                                        </p>
-                                      )}
+                          {/* Blueprint Manufacturing Order */}
+                          {aiEstimate && (
+                            <Card padding="lg">
+                              <div className="flex items-center gap-2 mb-4">
+                                <Package size={24} style={{ color: DS.colors.primary.blue }} />
+                                <h3 className="text-lg font-semibold" style={{ color: DS.colors.text.primary }}>
+                                  Blueprint Manufacturing
+                                </h3>
+                                <Badge variant="success" size="sm">
+                                  Recommended
+                                </Badge>
+                              </div>
+                              
+                              <div className="mb-6">
+                                <p className="text-sm mb-4" style={{ color: DS.colors.text.secondary }}>
+                                  Professional manufacturing with quality guarantee
+                                </p>
+                                
+                                <div className="space-y-3 mb-6">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm" style={{ color: DS.colors.text.secondary }}>Estimated Cost</span>
+                                    <span className="text-2xl font-bold" style={{ color: DS.colors.accent.success }}>
+                                      {aiEstimate.estimate}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm" style={{ color: DS.colors.text.secondary }}>Delivery Time</span>
+                                    <div className="flex items-center gap-1 text-sm" style={{ color: DS.colors.text.primary }}>
+                                      <Clock size={14} />
+                                      <span>5-7 business days</span>
                                     </div>
                                   </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm" style={{ color: DS.colors.text.secondary }}>Material</span>
+                                    <span className="text-sm font-medium" style={{ color: DS.colors.text.primary }}>
+                                      {material}
+                                    </span>
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
-                          </Card>
+                              </div>
+
+                              <Button
+                                variant="primary"
+                                onClick={handleOrderManufacturing}
+                                disabled={processing}
+                                className="w-full"
+                                icon={<ShoppingCart size={18} />}
+                                style={{ background: DS.colors.primary.blue, color: '#fff' }}
+                              >
+                                {processing ? 'Processing...' : 'Send Order Request'}
+                              </Button>
+                              <p className="text-xs mt-2 text-center" style={{ color: DS.colors.text.tertiary }}>
+                                You'll be redirected to the order page to complete your request
+                              </p>
+                            </Card>
+                          )}
 
                           </>
                         )}

@@ -311,22 +311,26 @@ export default function CADViewer({
             toRemove.forEach((obj) => scene.remove(obj));
 
             scene.add(meshToAdd);
-            // Position camera - for card views, ensure full model is visible and centered/higher
+            
+            // Calculate optimal camera distance to fit the entire model in view
+            const boxSize = Math.max(size.x, size.y, size.z) * scale;
+            // Calculate distance needed to fit model in viewport (with padding)
+            // Using FOV of 50 degrees, we need distance = (boxSize/2) / tan(FOV/2) * padding
+            const fovRad = (50 * Math.PI) / 180;
+            const distance = (boxSize / 2) / Math.tan(fovRad / 2) * 1.8; // 1.8x padding for good fit
+            
+            // Position camera - ensure model is centered and visible
             if (isCardView) {
-              // Calculate optimal camera distance to fit the entire model in view
-              // Use the bounding box size to determine camera distance
-              const boxSize = Math.max(size.x, size.y, size.z) * scale;
-              // Calculate distance needed to fit model in viewport (with padding)
-              // Using FOV of 50 degrees, we need distance = (boxSize/2) / tan(FOV/2) * padding
-              const fovRad = (50 * Math.PI) / 180;
-              const distance = (boxSize / 2) / Math.tan(fovRad / 2) * 2.5; // 2.5x padding for more zoom out
-              // Position camera higher up and centered to see the model better
-              // Higher Y (1.0) positions camera much higher, looking down at the model
-              camera.position.set(distance * 0.5, distance * 1.0, distance * 0.5);
+              // Card view: slightly angled view
+              camera.position.set(distance * 0.7, distance * 0.7, distance * 0.7);
             } else {
-              camera.position.set(2, 2, 2);
+              // Detail/upload view: standard 3/4 view angle (not too high)
+              camera.position.set(distance * 0.7, distance * 0.5, distance * 0.7);
             }
+            
+            // Look at the center (where the model is now positioned)
             camera.lookAt(0, 0, 0);
+            
             // Update controls target to center
             if (controls) {
               controls.target.set(0, 0, 0);
@@ -418,8 +422,8 @@ export default function CADViewer({
   // When noWrapper is true, render just the canvas with no extra divs
   if (noWrapper) {
     return (
-      <div className={`relative ${height} w-full ${className}`}>
-        <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+      <div className={`relative ${height} w-full ${className}`} style={{ minHeight: '400px' }}>
+        <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ minHeight: '400px' }} />
         
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm z-10">

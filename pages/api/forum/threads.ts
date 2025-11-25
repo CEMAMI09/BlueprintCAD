@@ -14,6 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         SELECT 
           t.*,
           u.username,
+          u.profile_picture,
           COUNT(DISTINCT r.id) as reply_count,
           MAX(COALESCE(r.created_at, t.created_at)) as last_activity
         FROM forum_threads t
@@ -73,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
 
       const thread = await db.get(
-        `SELECT t.*, u.username 
+        `SELECT t.*, u.username, u.profile_picture 
          FROM forum_threads t 
          JOIN users u ON t.user_id = u.id 
          WHERE t.id = ?`,
