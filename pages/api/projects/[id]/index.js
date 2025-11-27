@@ -11,10 +11,16 @@ export default async function handler(req, res) {
     try {
       console.log('[projects:id] GET', { id });
       
+      // Get project with master branch file_path if it exists
       const project = await db.get(
-        `SELECT p.*, u.username, u.profile_private 
+        `SELECT 
+          p.*, 
+          u.username, 
+          u.profile_private,
+          COALESCE(fb.file_path, p.file_path) as display_file_path
          FROM projects p 
          JOIN users u ON p.user_id = u.id 
+         LEFT JOIN file_branches fb ON p.id = fb.project_id AND fb.is_master = 1
          WHERE p.id = ?`,
         [id]
       );
@@ -22,6 +28,11 @@ export default async function handler(req, res) {
       if (!project) {
         console.warn('[projects:id] Not found', { id });
         return res.status(404).json({ error: 'Project not found' });
+      }
+
+      // Use master branch file_path if available
+      if (project.display_file_path) {
+        project.file_path = project.display_file_path;
       }
 
       // Check privacy

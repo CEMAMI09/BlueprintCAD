@@ -36,14 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Security: prevent directory traversal attacks
     const sanitizedFile = path.normalize(decodedFile).replace(/^(\.\.(\/|\\|$))+/, '');
-    const uploadsDir = path.join(process.cwd(), 'storage', 'uploads');
-    const filePath = path.join(uploadsDir, sanitizedFile);
     
-    // Security: ensure file is within uploads directory
-    if (!filePath.startsWith(uploadsDir)) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
     // Security: check file extension
     const ext = path.extname(sanitizedFile).toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
@@ -51,13 +44,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Get file info from database first to check if project exists
+    // Use the original decoded path for database lookup (database stores paths like /storage/branches/...)
     const db = await getDb();
     let project = await db.get(
       'SELECT * FROM projects WHERE file_path = ?',
       [sanitizedFile]
     );
 
-    // If no project found, check if it's a version file
+    // If no project found, check if it's a branch file
+    if (!project) {
+      const branchFile = await db.get(
+        `SELECT fb.*, p.id as project_id, p.user_id, p.is_public, p.folder_id, p.for_sale, p.price, p.title
+         FROM file_branches fb
+         JOIN projects p ON fb.project_id = p.id
+         WHERE fb.file_path = ?`,
+        [sanitizedFile]
+      );
+      
+      if (branchFile) {
+        // Use branch file data as project data
+        project = {
+          id: branchFile.project_id,
+          user_id: branchFile.user_id,
+          is_public: branchFile.is_public,
+          folder_id: branchFile.folder_id,
+          for_sale: branchFile.for_sale,
+          price: branchFile.price,
+          title: branchFile.title,
+          file_path: branchFile.file_path
+        };
+      }
+    }
+
+    // If still no project found, check if it's a version file
     if (!project) {
       const versionFile = await db.get(
         'SELECT fv.*, p.user_id, p.is_public, p.folder_id, p.for_sale, p.price FROM file_versions fv JOIN projects p ON fv.project_id = p.id WHERE fv.file_path = ?',
@@ -75,6 +94,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       project = versionFile;
     }
 
+    // Determine which storage directory to use based on file path
+    // Remove leading slash for file system operations
+    const normalizedFile = sanitizedFile.startsWith('/') ? sanitizedFile.substring(1) : sanitizedFile;
+    let storageDir: string;
+    let filePath: string;
+    
+    if (normalizedFile.startsWith('storage/branches/')) {
+      // Branch file
+      storageDir = path.join(process.cwd(), 'storage', 'branches');
+      const relativePath = normalizedFile.replace('storage/branches/', '');
+      filePath = path.join(storageDir, relativePath);
+    } else if (normalizedFile.startsWith('storage/uploads/')) {
+      // Regular upload file
+      storageDir = path.join(process.cwd(), 'storage', 'uploads');
+      const relativePath = normalizedFile.replace('storage/uploads/', '');
+      filePath = path.join(storageDir, relativePath);
+    } else {
+      // Default to uploads directory (backward compatibility)
+      storageDir = path.join(process.cwd(), 'storage', 'uploads');
+      filePath = path.join(storageDir, normalizedFile);
+    }
+    
+    // Security: ensure file is within allowed storage directories
+    const allowedDirs = [
+      path.join(process.cwd(), 'storage', 'uploads'),
+      path.join(process.cwd(), 'storage', 'branches')
+    ];
+    const isInAllowedDir = allowedDirs.some(dir => filePath.startsWith(dir));
+    
+    if (!isInAllowedDir) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     // Check if file exists on disk
     let exists = fs.existsSync(filePath);
     let actualFilePath = filePath;
@@ -82,37 +134,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // If file doesn't exist at exact path, try to find it by filename
     if (!exists && project) {
       const filename = path.basename(sanitizedFile);
-      const uploadsDir = path.join(process.cwd(), 'storage', 'uploads');
       
-      // Try to find file by searching in uploads directory
-      try {
-        const files = fs.readdirSync(uploadsDir, { withFileTypes: true });
-        for (const file of files) {
-          if (file.isFile() && file.name === filename) {
-            actualFilePath = path.join(uploadsDir, file.name);
-            exists = true;
-            console.log('[api/files] Found file by filename search:', { requested: sanitizedFile, found: file.name, actualPath: actualFilePath });
-            break;
-          } else if (file.isDirectory()) {
-            // Search in subdirectories
-            try {
-              const subFiles = fs.readdirSync(path.join(uploadsDir, file.name), { withFileTypes: true });
-              for (const subFile of subFiles) {
-                if (subFile.isFile() && subFile.name === filename) {
-                  actualFilePath = path.join(uploadsDir, file.name, subFile.name);
-                  exists = true;
-                  console.log('[api/files] Found file in subdirectory:', { requested: sanitizedFile, found: path.join(file.name, subFile.name), actualPath: actualFilePath });
-                  break;
+      // Search in the appropriate storage directory
+      const searchDirs = [
+        path.join(process.cwd(), 'storage', 'branches'),
+        path.join(process.cwd(), 'storage', 'uploads')
+      ];
+      
+      for (const searchDir of searchDirs) {
+        if (!fs.existsSync(searchDir)) continue;
+        
+        try {
+          const files = fs.readdirSync(searchDir, { withFileTypes: true });
+          for (const file of files) {
+            if (file.isFile() && file.name === filename) {
+              actualFilePath = path.join(searchDir, file.name);
+              exists = true;
+              console.log('[api/files] Found file by filename search:', { requested: sanitizedFile, found: file.name, actualPath: actualFilePath, searchDir });
+              break;
+            } else if (file.isDirectory()) {
+              // Search in subdirectories
+              try {
+                const subFiles = fs.readdirSync(path.join(searchDir, file.name), { withFileTypes: true });
+                for (const subFile of subFiles) {
+                  if (subFile.isFile() && subFile.name === filename) {
+                    actualFilePath = path.join(searchDir, file.name, subFile.name);
+                    exists = true;
+                    console.log('[api/files] Found file in subdirectory:', { requested: sanitizedFile, found: path.join(file.name, subFile.name), actualPath: actualFilePath, searchDir });
+                    break;
+                  }
                 }
+                if (exists) break;
+              } catch {
+                // Skip subdirectory if can't read
               }
-              if (exists) break;
-            } catch {
-              // Skip subdirectory if can't read
             }
           }
+          if (exists) break;
+        } catch (err) {
+          console.error('[api/files] Error searching for file in', searchDir, ':', err);
         }
-      } catch (err) {
-        console.error('[api/files] Error searching for file:', err);
       }
     }
     

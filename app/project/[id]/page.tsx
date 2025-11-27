@@ -1,8 +1,9 @@
 
 'use client';
 
-import { ThreePanelLayout, CenterPanel, PanelHeader, PanelContent } from '@/components/ui/ThreePanelLayout';
+import { ThreePanelLayout, CenterPanel, RightPanel, PanelHeader, PanelContent } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
+import FolderContextSidebar from '@/frontend/components/FolderContextSidebar';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 
 import { useState, useEffect } from 'react';
@@ -10,19 +11,12 @@ import { useParams, useRouter } from 'next/navigation';
 import ThreeDViewer from '@/frontend/components/ThreeDViewer';
 import RenameModal from '@/frontend/components/RenameModal';
 import HistoryModal from '@/components/HistoryModal';
-import CommentSystem from '@/components/CommentSystem';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import Link from 'next/link';
 import { MapPin, Link as LinkIcon, Github, Twitter, Instagram, Youtube } from 'lucide-react';
 import SubscriptionGate from '@/frontend/components/SubscriptionGate';
 import UpgradeModal from '@/frontend/components/UpgradeModal';
 
-interface Comment {
-  id: string;
-  content: string;
-  username: string;
-  created_at: string;
-}
 
 interface Project {
   id: string;
@@ -47,6 +41,7 @@ interface Project {
   canViewCostData?: boolean;
   isOwner?: boolean;
   is_public?: number | boolean;
+  folder_id?: number | null;
 }
 
 export default function ProjectDetail() {
@@ -57,8 +52,6 @@ export default function ProjectDetail() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false); // Using "liked" for starred state
-  const [comment, setComment] = useState('');
-  const [comments, setComments] = useState<Comment[]>([]);
   const [actionError, setActionError] = useState<string>('');
   const [fetchError, setFetchError] = useState<string>('');
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -69,6 +62,7 @@ export default function ProjectDetail() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [authorProfile, setAuthorProfile] = useState<any>(null);
+  const [currentBranchId, setCurrentBranchId] = useState<number | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -80,11 +74,37 @@ export default function ProjectDetail() {
   useEffect(() => {
     if (id) {
       fetchProject();
-      fetchComments();
       fetchLikeState(); // Fetches starred state
       checkPurchaseStatus();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (project?.folder_id) {
+      fetchCurrentBranch();
+    }
+  }, [project?.folder_id, id]);
+
+  const fetchCurrentBranch = async () => {
+    if (!project?.folder_id) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/projects/${id}/branches`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const masterBranch = data.branches?.find((b: any) => b.is_master === 1);
+        if (masterBranch) {
+          setCurrentBranchId(masterBranch.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching current branch:', error);
+    }
+  };
 
   useEffect(() => {
     if (project?.username) {
@@ -167,7 +187,7 @@ export default function ProjectDetail() {
             thumbnail_path: data.thumbnail_path,
             hasThumbnail: !!data.thumbnail_path,
             thumbnailUrl: data.thumbnail_path ? `/api/thumbnails/${data.thumbnail_path.replace('thumbnails/', '')}` : null,
-            fileUrl: data.file_path ? `/api/files/${data.file_path}` : null 
+            fileUrl: data.file_path ? `/api/files/${encodeURIComponent(data.file_path)}` : null 
           });
           
           if (!data.thumbnail_path) {
@@ -210,17 +230,6 @@ export default function ProjectDetail() {
     }
   };
 
-  const fetchComments = async () => {
-    try {
-      const res = await fetch(`/api/comments/on/project/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setComments(data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch comments:', err);
-    }
-  };
 
   const handleLike = async () => { // Handles star/unstar
     if (!user) {
@@ -258,45 +267,6 @@ export default function ProjectDetail() {
     }
   };
 
-  const handleComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) {
-      try {
-        if (typeof window !== 'undefined') {
-          setTimeout(() => router.push('/login'), 0);
-        }
-      } catch (err) {
-        console.error('Navigation error:', err);
-        window.location.href = '/login';
-      }
-      return;
-    }
-
-    if (!comment.trim()) return;
-
-    try {
-      setActionError('');
-      const res = await fetch(`/api/comments/on/project/${id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ content: comment })
-      });
-
-      if (res.ok) {
-        setComment('');
-        fetchComments();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setActionError(err.error || `Failed to post comment (status ${res.status})`);
-      }
-    } catch (err) {
-      console.error('Failed to post comment:', err);
-      setActionError('Network error while posting comment.');
-    }
-  };
 
   const handleDownload = async () => {
     if (!project?.file_path) return;
@@ -543,15 +513,6 @@ export default function ProjectDetail() {
                     {project.description || 'No description provided.'}
                   </p>
                 </div>
-                {/* Comments */}
-                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">
-                  <CommentSystem
-                    entityType="project"
-                    entityId={parseInt(id)}
-                    currentUserId={user?.id}
-                    currentUsername={user?.username}
-                  />
-                </div>
               </div>
               {/* Right Column - Details & Actions */}
               <div className="space-y-6">
@@ -781,7 +742,19 @@ export default function ProjectDetail() {
         </CenterPanel>
       }
       rightPanel={
-        authorProfile ? (
+        project?.folder_id ? (
+          <RightPanel>
+            <PanelHeader title="Folder Context" />
+            <PanelContent>
+              <FolderContextSidebar
+                projectId={id}
+                folderId={project.folder_id}
+                branchId={currentBranchId}
+                isRootFolder={false}
+              />
+            </PanelContent>
+          </RightPanel>
+        ) : authorProfile ? (
           <div className="p-6 space-y-6">
             {/* Author Profile */}
             <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">

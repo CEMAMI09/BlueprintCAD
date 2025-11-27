@@ -79,6 +79,50 @@ export default function Upload() {
   const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
 
+  // Check subscription feature access
+  const checkSubscription = async (feature: string, onAllowed: () => void) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setShowUpgradeModal(true);
+        setUpgradeTier('pro');
+        return;
+      }
+
+      const res = await fetch(`/api/subscriptions/can-action?feature=${feature}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.allowed) {
+          onAllowed();
+        } else {
+          // Determine required tier
+          const tierMap: { [key: string]: 'pro' | 'creator' | 'enterprise' } = {
+            maxPrivateProjects: 'pro',
+            canSell: 'pro',
+            maxProjects: 'pro',
+            maxFolders: 'pro',
+            storefrontCustomization: 'creator',
+            fileVersioning: 'creator',
+            analytics: 'pro',
+          };
+          setUpgradeTier(tierMap[feature] || 'pro');
+          setShowUpgradeModal(true);
+        }
+      } else {
+        // If check fails, show upgrade modal
+        setUpgradeTier('pro');
+        setShowUpgradeModal(true);
+      }
+    } catch (error) {
+      console.error('Subscription check error:', error);
+      setUpgradeTier('pro');
+      setShowUpgradeModal(true);
+    }
+  };
+
 useEffect(() => {
   // Read ?folder= param in App Router
   const folderId = searchParams ? searchParams.get('folder') : null;
@@ -476,6 +520,7 @@ const fetchFolders = async () => {
   };
 
   return (
+    <>
     <ThreePanelLayout
       leftPanel={<LeftPanel><GlobalNavSidebar /></LeftPanel>}
       centerPanel={
@@ -894,6 +939,7 @@ const fetchFolders = async () => {
           </PanelContent>
         </CenterPanel>
       }
+      rightPanel={null}
     />
     
     {showUpgradeModal && (
@@ -904,5 +950,6 @@ const fetchFolders = async () => {
         feature="maxPrivateProjects"
       />
     )}
+    </>
   );
 }

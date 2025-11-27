@@ -226,6 +226,22 @@ export default async function handler(req, res) {
 
       const projectId = result.lastID;
 
+      // If project is in a folder, create a default master branch with the project title as the branch name
+      if (folder_id) {
+        try {
+          const branchName = title.trim() || 'Untitled';
+          await db.run(
+            `INSERT INTO file_branches (project_id, folder_id, branch_name, file_path, is_master, created_by)
+             VALUES (?, ?, ?, ?, 1, ?)`,
+            [projectId, folder_id, branchName, file_path, user.userId]
+          );
+          console.log(`Created master branch "${branchName}" for project ${projectId} in folder ${folder_id}`);
+        } catch (branchError) {
+          console.error('Error creating default branch:', branchError);
+          // Don't fail project creation if branch creation fails
+        }
+      }
+
       // Save tags to tags table if tags are provided
       if (tags) {
         try {

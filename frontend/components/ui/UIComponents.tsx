@@ -201,6 +201,51 @@ export function Input({ label, error, icon, fullWidth = false, className = '', .
   );
 }
 
+// Textarea Component
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: string;
+  error?: string;
+  fullWidth?: boolean;
+}
+
+export function Textarea({ label, error, fullWidth = false, className = '', ...props }: TextareaProps) {
+  return (
+    <div className={`${fullWidth ? 'w-full' : ''}`}>
+      {label && (
+        <label
+          className="block text-sm font-medium mb-2"
+          style={{ color: DS.colors.text.primary }}
+        >
+          {label}
+        </label>
+      )}
+      <textarea
+        className={`w-full px-4 py-2 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 ${className}`}
+        style={{
+          backgroundColor: DS.colors.background.panelLight,
+          borderColor: error ? DS.colors.accent.error : DS.colors.border.default,
+          color: DS.colors.text.primary,
+          resize: 'vertical',
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = DS.colors.primary.blue;
+          e.currentTarget.style.boxShadow = `0 0 0 3px ${DS.colors.primary.blue}33`;
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = error ? DS.colors.accent.error : DS.colors.border.default;
+          e.currentTarget.style.boxShadow = 'none';
+        }}
+        {...props}
+      />
+      {error && (
+        <p className="mt-1 text-sm" style={{ color: DS.colors.accent.error }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // SearchBar Component
 interface SearchBarProps {
   placeholder?: string;

@@ -37,7 +37,10 @@ import {
   Globe,
   ArrowLeft,
   Trash2,
+  MessageSquare,
 } from 'lucide-react';
+import BranchManagementModal from '@/frontend/components/BranchManagementModal';
+import { Textarea } from '@/components/ui/UIComponents';
 
 interface FolderData {
   id: number;
@@ -97,11 +100,18 @@ export default function FolderDetailPage() {
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
   const [breadcrumb, setBreadcrumb] = useState<Array<{ id: number; name: string }>>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [selectedProjectForBranches, setSelectedProjectForBranches] = useState<{ id: number; folder_id: number } | null>(null);
+  const [projectMenuOpen, setProjectMenuOpen] = useState<number | null>(null);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [newNote, setNewNote] = useState('');
+  const [activeTab, setActiveTab] = useState<'info' | 'notes'>('info');
+  const [submittingNote, setSubmittingNote] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchFolderData();
       fetchBreadcrumb();
+      fetchNotes();
     }
   }, [id]);
 
@@ -144,6 +154,69 @@ export default function FolderDetailPage() {
       }
     } catch (error) {
       console.error('Error fetching breadcrumb:', error);
+    }
+  };
+
+  const fetchNotes = async () => {
+    if (!id) return;
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch(`/api/folders/${id}/notes?folder_only=true`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setNotes(data.notes || []);
+      }
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!newNote.trim() || !id || submittingNote) return;
+
+    setSubmittingNote(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/folders/${id}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          note_text: newNote.trim()
+        })
+      });
+
+      if (res.ok) {
+        setNewNote('');
+        await fetchNotes();
+      }
+    } catch (error) {
+      console.error('Error adding note:', error);
+    } finally {
+      setSubmittingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: number) => {
+    if (!id) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/folders/${id}/notes?note_id=${noteId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        await fetchNotes();
+      }
+    } catch (error) {
+      console.error('Error deleting note:', error);
     }
   };
 
@@ -466,7 +539,68 @@ export default function FolderDetailPage() {
                               <span>{formatTimeAgo(project.updated_at || project.created_at)}</span>
                             </div>
                           </div>
-                          <Button variant="ghost" size="sm" icon={<MoreVertical size={16} />} />
+                          <div className="relative">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              icon={<MoreVertical size={16} />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setProjectMenuOpen(projectMenuOpen === project.id ? null : project.id);
+                              }}
+                            />
+                            {projectMenuOpen === project.id && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-40"
+                                  onClick={() => setProjectMenuOpen(null)}
+                                />
+                                <div
+                                  className="absolute right-0 top-full mt-2 z-50 rounded-lg shadow-xl border py-1 min-w-[200px]"
+                                  style={{
+                                    backgroundColor: DS.colors.background.card,
+                                    borderColor: DS.colors.border.default,
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <button
+                                    onClick={() => {
+                                      setSelectedProjectForBranches({ id: project.id, folder_id: folder.id });
+                                      setProjectMenuOpen(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2"
+                                    style={{ color: DS.colors.text.primary }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = DS.colors.background.panelHover;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = 'transparent';
+                                    }}
+                                  >
+                                    <GitBranch size={16} />
+                                    <span>View Branches</span>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedProjectForBranches({ id: project.id, folder_id: folder.id });
+                                      setProjectMenuOpen(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2"
+                                    style={{ color: DS.colors.text.primary }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = DS.colors.background.panelHover;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = 'transparent';
+                                    }}
+                                  >
+                                    <Plus size={16} />
+                                    <span>Add New Branch</span>
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -507,68 +641,158 @@ export default function FolderDetailPage() {
           <RightPanel>
             <PanelHeader title="Folder Info" />
             <PanelContent>
-              <div className="space-y-4">
-                <Card padding="md" style={{ borderRadius: 0 }}>
-                  <div
-                    className="w-full h-24 rounded-lg flex items-center justify-center mb-4"
-                    style={{ backgroundColor: `${folder.color || DS.colors.primary.blue}22` }}
-                  >
-                    <Folder size={48} style={{ color: folder.color || DS.colors.primary.blue }} />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2" style={{ color: DS.colors.text.primary }}>
-                    {folder.name}
-                  </h3>
-                  {folder.description && (
-                    <p className="text-sm mb-4" style={{ color: DS.colors.text.secondary }}>
-                      {folder.description}
-                    </p>
-                  )}
-                </Card>
+              {/* Tabs */}
+              <div className="flex border-b mb-4" style={{ borderColor: DS.colors.border.default }}>
+                <button
+                  onClick={() => setActiveTab('info')}
+                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                    activeTab === 'info' ? 'border-b-2' : ''
+                  }`}
+                  style={{
+                    color: activeTab === 'info' ? DS.colors.primary.blue : DS.colors.text.secondary,
+                    borderBottomColor: activeTab === 'info' ? DS.colors.primary.blue : 'transparent'
+                  }}
+                >
+                  Info
+                </button>
+                <button
+                  onClick={() => setActiveTab('notes')}
+                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                    activeTab === 'notes' ? 'border-b-2' : ''
+                  }`}
+                  style={{
+                    color: activeTab === 'notes' ? DS.colors.primary.blue : DS.colors.text.secondary,
+                    borderBottomColor: activeTab === 'notes' ? DS.colors.primary.blue : 'transparent'
+                  }}
+                >
+                  Notes
+                </button>
+              </div>
 
-                <Card padding="md" style={{ borderRadius: 0 }}>
-                  <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
-                    Statistics
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span style={{ color: DS.colors.text.secondary }}>Subfolders</span>
-                      <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                        {subfolders.length}
-                      </span>
+              {activeTab === 'info' && (
+                <div className="space-y-4">
+                  <Card padding="md" style={{ borderRadius: 0 }}>
+                    <div
+                      className="w-full h-24 rounded-lg flex items-center justify-center mb-4"
+                      style={{ backgroundColor: `${folder.color || DS.colors.primary.blue}22` }}
+                    >
+                      <Folder size={48} style={{ color: folder.color || DS.colors.primary.blue }} />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span style={{ color: DS.colors.text.secondary }}>Projects</span>
-                      <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                        {projects.length}
-                      </span>
-                    </div>
-                    {folder.is_team_folder === 1 && (
+                    <h3 className="text-lg font-bold mb-2" style={{ color: DS.colors.text.primary }}>
+                      {folder.name}
+                    </h3>
+                    {folder.description && (
+                      <p className="text-sm mb-4" style={{ color: DS.colors.text.secondary }}>
+                        {folder.description}
+                      </p>
+                    )}
+                  </Card>
+
+                  <Card padding="md" style={{ borderRadius: 0 }}>
+                    <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
+                      Statistics
+                    </h3>
+                    <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
-                        <span style={{ color: DS.colors.text.secondary }}>Members</span>
+                        <span style={{ color: DS.colors.text.secondary }}>Subfolders</span>
                         <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                          {folder.member_count || 0}
+                          {subfolders.length}
                         </span>
                       </div>
+                      <div className="flex items-center justify-between">
+                        <span style={{ color: DS.colors.text.secondary }}>Projects</span>
+                        <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                          {projects.length}
+                        </span>
+                      </div>
+                      {folder.is_team_folder === 1 && (
+                        <div className="flex items-center justify-between">
+                          <span style={{ color: DS.colors.text.secondary }}>Members</span>
+                          <span className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                            {folder.member_count || 0}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+
+                  <Card padding="md" style={{ borderRadius: 0 }}>
+                    <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
+                      Owner
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full" style={{ backgroundColor: DS.colors.background.panelHover }} />
+                      <Link 
+                        href={`/profile/${folder.owner_username}`}
+                        className="font-semibold text-sm hover:underline"
+                        style={{ color: DS.colors.primary.blue }}
+                      >
+                        @{folder.owner_username}
+                      </Link>
+                    </div>
+                  </Card>
+                </div>
+              )}
+
+              {activeTab === 'notes' && (
+                <div className="space-y-4 px-4">
+                  <div className="space-y-3">
+                    <Textarea
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Add a note to this folder..."
+                      rows={3}
+                    />
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleAddNote}
+                      disabled={!newNote.trim() || submittingNote}
+                      icon={<Plus size={14} />}
+                    >
+                      Add Note
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3 mt-4">
+                    {notes.length === 0 ? (
+                      <p className="text-sm text-center py-4" style={{ color: DS.colors.text.tertiary }}>
+                        No notes yet. Add one above!
+                      </p>
+                    ) : (
+                      notes.map((note) => (
+                        <Card key={note.id} padding="sm">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="text-sm mb-2" style={{ color: DS.colors.text.primary }}>
+                                {note.note_text}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs" style={{ color: DS.colors.text.tertiary }}>
+                                <span>@{note.username}</span>
+                                <span>•</span>
+                                <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            {(() => {
+                              const user = localStorage.getItem('user');
+                              const userId = user ? JSON.parse(user).id : null;
+                              const canDelete = folder.user_role === 'owner' || folder.user_role === 'admin' || (userId && note.user_id === userId);
+                              return canDelete ? (
+                                <button
+                                  onClick={() => handleDeleteNote(note.id)}
+                                  className="p-1 rounded hover:bg-gray-800 transition-colors"
+                                >
+                                  <Trash2 size={14} style={{ color: DS.colors.text.tertiary }} />
+                                </button>
+                              ) : null;
+                            })()}
+                          </div>
+                        </Card>
+                      ))
                     )}
                   </div>
-                </Card>
-
-                <Card padding="md" style={{ borderRadius: 0 }}>
-                  <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
-                    Owner
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full" style={{ backgroundColor: DS.colors.background.panelHover }} />
-                    <Link 
-                      href={`/profile/${folder.owner_username}`}
-                      className="font-semibold text-sm hover:underline"
-                      style={{ color: DS.colors.primary.blue }}
-                    >
-                      @{folder.owner_username}
-                    </Link>
-                  </div>
-                </Card>
-              </div>
+                </div>
+              )}
             </PanelContent>
           </RightPanel>
         }
@@ -580,6 +804,23 @@ export default function FolderDetailPage() {
         onSubmit={handleCreateFolder}
         parentId={Number(id)}
       />
+
+      {selectedProjectForBranches && (
+        <BranchManagementModal
+          isOpen={!!selectedProjectForBranches}
+          onClose={() => {
+            setSelectedProjectForBranches(null);
+            // Refresh folder data when modal closes to show updated master branch
+            fetchFolderData();
+          }}
+          projectId={selectedProjectForBranches.id.toString()}
+          folderId={selectedProjectForBranches.folder_id.toString()}
+          onBranchChange={() => {
+            // Refresh folder data to show updated master branch
+            fetchFolderData();
+          }}
+        />
+      )}
 
       {/* Right-click Context Menu */}
       {contextMenu && (

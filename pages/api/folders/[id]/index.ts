@@ -53,15 +53,53 @@ export default async function handler(
         folder.user_role = 'owner';
       }
 
-      // Fetch projects in this folder
+      // Fetch projects in this folder, showing the master branch's file
       const projects = await db.all(
-        `SELECT p.*, u.username
+        `SELECT 
+          p.*, 
+          u.username,
+          fb.file_path as master_branch_file_path,
+          fb.branch_name as master_branch_name,
+          fb.id as master_branch_id
         FROM projects p
         JOIN users u ON p.user_id = u.id
+        LEFT JOIN file_branches fb ON p.id = fb.project_id AND fb.is_master = 1
         WHERE p.folder_id = ?
         ORDER BY p.updated_at DESC`,
         [id]
       );
+
+      // Update file_path and title to show master branch's file and sync with database
+      for (const project of projects) {
+        // Always use master branch file_path and name if it exists
+        if (project.master_branch_file_path) {
+          // Update the response to show master branch file
+          project.file_path = project.master_branch_file_path;
+          
+          // Also update the project title to match master branch name
+          if (project.master_branch_name) {
+            project.title = project.master_branch_name;
+          }
+          
+          // Also update the project's file_path and title in the database to match master branch
+          // This ensures consistency - the project always points to the master branch
+          const currentProject = await db.get('SELECT file_path, title FROM projects WHERE id = ?', [project.id]);
+          const needsUpdate = !currentProject || 
+            currentProject.file_path !== project.master_branch_file_path ||
+            (project.master_branch_name && currentProject.title !== project.master_branch_name);
+          
+          if (needsUpdate) {
+            await db.run(
+              'UPDATE projects SET file_path = ?, title = COALESCE(?, title) WHERE id = ?',
+              [project.master_branch_file_path, project.master_branch_name || null, project.id]
+            );
+            console.log(`Updated project ${project.id} file_path to "${project.master_branch_file_path}" and title to "${project.master_branch_name || 'unchanged'}"`);
+          }
+        }
+        // Clean up temporary fields
+        delete project.master_branch_file_path;
+        delete project.master_branch_id;
+      }
 
       // Fetch subfolders
       const subfolders = await db.all(
