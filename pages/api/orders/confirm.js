@@ -98,16 +98,35 @@ export default async function handler(req, res) {
           )
         );
 
-        // Record notifications
+        // Create notification for seller about the sale
         await db.run(
-          `INSERT INTO order_notifications (order_id, user_id, type) VALUES (?, ?, 'purchase')`,
-          [order.id, order.buyer_id]
+          `INSERT INTO notifications (user_id, type, related_id, message) VALUES (?, ?, ?, ?)`,
+          [order.seller_id, 'purchase', order.id, `${order.buyer_username} purchased your design "${order.project_title}" for $${order.amount}`]
         );
 
-        await db.run(
-          `INSERT INTO order_notifications (order_id, user_id, type) VALUES (?, ?, 'sale')`,
-          [order.id, order.seller_id]
+        // Check if seller just hit $100 earnings milestone
+        const totalEarnings = await db.get(
+          `SELECT COALESCE(SUM(amount - COALESCE(refund_amount, 0)), 0) as total
+           FROM orders
+           WHERE seller_id = ? AND payment_status = 'succeeded'`,
+          [order.seller_id]
         );
+        
+        const earnings = parseFloat(totalEarnings?.total || 0);
+        if (earnings >= 100) {
+          // Check if we've already notified about $100 milestone
+          const existingMilestone = await db.get(
+            'SELECT id FROM notifications WHERE user_id = ? AND type = ? AND message LIKE ?',
+            [order.seller_id, 'milestone', '%$100%']
+          );
+          
+          if (!existingMilestone) {
+            await db.run(
+              'INSERT INTO notifications (user_id, type, related_id, message) VALUES (?, ?, ?, ?)',
+              [order.seller_id, 'milestone', null, `💰 Congratulations! You've earned your first $100 on Blueprint!`]
+            );
+          }
+        }
 
       } catch (emailError) {
         console.error('Email notification error:', emailError);

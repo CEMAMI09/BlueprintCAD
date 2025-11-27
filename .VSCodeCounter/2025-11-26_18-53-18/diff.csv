@@ -1,0 +1,46 @@
+"filename", "language", "TypeScript", "JavaScript", "Markdown", "TypeScript JSX", "PostCSS", "comment", "blank", "total"
+"/Users/user/Documents/BlueprintCAD/SUBSCRIPTION_IMPLEMENTATION_GUIDE.md", "Markdown", 0, 0, 376, 0, 0, 0, 70, 446
+"/Users/user/Documents/BlueprintCAD/SUBSCRIPTION_SYSTEM_DESIGN.md", "Markdown", 0, 0, 287, 0, 0, 0, 61, 348
+"/Users/user/Documents/BlueprintCAD/SUBSCRIPTION_SYSTEM_SUMMARY.md", "Markdown", 0, 0, 255, 0, 0, 0, 59, 314
+"/Users/user/Documents/BlueprintCAD/app/checkout/page.tsx", "TypeScript JSX", 0, 0, 0, 20, 0, 1, 1, 22
+"/Users/user/Documents/BlueprintCAD/app/components/navbar.tsx", "TypeScript JSX", 0, 0, 0, 1, 0, 0, 0, 1
+"/Users/user/Documents/BlueprintCAD/app/dashboard/page.tsx", "TypeScript JSX", 0, 0, 0, 16, 0, 0, 2, 18
+"/Users/user/Documents/BlueprintCAD/app/explore/page.tsx", "TypeScript JSX", 0, 0, 0, 30, 0, 0, 0, 30
+"/Users/user/Documents/BlueprintCAD/app/folders/page.tsx", "TypeScript JSX", 0, 0, 0, 4, 0, 0, 0, 4
+"/Users/user/Documents/BlueprintCAD/app/forum/page.tsx", "TypeScript JSX", 0, 0, 0, 20, 0, 1, 2, 23
+"/Users/user/Documents/BlueprintCAD/app/globals.css", "PostCSS", 0, 0, 0, 0, 16, 2, 2, 20
+"/Users/user/Documents/BlueprintCAD/app/login/page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 1, 1, 2
+"/Users/user/Documents/BlueprintCAD/app/marketplace/page.tsx", "TypeScript JSX", 0, 0, 0, 4, 0, 0, 0, 4
+"/Users/user/Documents/BlueprintCAD/app/messages/page.tsx", "TypeScript JSX", 0, 0, 0, 4, 0, 0, 0, 4
+"/Users/user/Documents/BlueprintCAD/app/page.tsx", "TypeScript JSX", 0, 0, 0, -4, 0, 0, 0, -4
+"/Users/user/Documents/BlueprintCAD/app/project/[id]/page.tsx", "TypeScript JSX", 0, 0, 0, 27, 0, 0, 0, 27
+"/Users/user/Documents/BlueprintCAD/app/quote/page.tsx", "TypeScript JSX", 0, 0, 0, 4, 0, 0, 0, 4
+"/Users/user/Documents/BlueprintCAD/app/register/page.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 1, 1, 2
+"/Users/user/Documents/BlueprintCAD/app/settings/page.tsx", "TypeScript JSX", 0, 0, 0, 1, 0, 0, 0, 1
+"/Users/user/Documents/BlueprintCAD/app/subscription/page.tsx", "TypeScript JSX", 0, 0, 0, 337, 0, 3, 23, 363
+"/Users/user/Documents/BlueprintCAD/app/upload/page.tsx", "TypeScript JSX", 0, 0, 0, 31, 0, 1, 1, 33
+"/Users/user/Documents/BlueprintCAD/backend/lib/subscription-utils.js", "JavaScript", 0, 229, 0, 0, 0, 37, 34, 300
+"/Users/user/Documents/BlueprintCAD/db/migrations/006_add_subscriptions.js", "JavaScript", 0, 113, 0, 0, 0, 11, 17, 141
+"/Users/user/Documents/BlueprintCAD/frontend/components/SubscriptionGate.tsx", "TypeScript JSX", 0, 0, 0, 115, 0, 6, 17, 138
+"/Users/user/Documents/BlueprintCAD/frontend/components/UpgradeModal.tsx", "TypeScript JSX", 0, 0, 0, 197, 0, 0, 16, 213
+"/Users/user/Documents/BlueprintCAD/frontend/components/ui/GlobalNavSidebar.tsx", "TypeScript JSX", 0, 0, 0, -6, 0, 0, 0, -6
+"/Users/user/Documents/BlueprintCAD/lib/stripe-utils.js", "JavaScript", 0, 104, 0, 0, 0, 20, 12, 136
+"/Users/user/Documents/BlueprintCAD/pages/api/comments/on/[entityType]/[entityId].ts", "TypeScript", 14, 0, 0, 0, 0, 1, 1, 16
+"/Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/members.ts", "TypeScript", 15, 0, 0, 0, 0, 1, 1, 17
+"/Users/user/Documents/BlueprintCAD/pages/api/folders/index.ts", "TypeScript", 17, 0, 0, 0, 0, 1, 1, 19
+"/Users/user/Documents/BlueprintCAD/pages/api/forum/threads.ts", "TypeScript", 9, 0, 0, 0, 0, 1, 1, 11
+"/Users/user/Documents/BlueprintCAD/pages/api/manufacturing-orders/[id]/status.js", "JavaScript", 0, 55, 0, 0, 0, 5, 16, 76
+"/Users/user/Documents/BlueprintCAD/pages/api/messages.ts", "TypeScript", 11, 0, 0, 0, 0, 1, 1, 13
+"/Users/user/Documents/BlueprintCAD/pages/api/orders/checkout.js", "JavaScript", 0, 5, 0, 0, 0, 1, 1, 7
+"/Users/user/Documents/BlueprintCAD/pages/api/orders/confirm.js", "JavaScript", 0, 15, 0, 0, 0, 2, 2, 19
+"/Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/download.js", "JavaScript", 0, 28, 0, 0, 0, 4, 2, 34
+"/Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/index.js", "JavaScript", 0, 7, 0, 0, 0, 1, 1, 9
+"/Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/like.js", "JavaScript", 0, 7, 0, 0, 0, 2, 2, 11
+"/Users/user/Documents/BlueprintCAD/pages/api/projects/index.js", "JavaScript", 0, 31, 0, 0, 0, 4, 4, 39
+"/Users/user/Documents/BlueprintCAD/pages/api/subscriptions/can-action.js", "JavaScript", 0, 23, 0, 0, 0, 1, 8, 32
+"/Users/user/Documents/BlueprintCAD/pages/api/subscriptions/cancel.js", "JavaScript", 0, 31, 0, 0, 0, 4, 10, 45
+"/Users/user/Documents/BlueprintCAD/pages/api/subscriptions/check.js", "JavaScript", 0, 37, 0, 0, 0, 2, 7, 46
+"/Users/user/Documents/BlueprintCAD/pages/api/subscriptions/platform-fee.js", "JavaScript", 0, 22, 0, 0, 0, 2, 6, 30
+"/Users/user/Documents/BlueprintCAD/pages/api/subscriptions/upgrade.js", "JavaScript", 0, 56, 0, 0, 0, 7, 14, 77
+"/Users/user/Documents/BlueprintCAD/pages/api/subscriptions/webhook.js", "JavaScript", 0, 181, 0, 0, 0, 7, 26, 214
+"Total", "-", 66, 944, 918, 801, 16, 131, 423, 3299

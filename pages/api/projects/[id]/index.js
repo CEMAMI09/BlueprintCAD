@@ -48,7 +48,16 @@ export default async function handler(req, res) {
 
       // Only increment views if not owner
       if (!isOwner) {
-        await db.run('UPDATE projects SET views = views + 1 WHERE id = ?', [id]);
+        const result = await db.run('UPDATE projects SET views = views + 1 WHERE id = ?', [id]);
+        
+        // Check if views just hit 1000 milestone
+        const updatedProject = await db.get('SELECT views FROM projects WHERE id = ?', [id]);
+        if (updatedProject && updatedProject.views === 1000) {
+          await db.run(
+            'INSERT INTO notifications (user_id, type, related_id, message) VALUES (?, ?, ?, ?)',
+            [project.user_id, 'milestone', id, `🎉 Your design "${project.title}" just reached 1000 views!`]
+          );
+        }
       }
 
       // Check if user can view cost data (owner OR team member)

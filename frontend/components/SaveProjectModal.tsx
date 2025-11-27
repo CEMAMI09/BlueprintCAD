@@ -120,9 +120,9 @@ export default function SaveProjectModal({
 
           {/* Tags */}
           <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
-              <Tag size={16} className="inline mr-1" />
-              Tags (comma-separated)
+            <label className="flex items-center gap-2 text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
+              <Tag size={16} />
+              <span>Tags (comma-separated)</span>
             </label>
             <input
               type="text"

@@ -422,8 +422,8 @@ export default function CADViewer({
   // When noWrapper is true, render just the canvas with no extra divs
   if (noWrapper) {
     return (
-      <div className={`relative ${height} w-full ${className}`} style={{ minHeight: '400px' }}>
-        <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ minHeight: '400px' }} />
+      <div className={`relative ${height} w-full ${className}`} style={{ minHeight: '400px', margin: 0, padding: 0, marginBottom: 0, paddingBottom: 0 }}>
+        <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ minHeight: '400px', margin: 0, padding: 0, marginBottom: 0, paddingBottom: 0 }} />
         
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm z-10">

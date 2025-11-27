@@ -235,17 +235,39 @@ function CheckoutForm() {
   let basePrice = 0;
   let platformFee = 0;
   let totalPrice = 0;
+  const [platformFeeRate, setPlatformFeeRate] = useState<number>(0.05);
+
+  useEffect(() => {
+    // Fetch platform fee based on seller's subscription
+    if (checkoutData?.type === 'digital' && checkoutData?.projectId) {
+      fetch(`/api/projects/${checkoutData.projectId}`)
+        .then(res => res.json())
+        .then(project => {
+          if (project.user_id) {
+            fetch(`/api/subscriptions/platform-fee`, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
+              .then(res => res.json())
+              .then(data => {
+                setPlatformFeeRate(data.platformFee || 0.05);
+              })
+              .catch(() => setPlatformFeeRate(0.05));
+          }
+        })
+        .catch(() => setPlatformFeeRate(0.05));
+    }
+  }, [checkoutData]);
 
   if (checkoutData.type === 'digital') {
     // If basePrice is provided, use it; otherwise calculate from price (assuming price might be total)
     if ((checkoutData as any).basePrice) {
       basePrice = (checkoutData as any).basePrice;
-      platformFee = (checkoutData as any).platformFee || (basePrice * 0.05);
+      platformFee = (checkoutData as any).platformFee || (basePrice * platformFeeRate);
       totalPrice = basePrice + platformFee;
     } else {
       // If no basePrice, assume price is base and calculate fee
       basePrice = checkoutData.price || 0;
-      platformFee = basePrice * 0.05;
+      platformFee = basePrice * platformFeeRate;
       totalPrice = basePrice + platformFee;
     }
   } else {

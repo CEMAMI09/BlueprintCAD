@@ -159,6 +159,45 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Title and file are required' });
       }
 
+      // Check subscription limits
+      const { canPerformAction } = require('../../../backend/lib/subscription-utils');
+      
+      // Check project limit
+      const projectCheck = await canPerformAction(user.userId, 'maxProjects');
+      if (!projectCheck.allowed) {
+        return res.status(403).json({ 
+          error: 'Project limit reached',
+          reason: projectCheck.reason,
+          requiredTier: projectCheck.requiredTier,
+          current: projectCheck.current,
+          limit: projectCheck.limit
+        });
+      }
+
+      // Check private project limit if making private
+      if (is_public === false || is_public === 0) {
+        const privateCheck = await canPerformAction(user.userId, 'maxPrivateProjects');
+        if (!privateCheck.allowed) {
+          return res.status(403).json({ 
+            error: 'Private projects require Pro subscription',
+            reason: privateCheck.reason,
+            requiredTier: privateCheck.requiredTier
+          });
+        }
+      }
+
+      // Check if can sell
+      if (for_sale === true || for_sale === 1) {
+        const sellCheck = await canPerformAction(user.userId, 'canSell');
+        if (!sellCheck.allowed) {
+          return res.status(403).json({ 
+            error: 'Selling designs requires Pro subscription',
+            reason: sellCheck.reason,
+            requiredTier: sellCheck.requiredTier
+          });
+        }
+      }
+
       const result = await db.run(
         `INSERT INTO projects (
           user_id, title, description, file_path, file_type,

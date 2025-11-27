@@ -32,7 +32,10 @@ export default function HomePage() {
     const checkUser = () => {
       const userData = localStorage.getItem('user');
       if (userData) {
-        setUser(JSON.parse(userData));
+        const user = JSON.parse(userData);
+        setUser(user);
+        // If user is logged in, redirect to dashboard
+        router.push('/dashboard');
       } else {
         setUser(null);
       }
@@ -47,7 +50,7 @@ export default function HomePage() {
       window.removeEventListener('userChanged', handleUserChange);
       window.removeEventListener('storage', handleUserChange);
     };
-  }, []);
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -107,17 +110,13 @@ export default function HomePage() {
           borderColor: DS.colors.border.subtle,
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-lg"
-              style={{ backgroundColor: DS.colors.primary.blue }}
-            >
-              B
-            </div>
-            <span className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
-              Blueprint
-            </span>
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between" style={{ height: '90px', minHeight: '90px', padding: '0', margin: '0', lineHeight: '1' }}>
+          <Link href="/" className="flex items-center" style={{ padding: '0', margin: '0', lineHeight: '1' }}>
+            <img
+              src="/bpcube2.png"
+              alt="Blueprint Logo"
+              className="logo-image"
+            />
           </Link>
           
           <nav className="hidden md:flex items-center gap-8">

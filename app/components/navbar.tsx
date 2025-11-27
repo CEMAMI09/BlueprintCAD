@@ -85,15 +85,16 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50" style={{ minHeight: '90px' }}>
+      <div className="container mx-auto px-4" style={{ height: '90px', minHeight: '90px', padding: '0', margin: '0', lineHeight: '1' }}>
+        <div className="flex items-center justify-between h-full">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-lg"></div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-              BLUEPRINT
-            </span>
+          <Link href="/" className="flex items-center" style={{ padding: '0', margin: '0', lineHeight: '1' }}>
+            <img
+              src="/bpcube2.png"
+              alt="Blueprint Logo"
+              className="logo-image"
+            />
           </Link>
 
           {/* Desktop Navigation */}

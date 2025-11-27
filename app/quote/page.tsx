@@ -20,6 +20,8 @@ import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import ThreePreview from '@/components/ThreePreview';
 import ThreeDViewer from '@/frontend/components/ThreeDViewer';
 import SaveProjectModal from '@/components/SaveProjectModal';
+import SubscriptionGate from '@/frontend/components/SubscriptionGate';
+import UpgradeModal from '@/frontend/components/UpgradeModal';
 import {
   Upload,
   FileUp,
@@ -94,6 +96,8 @@ export default function QuotePage() {
   const [dragActive, setDragActive] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -659,19 +663,26 @@ export default function QuotePage() {
 
   return (
     <>
+      {/* Hidden file input for "Upload Different File" button */}
+      <input
+        type="file"
+        id="file-upload-replace"
+        className="hidden"
+        accept=".stl,.obj,.step,.stp,.iges,.igs,.fbx,.3mf"
+        onChange={(e) => {
+          if (e.target.files?.[0]) {
+            handleFileChange(e.target.files[0]);
+          }
+          // Reset the input so the same file can be selected again
+          e.target.value = '';
+        }}
+      />
       <ThreePanelLayout
         leftPanel={<GlobalNavSidebar />}
         centerPanel={
           <CenterPanel>
             <PanelHeader
               title="Quote Tool"
-              actions={
-                file && (
-                  <Button variant="primary" onClick={() => setIsSaveModalOpen(true)} disabled={loading}>
-                    {loading ? 'Saving...' : 'Save Project'}
-                  </Button>
-                )
-              }
             />
             <PanelContent>
               <div className="max-w-7xl mx-auto px-6 py-6">
@@ -1284,10 +1295,8 @@ export default function QuotePage() {
                     variant="secondary"
                     className="w-full"
                     onClick={() => {
-                      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+                      const fileInput = document.getElementById('file-upload-replace') as HTMLInputElement;
                       if (fileInput) {
-                        // Clear the input so the same file can be selected again
-                        fileInput.value = '';
                         // Open file picker - handleFileChange will reset state and process the new file
                         fileInput.click();
                       }

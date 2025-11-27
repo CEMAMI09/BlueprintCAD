@@ -41,6 +41,11 @@ export default async function handler(
       return res.status(403).json({ error: 'You can only rename your own projects' });
     }
 
+    // Check if project is public - only allow renaming non-public files
+    if (project.is_public === 1) {
+      return res.status(403).json({ error: 'Cannot rename public projects. Please make the project private first.' });
+    }
+
     // Check for naming conflicts in the same folder
     if (project.folder_id) {
       const conflict = await db.get(

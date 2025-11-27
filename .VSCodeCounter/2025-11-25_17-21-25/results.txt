@@ -1,0 +1,692 @@
+Date : 2025-11-25 17:21:25
+Directory : /Users/user/Documents/BlueprintCAD
+Total : 488 files,  105507 codes, 11409 comments, 15149 blanks, all 132065 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| TypeScript         |        170 |     40,016 |      7,487 |      8,224 |     55,727 |
+| TypeScript JSX     |        120 |     37,677 |      1,563 |      3,489 |     42,729 |
+| JavaScript         |        181 |     16,420 |      2,181 |      2,840 |     21,441 |
+| JSON               |          2 |      7,426 |          0 |          2 |      7,428 |
+| PostCSS            |          2 |      1,677 |        171 |        444 |      2,292 |
+| Diff               |          1 |      1,671 |          0 |          1 |      1,672 |
+| Markdown           |          3 |        497 |          0 |        139 |        636 |
+| JSON with Comments |          1 |         60 |          0 |          1 |         61 |
+| MS SQL             |          3 |         58 |          7 |          9 |         74 |
+| XML                |          5 |          5 |          0 |          0 |          5 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                          | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                             |        488 |    105,507 |     11,409 |     15,149 |    132,065 |
+| . (Files)                                                                                     |          9 |      7,633 |         27 |         28 |      7,688 |
+| app                                                                                           |         57 |     21,235 |        769 |      1,880 |     23,884 |
+| app (Files)                                                                                   |          6 |        505 |         18 |         43 |        566 |
+| app/api                                                                                       |          1 |        122 |          5 |         25 |        152 |
+| app/api/cad                                                                                   |          1 |        122 |          5 |         25 |        152 |
+| app/api/cad/files                                                                             |          1 |        122 |          5 |         25 |        152 |
+| app/api/cad/files/feature-tree                                                                |          1 |        122 |          5 |         25 |        152 |
+| app/assembly-editor                                                                           |          1 |        953 |         78 |        170 |      1,201 |
+| app/auth                                                                                      |          1 |         78 |          6 |         11 |         95 |
+| app/auth/callback                                                                             |          1 |         78 |          6 |         11 |         95 |
+| app/bom-editor                                                                                |          1 |        335 |          8 |         42 |        385 |
+| app/buy                                                                                       |          1 |        492 |          9 |         38 |        539 |
+| app/cad-editor                                                                                |          1 |      1,311 |         71 |        184 |      1,566 |
+| app/checkout                                                                                  |          2 |        586 |         14 |         62 |        662 |
+| app/checkout (Files)                                                                          |          1 |        462 |          9 |         48 |        519 |
+| app/checkout/success                                                                          |          1 |        124 |          5 |         14 |        143 |
+| app/components                                                                                |          7 |      1,065 |         33 |        154 |      1,252 |
+| app/dashboard                                                                                 |          1 |        427 |         18 |         22 |        467 |
+| app/drawing-editor                                                                            |          1 |        661 |         38 |         98 |        797 |
+| app/explore                                                                                   |          2 |        834 |         28 |         23 |        885 |
+| app/folders                                                                                   |          2 |        947 |         33 |         53 |      1,033 |
+| app/folders (Files)                                                                           |          1 |        345 |         17 |         25 |        387 |
+| app/folders/[id]                                                                              |          1 |        602 |         16 |         28 |        646 |
+| app/forgot-password                                                                           |          1 |        140 |          4 |         14 |        158 |
+| app/forgot-username                                                                           |          1 |        140 |          4 |         14 |        158 |
+| app/forum                                                                                     |          2 |      1,290 |         34 |         76 |      1,400 |
+| app/forum (Files)                                                                             |          1 |        804 |         29 |         47 |        880 |
+| app/forum/[id]                                                                                |          1 |        486 |          5 |         29 |        520 |
+| app/issues                                                                                    |          1 |        570 |         11 |         59 |        640 |
+| app/login                                                                                     |          1 |        247 |          8 |         28 |        283 |
+| app/marketplace                                                                               |          2 |        841 |         28 |         26 |        895 |
+| app/messages                                                                                  |          1 |        613 |         20 |         29 |        662 |
+| app/notifications                                                                             |          1 |        270 |         10 |         26 |        306 |
+| app/order                                                                                     |          2 |        525 |          4 |         40 |        569 |
+| app/order (Files)                                                                             |          1 |        415 |          4 |         29 |        448 |
+| app/order/thank-you                                                                           |          1 |        110 |          0 |         11 |        121 |
+| app/orders                                                                                    |          1 |        393 |          7 |         26 |        426 |
+| app/profile                                                                                   |          4 |      2,024 |         57 |        140 |      2,221 |
+| app/profile/[username]                                                                        |          4 |      2,024 |         57 |        140 |      2,221 |
+| app/profile/[username] (Files)                                                                |          2 |      1,638 |         57 |        104 |      1,799 |
+| app/profile/[username]/followers                                                              |          1 |        193 |          0 |         18 |        211 |
+| app/profile/[username]/following                                                              |          1 |        193 |          0 |         18 |        211 |
+| app/project                                                                                   |          2 |        901 |         27 |         46 |        974 |
+| app/project/[id]                                                                              |          2 |        901 |         27 |         46 |        974 |
+| app/providers                                                                                 |          1 |          6 |          0 |          3 |          9 |
+| app/purchase                                                                                  |          1 |        584 |         13 |         34 |        631 |
+| app/quote                                                                                     |          2 |      1,862 |         95 |        189 |      2,146 |
+| app/register                                                                                  |          1 |        269 |          8 |         26 |        303 |
+| app/reset-password                                                                            |          1 |        213 |          5 |         23 |        241 |
+| app/settings                                                                                  |          2 |        949 |         22 |         57 |      1,028 |
+| app/settings (Files)                                                                          |          1 |        711 |         20 |         31 |        762 |
+| app/settings/account                                                                          |          1 |        238 |          2 |         26 |        266 |
+| app/support                                                                                   |          1 |        199 |          8 |         11 |        218 |
+| app/upload                                                                                    |          1 |        760 |         43 |         72 |        875 |
+| app/verify-email                                                                              |          1 |        123 |          2 |         16 |        141 |
+| backend                                                                                       |        181 |     28,614 |      4,886 |      5,683 |     39,183 |
+| backend/api                                                                                   |         88 |      6,789 |        632 |      1,388 |      8,809 |
+| backend/api (Files)                                                                           |          4 |        276 |         25 |         53 |        354 |
+| backend/api/auth                                                                              |         10 |        699 |         77 |        156 |        932 |
+| backend/api/cad                                                                               |         10 |        803 |         42 |        154 |        999 |
+| backend/api/cad (Files)                                                                       |          1 |         57 |          3 |          9 |         69 |
+| backend/api/cad/assemblies                                                                    |          2 |        251 |          6 |         42 |        299 |
+| backend/api/cad/files                                                                         |          7 |        495 |         33 |        103 |        631 |
+| backend/api/cad/files (Files)                                                                 |          3 |        162 |          8 |         36 |        206 |
+| backend/api/cad/files/[id]                                                                    |          4 |        333 |         25 |         67 |        425 |
+| backend/api/comments                                                                          |          2 |        196 |         16 |         33 |        245 |
+| backend/api/comments/[commentId]                                                              |          1 |         40 |          3 |          8 |         51 |
+| backend/api/comments/on                                                                       |          1 |        156 |         13 |         25 |        194 |
+| backend/api/comments/on/[entityType]                                                          |          1 |        156 |         13 |         25 |        194 |
+| backend/api/dashboard                                                                         |          4 |        326 |         33 |         54 |        413 |
+| backend/api/files                                                                             |          1 |        128 |         29 |         31 |        188 |
+| backend/api/folders                                                                           |         12 |        873 |         54 |        183 |      1,110 |
+| backend/api/folders (Files)                                                                   |          3 |        148 |          3 |         30 |        181 |
+| backend/api/folders/[id]                                                                      |          9 |        725 |         51 |        153 |        929 |
+| backend/api/folders/[id] (Files)                                                              |          7 |        533 |         29 |        102 |        664 |
+| backend/api/folders/[id]/members                                                              |          2 |        192 |         22 |         51 |        265 |
+| backend/api/folders/[id]/members (Files)                                                      |          1 |         76 |          4 |         18 |         98 |
+| backend/api/folders/[id]/members/[memberId]                                                   |          1 |        116 |         18 |         33 |        167 |
+| backend/api/forum                                                                             |          3 |        206 |         19 |         53 |        278 |
+| backend/api/invitations                                                                       |          2 |        100 |          3 |         17 |        120 |
+| backend/api/issues                                                                            |          3 |        319 |         27 |         67 |        413 |
+| backend/api/issues (Files)                                                                    |          2 |        231 |         20 |         46 |        297 |
+| backend/api/issues/[id]                                                                       |          1 |         88 |          7 |         21 |        116 |
+| backend/api/manufacturing-orders                                                              |          1 |        101 |          6 |         14 |        121 |
+| backend/api/messages                                                                          |          1 |         39 |          4 |         10 |         53 |
+| backend/api/orders                                                                            |          5 |        399 |         49 |         90 |        538 |
+| backend/api/ownership-transfer                                                                |          2 |        307 |         38 |         60 |        405 |
+| backend/api/projects                                                                          |         11 |        978 |        100 |        180 |      1,258 |
+| backend/api/projects (Files)                                                                  |          4 |        416 |         22 |         64 |        502 |
+| backend/api/projects/[id]                                                                     |          7 |        562 |         78 |        116 |        756 |
+| backend/api/quote                                                                             |          1 |        102 |          8 |         24 |        134 |
+| backend/api/rename-move-history                                                               |          1 |         34 |          0 |          8 |         42 |
+| backend/api/rename-move-history/[entityType]                                                  |          1 |         34 |          0 |          8 |         42 |
+| backend/api/thumbnails                                                                        |          2 |        121 |         23 |         33 |        177 |
+| backend/api/users                                                                             |         13 |        782 |         79 |        168 |      1,029 |
+| backend/api/users (Files)                                                                     |          7 |        376 |         40 |         88 |        504 |
+| backend/api/users/[username]                                                                  |          4 |        344 |         35 |         63 |        442 |
+| backend/api/users/banner                                                                      |          1 |         31 |          2 |          9 |         42 |
+| backend/api/users/profile-picture                                                             |          1 |         31 |          2 |          8 |         41 |
+| backend/lib                                                                                   |         60 |     20,102 |      4,112 |      3,977 |     28,191 |
+| backend/lib (Files)                                                                           |         18 |      3,084 |        636 |        512 |      4,232 |
+| backend/lib/cad                                                                               |         41 |     16,885 |      3,466 |      3,450 |     23,801 |
+| backend/lib/cad (Files)                                                                       |         32 |     13,879 |      2,713 |      2,729 |     19,321 |
+| backend/lib/cad/brep                                                                          |          9 |      3,006 |        753 |        721 |      4,480 |
+| backend/lib/ui                                                                                |          1 |        133 |         10 |         15 |        158 |
+| backend/scripts                                                                               |         33 |      1,723 |        142 |        318 |      2,183 |
+| db                                                                                            |         10 |        563 |         32 |         60 |        655 |
+| db (Files)                                                                                    |          1 |        218 |          7 |          7 |        232 |
+| db/migrations                                                                                 |          9 |        345 |         25 |         53 |        423 |
+| frontend                                                                                      |         66 |     16,163 |        725 |      1,609 |     18,497 |
+| frontend/components                                                                           |         64 |     16,043 |        725 |      1,599 |     18,367 |
+| frontend/components (Files)                                                                   |         23 |      4,103 |        193 |        413 |      4,709 |
+| frontend/components/cad                                                                       |         38 |     11,202 |        497 |      1,118 |     12,817 |
+| frontend/components/ui                                                                        |          3 |        738 |         35 |         68 |        841 |
+| frontend/types                                                                                |          2 |        120 |          0 |         10 |        130 |
+| lib                                                                                           |         60 |     19,808 |      4,005 |      3,893 |     27,706 |
+| lib (Files)                                                                                   |         18 |      2,790 |        529 |        428 |      3,747 |
+| lib/cad                                                                                       |         41 |     16,885 |      3,466 |      3,450 |     23,801 |
+| lib/cad (Files)                                                                               |         32 |     13,879 |      2,713 |      2,729 |     19,321 |
+| lib/cad/brep                                                                                  |          9 |      3,006 |        753 |        721 |      4,480 |
+| lib/ui                                                                                        |          1 |        133 |         10 |         15 |        158 |
+| pages                                                                                         |         97 |      8,166 |        792 |      1,554 |     10,512 |
+| pages (Files)                                                                                 |          2 |         23 |          0 |          5 |         28 |
+| pages/api                                                                                     |         95 |      8,143 |        792 |      1,549 |     10,484 |
+| pages/api (Files)                                                                             |          3 |        212 |         23 |         40 |        275 |
+| pages/api/auth                                                                                |         10 |        699 |         77 |        156 |        932 |
+| pages/api/cad                                                                                 |         10 |        803 |         42 |        154 |        999 |
+| pages/api/cad (Files)                                                                         |          1 |         57 |          3 |          9 |         69 |
+| pages/api/cad/assemblies                                                                      |          2 |        251 |          6 |         42 |        299 |
+| pages/api/cad/files                                                                           |          7 |        495 |         33 |        103 |        631 |
+| pages/api/cad/files (Files)                                                                   |          3 |        162 |          8 |         36 |        206 |
+| pages/api/cad/files/[id]                                                                      |          4 |        333 |         25 |         67 |        425 |
+| pages/api/comments                                                                            |          2 |        196 |         16 |         33 |        245 |
+| pages/api/comments/[commentId]                                                                |          1 |         40 |          3 |          8 |         51 |
+| pages/api/comments/on                                                                         |          1 |        156 |         13 |         25 |        194 |
+| pages/api/comments/on/[entityType]                                                            |          1 |        156 |         13 |         25 |        194 |
+| pages/api/dashboard                                                                           |          4 |        339 |         35 |         56 |        430 |
+| pages/api/files                                                                               |          1 |        134 |         30 |         31 |        195 |
+| pages/api/folders                                                                             |         12 |        875 |         57 |        183 |      1,115 |
+| pages/api/folders (Files)                                                                     |          3 |        150 |          6 |         30 |        186 |
+| pages/api/folders/[id]                                                                        |          9 |        725 |         51 |        153 |        929 |
+| pages/api/folders/[id] (Files)                                                                |          7 |        533 |         29 |        102 |        664 |
+| pages/api/folders/[id]/members                                                                |          2 |        192 |         22 |         51 |        265 |
+| pages/api/folders/[id]/members (Files)                                                        |          1 |         76 |          4 |         18 |         98 |
+| pages/api/folders/[id]/members/[memberId]                                                     |          1 |        116 |         18 |         33 |        167 |
+| pages/api/forum                                                                               |          3 |        207 |         19 |         53 |        279 |
+| pages/api/invitations                                                                         |          2 |        100 |          3 |         17 |        120 |
+| pages/api/issues                                                                              |          3 |        319 |         27 |         67 |        413 |
+| pages/api/issues (Files)                                                                      |          2 |        231 |         20 |         46 |        297 |
+| pages/api/issues/[id]                                                                         |          1 |         88 |          7 |         21 |        116 |
+| pages/api/manufacturing-orders                                                                |          1 |         88 |          6 |         12 |        106 |
+| pages/api/messages                                                                            |          2 |         61 |          6 |         17 |         84 |
+| pages/api/notifications                                                                       |          2 |         89 |          8 |         21 |        118 |
+| pages/api/orders                                                                              |          5 |        444 |         53 |         92 |        589 |
+| pages/api/ownership-transfer                                                                  |          2 |        307 |         38 |         60 |        405 |
+| pages/api/projects                                                                            |         12 |      1,525 |        183 |        240 |      1,948 |
+| pages/api/projects (Files)                                                                    |          4 |        835 |         85 |        103 |      1,023 |
+| pages/api/projects/[id]                                                                       |          8 |        690 |         98 |        137 |        925 |
+| pages/api/quote                                                                               |          1 |        102 |          8 |         24 |        134 |
+| pages/api/rename-move-history                                                                 |          1 |         34 |          0 |          8 |         42 |
+| pages/api/rename-move-history/[entityType]                                                    |          1 |         34 |          0 |          8 |         42 |
+| pages/api/tags                                                                                |          2 |        335 |         35 |         50 |        420 |
+| pages/api/thumbnails                                                                          |          2 |        122 |         24 |         35 |        181 |
+| pages/api/users                                                                               |         15 |      1,152 |        102 |        200 |      1,454 |
+| pages/api/users (Files)                                                                       |          8 |        575 |         54 |        107 |        736 |
+| pages/api/users/[username]                                                                    |          5 |        515 |         44 |         76 |        635 |
+| pages/api/users/banner                                                                        |          1 |         31 |          2 |          9 |         42 |
+| pages/api/users/profile-picture                                                               |          1 |         31 |          2 |          8 |         41 |
+| patches                                                                                       |          1 |      1,671 |          0 |          1 |      1,672 |
+| public                                                                                        |          6 |      1,632 |        168 |        435 |      2,235 |
+| scripts                                                                                       |          1 |         22 |          5 |          6 |         33 |
++-----------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                      | language           | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| /Users/user/Documents/BlueprintCAD/README.md                                                  | Markdown           |         29 |          0 |          7 |         36 |
+| /Users/user/Documents/BlueprintCAD/app/api/cad/files/feature-tree/route.ts                    | TypeScript         |        122 |          5 |         25 |        152 |
+| /Users/user/Documents/BlueprintCAD/app/assembly-editor/page.tsx                               | TypeScript JSX     |        953 |         78 |        170 |      1,201 |
+| /Users/user/Documents/BlueprintCAD/app/auth/callback/page.tsx                                 | TypeScript JSX     |         78 |          6 |         11 |         95 |
+| /Users/user/Documents/BlueprintCAD/app/bom-editor/page.tsx                                    | TypeScript JSX     |        335 |          8 |         42 |        385 |
+| /Users/user/Documents/BlueprintCAD/app/buy/page.tsx                                           | TypeScript JSX     |        492 |          9 |         38 |        539 |
+| /Users/user/Documents/BlueprintCAD/app/cad-editor/page.tsx                                    | TypeScript JSX     |      1,311 |         71 |        184 |      1,566 |
+| /Users/user/Documents/BlueprintCAD/app/checkout/page.tsx                                      | TypeScript JSX     |        462 |          9 |         48 |        519 |
+| /Users/user/Documents/BlueprintCAD/app/checkout/success/page.tsx                              | TypeScript JSX     |        124 |          5 |         14 |        143 |
+| /Users/user/Documents/BlueprintCAD/app/components/CheckoutModal.tsx                           | TypeScript JSX     |        148 |          3 |         26 |        177 |
+| /Users/user/Documents/BlueprintCAD/app/components/FolderBreadcrumb.tsx                        | TypeScript JSX     |        124 |          1 |         14 |        139 |
+| /Users/user/Documents/BlueprintCAD/app/components/FolderTree.tsx                              | TypeScript JSX     |        190 |          4 |         30 |        224 |
+| /Users/user/Documents/BlueprintCAD/app/components/VerificationBanner.tsx                      | TypeScript JSX     |        101 |          1 |         11 |        113 |
+| /Users/user/Documents/BlueprintCAD/app/components/layout.tsx                                  | TypeScript JSX     |          9 |          0 |          1 |         10 |
+| /Users/user/Documents/BlueprintCAD/app/components/navbar.tsx                                  | TypeScript JSX     |        256 |         12 |         24 |        292 |
+| /Users/user/Documents/BlueprintCAD/app/components/threepreview.tsx                            | TypeScript JSX     |        237 |         12 |         48 |        297 |
+| /Users/user/Documents/BlueprintCAD/app/dashboard/page.tsx                                     | TypeScript JSX     |        427 |         18 |         22 |        467 |
+| /Users/user/Documents/BlueprintCAD/app/drawing-editor/page.tsx                                | TypeScript JSX     |        661 |         38 |         98 |        797 |
+| /Users/user/Documents/BlueprintCAD/app/error.tsx                                              | TypeScript JSX     |         24 |          1 |          2 |         27 |
+| /Users/user/Documents/BlueprintCAD/app/explore/error.tsx                                      | TypeScript JSX     |         24 |          1 |          2 |         27 |
+| /Users/user/Documents/BlueprintCAD/app/explore/page.tsx                                       | TypeScript JSX     |        810 |         27 |         21 |        858 |
+| /Users/user/Documents/BlueprintCAD/app/folders/[id]/page.tsx                                  | TypeScript JSX     |        602 |         16 |         28 |        646 |
+| /Users/user/Documents/BlueprintCAD/app/folders/page.tsx                                       | TypeScript JSX     |        345 |         17 |         25 |        387 |
+| /Users/user/Documents/BlueprintCAD/app/forgot-password/page.tsx                               | TypeScript JSX     |        140 |          4 |         14 |        158 |
+| /Users/user/Documents/BlueprintCAD/app/forgot-username/page.tsx                               | TypeScript JSX     |        140 |          4 |         14 |        158 |
+| /Users/user/Documents/BlueprintCAD/app/forum/[id]/page.tsx                                    | TypeScript JSX     |        486 |          5 |         29 |        520 |
+| /Users/user/Documents/BlueprintCAD/app/forum/page.tsx                                         | TypeScript JSX     |        804 |         29 |         47 |        880 |
+| /Users/user/Documents/BlueprintCAD/app/global-error.tsx                                       | TypeScript JSX     |         28 |          1 |          2 |         31 |
+| /Users/user/Documents/BlueprintCAD/app/globals.css                                            | PostCSS            |         50 |          3 |          9 |         62 |
+| /Users/user/Documents/BlueprintCAD/app/issues/page.tsx                                        | TypeScript JSX     |        570 |         11 |         59 |        640 |
+| /Users/user/Documents/BlueprintCAD/app/layout.tsx                                             | TypeScript JSX     |         36 |          0 |          5 |         41 |
+| /Users/user/Documents/BlueprintCAD/app/login/page.tsx                                         | TypeScript JSX     |        247 |          8 |         28 |        283 |
+| /Users/user/Documents/BlueprintCAD/app/marketplace/error.tsx                                  | TypeScript JSX     |         24 |          1 |          2 |         27 |
+| /Users/user/Documents/BlueprintCAD/app/marketplace/page.tsx                                   | TypeScript JSX     |        817 |         27 |         24 |        868 |
+| /Users/user/Documents/BlueprintCAD/app/messages/page.tsx                                      | TypeScript JSX     |        613 |         20 |         29 |        662 |
+| /Users/user/Documents/BlueprintCAD/app/not-found.tsx                                          | TypeScript JSX     |         21 |          1 |          2 |         24 |
+| /Users/user/Documents/BlueprintCAD/app/notifications/page.tsx                                 | TypeScript JSX     |        270 |         10 |         26 |        306 |
+| /Users/user/Documents/BlueprintCAD/app/order/page.tsx                                         | TypeScript JSX     |        415 |          4 |         29 |        448 |
+| /Users/user/Documents/BlueprintCAD/app/order/thank-you/page.tsx                               | TypeScript JSX     |        110 |          0 |         11 |        121 |
+| /Users/user/Documents/BlueprintCAD/app/orders/page.tsx                                        | TypeScript JSX     |        393 |          7 |         26 |        426 |
+| /Users/user/Documents/BlueprintCAD/app/page.tsx                                               | TypeScript JSX     |        346 |         12 |         23 |        381 |
+| /Users/user/Documents/BlueprintCAD/app/profile/[username]/followers/page.tsx                  | TypeScript JSX     |        193 |          0 |         18 |        211 |
+| /Users/user/Documents/BlueprintCAD/app/profile/[username]/following/page.tsx                  | TypeScript JSX     |        193 |          0 |         18 |        211 |
+| /Users/user/Documents/BlueprintCAD/app/profile/[username]/page.tsx                            | TypeScript JSX     |        841 |         27 |         47 |        915 |
+| /Users/user/Documents/BlueprintCAD/app/profile/[username]/page_old.tsx                        | TypeScript JSX     |        797 |         30 |         57 |        884 |
+| /Users/user/Documents/BlueprintCAD/app/project/[id]/error.tsx                                 | TypeScript JSX     |         24 |          1 |          2 |         27 |
+| /Users/user/Documents/BlueprintCAD/app/project/[id]/page.tsx                                  | TypeScript JSX     |        877 |         26 |         44 |        947 |
+| /Users/user/Documents/BlueprintCAD/app/providers/AuthProvider.tsx                             | TypeScript JSX     |          6 |          0 |          3 |          9 |
+| /Users/user/Documents/BlueprintCAD/app/purchase/page.tsx                                      | TypeScript JSX     |        584 |         13 |         34 |        631 |
+| /Users/user/Documents/BlueprintCAD/app/quote/page.tsx                                         | TypeScript JSX     |      1,136 |         75 |        108 |      1,319 |
+| /Users/user/Documents/BlueprintCAD/app/quote/page_old.tsx                                     | TypeScript JSX     |        726 |         20 |         81 |        827 |
+| /Users/user/Documents/BlueprintCAD/app/register/page.tsx                                      | TypeScript JSX     |        269 |          8 |         26 |        303 |
+| /Users/user/Documents/BlueprintCAD/app/reset-password/page.tsx                                | TypeScript JSX     |        213 |          5 |         23 |        241 |
+| /Users/user/Documents/BlueprintCAD/app/settings/account/page.tsx                              | TypeScript JSX     |        238 |          2 |         26 |        266 |
+| /Users/user/Documents/BlueprintCAD/app/settings/page.tsx                                      | TypeScript JSX     |        711 |         20 |         31 |        762 |
+| /Users/user/Documents/BlueprintCAD/app/support/page.tsx                                       | TypeScript JSX     |        199 |          8 |         11 |        218 |
+| /Users/user/Documents/BlueprintCAD/app/upload/page.tsx                                        | TypeScript JSX     |        760 |         43 |         72 |        875 |
+| /Users/user/Documents/BlueprintCAD/app/verify-email/page.tsx                                  | TypeScript JSX     |        123 |          2 |         16 |        141 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/[...nextauth].js                          | JavaScript         |        204 |         16 |         39 |        259 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/disconnect.js                             | JavaScript         |         57 |          7 |         14 |         78 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/forgot-password.ts                        | TypeScript         |         71 |         11 |         16 |         98 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/forgot-username.ts                        | TypeScript         |         60 |          6 |         13 |         79 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/login.js                                  | JavaScript         |         41 |          4 |         10 |         55 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/providers.js                              | JavaScript         |         41 |          3 |          9 |         53 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/register.js                               | JavaScript         |         73 |         10 |         17 |        100 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/resend-verification.js                    | JavaScript         |         62 |          9 |         14 |         85 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/reset-password.ts                         | TypeScript         |         53 |          6 |         14 |         73 |
+| /Users/user/Documents/BlueprintCAD/backend/api/auth/verify-email.js                           | JavaScript         |         37 |          5 |         10 |         52 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/assemblies/[id].ts                         | TypeScript         |        139 |          4 |         25 |        168 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/assemblies/index.ts                        | TypeScript         |        112 |          2 |         17 |        131 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/files/[id].js                              | JavaScript         |         57 |          4 |         11 |         72 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/files/[id]/metadata.ts                     | TypeScript         |        126 |         13 |         29 |        168 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/files/[id]/reference.ts                    | TypeScript         |         57 |          2 |         11 |         70 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/files/[id]/save.js                         | JavaScript         |         91 |          7 |         16 |        114 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/files/[id]/versions.js                     | JavaScript         |         59 |          3 |         11 |         73 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/files/index.ts                             | TypeScript         |         40 |          0 |          9 |         49 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/files/upload.js                            | JavaScript         |         65 |          4 |         16 |         85 |
+| /Users/user/Documents/BlueprintCAD/backend/api/cad/list.js                                    | JavaScript         |         57 |          3 |          9 |         69 |
+| /Users/user/Documents/BlueprintCAD/backend/api/comments/[commentId]/reactions.ts              | TypeScript         |         40 |          3 |          8 |         51 |
+| /Users/user/Documents/BlueprintCAD/backend/api/comments/on/[entityType]/[entityId].ts         | TypeScript         |        156 |         13 |         25 |        194 |
+| /Users/user/Documents/BlueprintCAD/backend/api/dashboard/activity.js                          | JavaScript         |        121 |          7 |         19 |        147 |
+| /Users/user/Documents/BlueprintCAD/backend/api/dashboard/stats.js                             | JavaScript         |         75 |         10 |         13 |         98 |
+| /Users/user/Documents/BlueprintCAD/backend/api/dashboard/storage.js                           | JavaScript         |         88 |         12 |         15 |        115 |
+| /Users/user/Documents/BlueprintCAD/backend/api/dashboard/trending.js                          | JavaScript         |         42 |          4 |          7 |         53 |
+| /Users/user/Documents/BlueprintCAD/backend/api/files/[file].ts                                | TypeScript         |        128 |         29 |         31 |        188 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/[id]/activity.ts                       | TypeScript         |         32 |          0 |          4 |         36 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/[id]/breadcrumb.ts                     | TypeScript         |         18 |          0 |          4 |         22 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/[id]/comments.ts                       | TypeScript         |         78 |          2 |         12 |         92 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/[id]/index.ts                          | TypeScript         |        113 |          4 |         21 |        138 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/[id]/members.ts                        | TypeScript         |         91 |          5 |         18 |        114 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/[id]/members/[memberId].ts             | TypeScript         |         76 |          4 |         18 |         98 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/[id]/members/[memberId]/role.ts        | TypeScript         |        116 |         18 |         33 |        167 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/[id]/move-folder.ts                    | TypeScript         |        121 |         11 |         24 |        156 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/[id]/rename.ts                         | TypeScript         |         80 |          7 |         19 |        106 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/index.ts                               | TypeScript         |         90 |          3 |         18 |        111 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/move.ts                                | TypeScript         |         35 |          0 |          7 |         42 |
+| /Users/user/Documents/BlueprintCAD/backend/api/folders/tree.ts                                | TypeScript         |         23 |          0 |          5 |         28 |
+| /Users/user/Documents/BlueprintCAD/backend/api/forum/[id].ts                                  | TypeScript         |         88 |          8 |         25 |        121 |
+| /Users/user/Documents/BlueprintCAD/backend/api/forum/stats.js                                 | JavaScript         |         47 |          7 |         11 |         65 |
+| /Users/user/Documents/BlueprintCAD/backend/api/forum/threads.ts                               | TypeScript         |         71 |          4 |         17 |         92 |
+| /Users/user/Documents/BlueprintCAD/backend/api/invitations/[id].ts                            | TypeScript         |         64 |          3 |         12 |         79 |
+| /Users/user/Documents/BlueprintCAD/backend/api/invitations/index.ts                           | TypeScript         |         36 |          0 |          5 |         41 |
+| /Users/user/Documents/BlueprintCAD/backend/api/issues/[id]/update.js                          | JavaScript         |         88 |          7 |         21 |        116 |
+| /Users/user/Documents/BlueprintCAD/backend/api/issues/list.js                                 | JavaScript         |        127 |          9 |         26 |        162 |
+| /Users/user/Documents/BlueprintCAD/backend/api/issues/submit.js                               | JavaScript         |        104 |         11 |         20 |        135 |
+| /Users/user/Documents/BlueprintCAD/backend/api/manufacturing-orders/create.js                 | JavaScript         |        101 |          6 |         14 |        121 |
+| /Users/user/Documents/BlueprintCAD/backend/api/messages.ts                                    | TypeScript         |         99 |          9 |         21 |        129 |
+| /Users/user/Documents/BlueprintCAD/backend/api/messages/[username].ts                         | TypeScript         |         39 |          4 |         10 |         53 |
+| /Users/user/Documents/BlueprintCAD/backend/api/notifications.ts                               | TypeScript         |         50 |          4 |         11 |         65 |
+| /Users/user/Documents/BlueprintCAD/backend/api/orders/checkout.js                             | JavaScript         |         69 |         10 |         20 |         99 |
+| /Users/user/Documents/BlueprintCAD/backend/api/orders/confirm.js                              | JavaScript         |        109 |         13 |         21 |        143 |
+| /Users/user/Documents/BlueprintCAD/backend/api/orders/download.js                             | JavaScript         |         61 |         12 |         18 |         91 |
+| /Users/user/Documents/BlueprintCAD/backend/api/orders/my-orders.js                            | JavaScript         |         68 |          5 |         13 |         86 |
+| /Users/user/Documents/BlueprintCAD/backend/api/orders/refund.js                               | JavaScript         |         92 |          9 |         18 |        119 |
+| /Users/user/Documents/BlueprintCAD/backend/api/ownership-transfer/[requestId].ts              | TypeScript         |        170 |         27 |         41 |        238 |
+| /Users/user/Documents/BlueprintCAD/backend/api/ownership-transfer/index.ts                    | TypeScript         |        137 |         11 |         19 |        167 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/[id]/comments.js                      | JavaScript         |         49 |          0 |          9 |         58 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/[id]/index.js                         | JavaScript         |        149 |         47 |         33 |        229 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/[id]/like.js                          | JavaScript         |         47 |          1 |          7 |         55 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/[id]/rename.ts                        | TypeScript         |         78 |          7 |         17 |        102 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/[id]/restore-version.ts               | TypeScript         |         61 |          7 |         15 |         83 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/[id]/upload-version.ts                | TypeScript         |        134 |         12 |         27 |        173 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/[id]/versions.ts                      | TypeScript         |         44 |          4 |          8 |         56 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/estimate.js                           | JavaScript         |        134 |          4 |         18 |        156 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/index.js                              | JavaScript         |        153 |          8 |         20 |        181 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/move.ts                               | TypeScript         |         90 |          8 |         18 |        116 |
+| /Users/user/Documents/BlueprintCAD/backend/api/projects/starred.js                            | JavaScript         |         39 |          2 |          8 |         49 |
+| /Users/user/Documents/BlueprintCAD/backend/api/quote/analyze.js                               | JavaScript         |        102 |          8 |         24 |        134 |
+| /Users/user/Documents/BlueprintCAD/backend/api/rename-move-history/[entityType]/[entityId].ts | TypeScript         |         34 |          0 |          8 |         42 |
+| /Users/user/Documents/BlueprintCAD/backend/api/stats.js                                       | JavaScript         |         18 |          1 |          4 |         23 |
+| /Users/user/Documents/BlueprintCAD/backend/api/thumbnails/[file].ts                           | TypeScript         |         59 |         11 |         17 |         87 |
+| /Users/user/Documents/BlueprintCAD/backend/api/thumbnails/generate.ts                         | TypeScript         |         62 |         12 |         16 |         90 |
+| /Users/user/Documents/BlueprintCAD/backend/api/upload.js                                      | JavaScript         |        109 |         11 |         17 |        137 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/[username]/follow.js                     | JavaScript         |         69 |          7 |         15 |         91 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/[username]/followers.js                  | JavaScript         |         94 |          9 |         16 |        119 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/[username]/following.js                  | JavaScript         |         94 |         10 |         16 |        120 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/[username]/index.js                      | JavaScript         |         87 |          9 |         16 |        112 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/banner/[file].ts                         | TypeScript         |         31 |          2 |          9 |         42 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/check-pending.js                         | JavaScript         |         27 |          2 |          8 |         37 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/follow-request.js                        | JavaScript         |         57 |          8 |         16 |         81 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/follow-requests.js                       | JavaScript         |         26 |          2 |          6 |         34 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/follow.js                                | JavaScript         |         46 |          5 |         10 |         61 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/profile-picture/[file].ts                | TypeScript         |         31 |          2 |          8 |         41 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/profile.ts                               | TypeScript         |        167 |         20 |         33 |        220 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/search.ts                                | TypeScript         |         24 |          2 |          7 |         33 |
+| /Users/user/Documents/BlueprintCAD/backend/api/users/update-privacy.js                        | JavaScript         |         29 |          1 |          8 |         38 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/auth.js                                        | JavaScript         |         33 |          1 |          7 |         41 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad-formats.js                                 | JavaScript         |        251 |         54 |         25 |        330 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/annotation-styles.ts                       | TypeScript         |        345 |         52 |         62 |        459 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/assembly-system.ts                         | TypeScript         |        600 |        135 |        133 |        868 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/bom-exporters.ts                           | TypeScript         |        536 |         58 |        102 |        696 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/bom-generator.ts                           | TypeScript         |        374 |         75 |         54 |        503 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/brep/README.md                             | Markdown           |        234 |          0 |         66 |        300 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/brep/boolean.ts                            | TypeScript         |        499 |        142 |        126 |        767 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/brep/fillet-chamfer.ts                     | TypeScript         |        394 |        131 |        113 |        638 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/brep/occt.ts                               | TypeScript         |        287 |         71 |         56 |        414 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/brep/opencascade.d.ts                      | TypeScript         |          3 |          1 |          1 |          5 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/brep/operations.test.ts                    | TypeScript         |        344 |         16 |         93 |        453 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/brep/operations.ts                         | TypeScript         |        382 |        180 |        102 |        664 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/brep/preview.ts                            | TypeScript         |        288 |         50 |         63 |        401 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/brep/topology.ts                           | TypeScript         |        575 |        162 |        101 |        838 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/constraint-solver.ts                       | TypeScript         |        630 |        172 |        141 |        943 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/dimension-annotations.ts                   | TypeScript         |        373 |         32 |         63 |        468 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/dimension-integration.tsx                  | TypeScript JSX     |        366 |         41 |         28 |        435 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/dimension-manager.ts                       | TypeScript         |        292 |         61 |         48 |        401 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/draft-analysis-helpers.ts                  | TypeScript         |         90 |         36 |         24 |        150 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/draft-analysis.ts                          | TypeScript         |        349 |         60 |         53 |        462 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/drawing-exporters.ts                       | TypeScript         |        700 |        161 |        113 |        974 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/drawing-system.ts                          | TypeScript         |        626 |         88 |        128 |        842 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/edge-highlighter.ts                        | TypeScript         |        165 |         45 |         41 |        251 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/exploded-view.ts                           | TypeScript         |        531 |        137 |        107 |        775 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/face-operations.ts                         | TypeScript         |        419 |         59 |         91 |        569 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/feature-tree.ts                            | TypeScript         |        531 |        109 |        126 |        766 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/gdt-symbols.ts                             | TypeScript         |        304 |         51 |         38 |        393 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/geometry-kernel.ts                         | TypeScript         |        453 |         49 |         98 |        600 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/geometry-picker.ts                         | TypeScript         |        315 |         71 |         74 |        460 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/interactive-drag.ts                        | TypeScript         |        172 |         41 |         40 |        253 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/mate-solver.ts                             | TypeScript         |        436 |         94 |         98 |        628 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/mate-system.ts                             | TypeScript         |        412 |        102 |         79 |        593 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/optimized-solver.ts                        | TypeScript         |        688 |        125 |        118 |        931 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/pattern-features.ts                        | TypeScript         |        704 |        122 |        129 |        955 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/shell-integration.ts                       | TypeScript         |        476 |         85 |         84 |        645 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/shell-operation.ts                         | TypeScript         |        555 |         89 |        111 |        755 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/sketch-solver.ts                           | TypeScript         |        161 |          8 |         47 |        216 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/sketch-tools.ts                            | TypeScript         |        623 |        149 |        120 |        892 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/solver-integration.ts                      | TypeScript         |        401 |        119 |         84 |        604 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/sweep-loft-integration.ts                  | TypeScript         |        422 |         92 |        108 |        622 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/sweep-loft.ts                              | TypeScript         |        664 |        130 |        147 |        941 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/cad/video-exporter.ts                          | TypeScript         |        166 |         65 |         40 |        271 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/email-templates.js                             | JavaScript         |        269 |          1 |          6 |        276 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/email-verification.js                          | JavaScript         |         61 |         14 |         20 |         95 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/email.js                                       | JavaScript         |        201 |         17 |         19 |        237 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/folder-utils.js                                | JavaScript         |        179 |         69 |         45 |        293 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/generateThumbnail.js                           | JavaScript         |        390 |         85 |         75 |        550 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/print-cost-config.js                           | JavaScript         |        178 |         14 |         10 |        202 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/print-cost-estimator.js                        | JavaScript         |        467 |        119 |         96 |        682 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/print-cost-validator.js                        | JavaScript         |        271 |         39 |         40 |        350 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/privacy-utils.js                               | JavaScript         |         79 |         40 |         21 |        140 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/rate-limit.js                                  | JavaScript         |         71 |         31 |         20 |        122 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/stl-printability.js                            | JavaScript         |         96 |         17 |         20 |        133 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/stl-utils.js                                   | JavaScript         |        104 |         39 |         35 |        178 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/stripe-utils.js                                | JavaScript         |         66 |         19 |         12 |         97 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/thumbnailGenerator.js                          | JavaScript         |        134 |         29 |         28 |        191 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/thumbnailGeneratorSimple.js                    | JavaScript         |        211 |         36 |         26 |        273 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/ui/design-system.ts                            | TypeScript         |        133 |         10 |         15 |        158 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/verification-middleware.js                     | JavaScript         |         23 |         12 |          7 |         42 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-comments-system.js                     | JavaScript         |        115 |          8 |         15 |        138 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-email-verification.js                  | JavaScript         |         91 |         13 |         23 |        127 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-extended-profile-fields.js             | JavaScript         |         47 |          6 |          8 |         61 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-file-versions.js                       | JavaScript         |         50 |          4 |          6 |         60 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-follow-requests.js                     | JavaScript         |         25 |          1 |          5 |         31 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-messaging-notifications.js             | JavaScript         |         57 |          4 |          9 |         70 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-oauth-support.js                       | JavaScript         |        125 |         15 |         23 |        163 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-ownership-transfer.js                  | JavaScript         |         76 |          6 |         11 |         93 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-private-accounts.js                    | JavaScript         |         23 |          1 |          5 |         29 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-profile-columns.js                     | JavaScript         |         28 |          0 |          6 |         34 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-profile-fields.js                      | JavaScript         |         21 |          0 |          4 |         25 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-project-dimensions.js                  | JavaScript         |         35 |          0 |          6 |         41 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-recovery-tokens-table.js               | JavaScript         |         48 |          3 |          7 |         58 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/add-rename-move-support.js                 | JavaScript         |         92 |          7 |         16 |        115 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/check-comments.js                          | JavaScript         |         17 |          0 |          6 |         23 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/check-schema.js                            | JavaScript         |         18 |          0 |          6 |         24 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/check-users.js                             | JavaScript         |         16 |          0 |          5 |         21 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/create-follows-table.js                    | JavaScript         |         32 |          3 |          6 |         41 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/create-forum-tables.js                     | JavaScript         |         66 |          3 |          8 |         77 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/debug-file.js                              | JavaScript         |         44 |          3 |          8 |         55 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/fix-uploaded-filenames.js                  | JavaScript         |         31 |          4 |          7 |         42 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/force_all_previews_work.js                 | JavaScript         |         36 |          4 |          7 |         47 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/generate-existing-thumbnails.js            | JavaScript         |         91 |         11 |         21 |        123 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/generate-missing-thumbnails.js             | JavaScript         |         51 |          5 |         13 |         69 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/migrate-existing-projects-to-versions.js   | JavaScript         |         72 |          4 |          8 |         84 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/migrate-nested-folders.js                  | JavaScript         |         95 |          5 |         11 |        111 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/migrate-thumbnails.js                      | JavaScript         |         62 |          7 |         14 |         83 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/run-migration.js                           | JavaScript         |         22 |          1 |          7 |         30 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/sync_uploads_with_db.js                    | JavaScript         |         44 |          5 |          8 |         57 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/test-privacy-filter.js                     | JavaScript         |         51 |          1 |          7 |         59 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/test-recovery-system.js                    | JavaScript         |         74 |         11 |         15 |        100 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/verify-migration.js                        | JavaScript         |         41 |          4 |         10 |         55 |
+| /Users/user/Documents/BlueprintCAD/backend/scripts/verify-schema.js                           | JavaScript         |         27 |          3 |          7 |         37 |
+| /Users/user/Documents/BlueprintCAD/db/db.js                                                   | JavaScript         |        218 |          7 |          7 |        232 |
+| /Users/user/Documents/BlueprintCAD/db/migrations/002_orders_schema.sql                        | MS SQL             |         40 |          1 |          3 |         44 |
+| /Users/user/Documents/BlueprintCAD/db/migrations/003_issues_schema.js                         | JavaScript         |         61 |          2 |          7 |         70 |
+| /Users/user/Documents/BlueprintCAD/db/migrations/004_cad_editor_schema.js                     | JavaScript         |         95 |          4 |         10 |        109 |
+| /Users/user/Documents/BlueprintCAD/db/migrations/005_add_user_tier.js                         | JavaScript         |         23 |          1 |          5 |         29 |
+| /Users/user/Documents/BlueprintCAD/db/migrations/add_feature_trees.sql                        | MS SQL             |         12 |          1 |          2 |         15 |
+| /Users/user/Documents/BlueprintCAD/db/migrations/add_thumbnail_path.sql                       | MS SQL             |          6 |          5 |          4 |         15 |
+| /Users/user/Documents/BlueprintCAD/db/migrations/check-orders.js                              | JavaScript         |         53 |          4 |          9 |         66 |
+| /Users/user/Documents/BlueprintCAD/db/migrations/run-orders-migration.js                      | JavaScript         |         14 |          4 |          5 |         23 |
+| /Users/user/Documents/BlueprintCAD/db/migrations/setup-cad-user.js                            | JavaScript         |         41 |          3 |          8 |         52 |
+| /Users/user/Documents/BlueprintCAD/eslint.config.mjs                                          | JavaScript         |         14 |          2 |          3 |         19 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/CADViewer.tsx                          | TypeScript JSX     |        398 |         53 |         51 |        502 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/CADViewerModal.tsx                     | TypeScript JSX     |         82 |          4 |          8 |         94 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/ChangeRoleModal.tsx                    | TypeScript JSX     |        138 |          1 |         17 |        156 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/CommentSystem.tsx                      | TypeScript JSX     |        507 |         25 |         48 |        580 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/ConfirmationModal.tsx                  | TypeScript JSX     |         95 |          0 |          6 |        101 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/CreateFolderModal.tsx                  | TypeScript JSX     |        119 |          0 |         11 |        130 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/FolderCard.tsx                         | TypeScript JSX     |        162 |          0 |         10 |        172 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/HistoryModal.tsx                       | TypeScript JSX     |        170 |          0 |         12 |        182 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/InvitationsNotification.tsx            | TypeScript JSX     |        105 |          1 |          9 |        115 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/InviteMemberModal.tsx                  | TypeScript JSX     |         82 |          0 |          9 |         91 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/Layout.js                              | JavaScript         |         11 |          1 |          1 |         13 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/MoveFolderModal.tsx                    | TypeScript JSX     |        174 |          1 |         17 |        192 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/Navbar.tsx                             | TypeScript JSX     |        248 |         12 |         24 |        284 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/NotificationsDropdown.tsx              | TypeScript JSX     |        229 |          9 |         17 |        255 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/ProjectCard.js                         | JavaScript         |        155 |          4 |         13 |        172 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/RenameModal.tsx                        | TypeScript JSX     |         95 |          0 |         12 |        107 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/SaveProjectModal.tsx                   | TypeScript JSX     |        268 |         12 |         16 |        296 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/ThreeDViewer.tsx                       | TypeScript JSX     |        129 |         40 |         17 |        186 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/ThreePreview.tsx                       | TypeScript JSX     |        266 |         26 |         36 |        328 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/TransferOwnershipModal.tsx             | TypeScript JSX     |        161 |          0 |         18 |        179 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/TransferRequestsList.tsx               | TypeScript JSX     |        194 |          1 |         21 |        216 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/VersionDropdown.tsx                    | TypeScript JSX     |        104 |          0 |         14 |        118 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/VersionHistory.tsx                     | TypeScript JSX     |        211 |          3 |         26 |        240 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/AdvancedSketchModal.tsx            | TypeScript JSX     |        321 |         11 |         21 |        353 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/AssemblyTreePanel.tsx              | TypeScript JSX     |        214 |          9 |         19 |        242 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/BOMViewer.tsx                      | TypeScript JSX     |        428 |          4 |         40 |        472 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/BottomBar.tsx                      | TypeScript JSX     |        119 |          5 |          8 |        132 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/CADViewport.tsx                    | TypeScript JSX     |        804 |         75 |        131 |      1,010 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/ChamferModal.tsx                   | TypeScript JSX     |        238 |          5 |         18 |        261 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/CollisionDisplay.tsx               | TypeScript JSX     |        131 |          4 |         12 |        147 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/ConstraintContextMenu.tsx          | TypeScript JSX     |        224 |          7 |         18 |        249 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/ConstraintIconOverlay.tsx          | TypeScript JSX     |        235 |         12 |         48 |        295 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/ConstraintManager.tsx              | TypeScript JSX     |        273 |          7 |         25 |        305 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/ConstraintToolbar.tsx              | TypeScript JSX     |        145 |         12 |         18 |        175 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/DOFDisplay.tsx                     | TypeScript JSX     |        225 |          9 |         14 |        248 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/DimensionEditor.tsx                | TypeScript JSX     |        296 |          9 |         25 |        330 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/DimensionRenderer.tsx              | TypeScript JSX     |        336 |         20 |         53 |        409 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/DimensionToolbar.tsx               | TypeScript JSX     |        224 |          4 |         12 |        240 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/DimensionTools.tsx                 | TypeScript JSX     |        526 |         12 |         36 |        574 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/DraftAnalysisModal.tsx             | TypeScript JSX     |        343 |         11 |         26 |        380 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/DrawingControls.tsx                | TypeScript JSX     |        464 |         13 |         22 |        499 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/DrawingSheetViewer.tsx             | TypeScript JSX     |        324 |         24 |         58 |        406 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/EnhancedCADViewport.tsx            | TypeScript JSX     |        277 |         22 |         44 |        343 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/ExplodeControls.tsx                | TypeScript JSX     |        391 |         18 |         26 |        435 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/ExportModal.tsx                    | TypeScript JSX     |        125 |          0 |         14 |        139 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/ExtrudeModal.tsx                   | TypeScript JSX     |        113 |          0 |         11 |        124 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/FaceOperationsModal.tsx            | TypeScript JSX     |        313 |         11 |         30 |        354 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/FeatureTreeSidebar.tsx             | TypeScript JSX     |        418 |         29 |         40 |        487 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/FilletModal.tsx                    | TypeScript JSX     |        186 |         11 |         16 |        213 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/LoadingSplash.tsx                  | TypeScript JSX     |         11 |          0 |          1 |         12 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/MateEditor.tsx                     | TypeScript JSX     |        295 |         13 |         24 |        332 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/MateList.tsx                       | TypeScript JSX     |        188 |         11 |         17 |        216 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/PartBrowserPanel.tsx               | TypeScript JSX     |        175 |          9 |         24 |        208 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/PatternModal.tsx                   | TypeScript JSX     |        672 |         15 |         47 |        734 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/ShellModal.tsx                     | TypeScript JSX     |        450 |         28 |         54 |        532 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/SidebarLeft.tsx                    | TypeScript JSX     |        131 |          4 |         10 |        145 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/SidebarRight.tsx                   | TypeScript JSX     |        243 |          4 |         13 |        260 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/SketchCanvas.tsx                   | TypeScript JSX     |        504 |         37 |         66 |        607 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/SketchModal.tsx                    | TypeScript JSX     |         70 |          0 |          9 |         79 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/SweepLoftModal.tsx                 | TypeScript JSX     |        491 |         22 |         50 |        563 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/cad/Toolbar.tsx                        | TypeScript JSX     |        279 |         10 |         18 |        307 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/ui/GlobalNavSidebar.tsx                | TypeScript JSX     |        283 |         14 |         22 |        319 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/ui/ThreePanelLayout.tsx                | TypeScript JSX     |        146 |          9 |         20 |        175 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/ui/UIComponents.tsx                    | TypeScript JSX     |        309 |         12 |         26 |        347 |
+| /Users/user/Documents/BlueprintCAD/frontend/types/index.ts                                    | TypeScript         |         88 |          0 |          6 |         94 |
+| /Users/user/Documents/BlueprintCAD/frontend/types/next-auth.d.ts                              | TypeScript         |         32 |          0 |          4 |         36 |
+| /Users/user/Documents/BlueprintCAD/lib/auth.js                                                | JavaScript         |         33 |          1 |          7 |         41 |
+| /Users/user/Documents/BlueprintCAD/lib/cad-formats.js                                         | JavaScript         |        251 |         54 |         25 |        330 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/annotation-styles.ts                               | TypeScript         |        345 |         52 |         62 |        459 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/assembly-system.ts                                 | TypeScript         |        600 |        135 |        133 |        868 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/bom-exporters.ts                                   | TypeScript         |        536 |         58 |        102 |        696 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/bom-generator.ts                                   | TypeScript         |        374 |         75 |         54 |        503 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/brep/README.md                                     | Markdown           |        234 |          0 |         66 |        300 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/brep/boolean.ts                                    | TypeScript         |        499 |        142 |        126 |        767 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/brep/fillet-chamfer.ts                             | TypeScript         |        394 |        131 |        113 |        638 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/brep/occt.ts                                       | TypeScript         |        287 |         71 |         56 |        414 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/brep/opencascade.d.ts                              | TypeScript         |          3 |          1 |          1 |          5 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/brep/operations.test.ts                            | TypeScript         |        344 |         16 |         93 |        453 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/brep/operations.ts                                 | TypeScript         |        382 |        180 |        102 |        664 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/brep/preview.ts                                    | TypeScript         |        288 |         50 |         63 |        401 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/brep/topology.ts                                   | TypeScript         |        575 |        162 |        101 |        838 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/constraint-solver.ts                               | TypeScript         |        630 |        172 |        141 |        943 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/dimension-annotations.ts                           | TypeScript         |        373 |         32 |         63 |        468 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/dimension-integration.tsx                          | TypeScript JSX     |        366 |         41 |         28 |        435 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/dimension-manager.ts                               | TypeScript         |        292 |         61 |         48 |        401 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/draft-analysis-helpers.ts                          | TypeScript         |         90 |         36 |         24 |        150 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/draft-analysis.ts                                  | TypeScript         |        349 |         60 |         53 |        462 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/drawing-exporters.ts                               | TypeScript         |        700 |        161 |        113 |        974 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/drawing-system.ts                                  | TypeScript         |        626 |         88 |        128 |        842 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/edge-highlighter.ts                                | TypeScript         |        165 |         45 |         41 |        251 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/exploded-view.ts                                   | TypeScript         |        531 |        137 |        107 |        775 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/face-operations.ts                                 | TypeScript         |        419 |         59 |         91 |        569 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/feature-tree.ts                                    | TypeScript         |        531 |        109 |        126 |        766 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/gdt-symbols.ts                                     | TypeScript         |        304 |         51 |         38 |        393 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/geometry-kernel.ts                                 | TypeScript         |        453 |         49 |         98 |        600 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/geometry-picker.ts                                 | TypeScript         |        315 |         71 |         74 |        460 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/interactive-drag.ts                                | TypeScript         |        172 |         41 |         40 |        253 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/mate-solver.ts                                     | TypeScript         |        436 |         94 |         98 |        628 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/mate-system.ts                                     | TypeScript         |        412 |        102 |         79 |        593 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/optimized-solver.ts                                | TypeScript         |        688 |        125 |        118 |        931 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/pattern-features.ts                                | TypeScript         |        704 |        122 |        129 |        955 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/shell-integration.ts                               | TypeScript         |        476 |         85 |         84 |        645 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/shell-operation.ts                                 | TypeScript         |        555 |         89 |        111 |        755 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/sketch-solver.ts                                   | TypeScript         |        161 |          8 |         47 |        216 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/sketch-tools.ts                                    | TypeScript         |        623 |        149 |        120 |        892 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/solver-integration.ts                              | TypeScript         |        401 |        119 |         84 |        604 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/sweep-loft-integration.ts                          | TypeScript         |        422 |         92 |        108 |        622 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/sweep-loft.ts                                      | TypeScript         |        664 |        130 |        147 |        941 |
+| /Users/user/Documents/BlueprintCAD/lib/cad/video-exporter.ts                                  | TypeScript         |        166 |         65 |         40 |        271 |
+| /Users/user/Documents/BlueprintCAD/lib/db.js                                                  | JavaScript         |        196 |          5 |          6 |        207 |
+| /Users/user/Documents/BlueprintCAD/lib/email-templates.js                                     | JavaScript         |        269 |          1 |          6 |        276 |
+| /Users/user/Documents/BlueprintCAD/lib/email-verification.js                                  | JavaScript         |         61 |         14 |         20 |         95 |
+| /Users/user/Documents/BlueprintCAD/lib/email.js                                               | JavaScript         |        201 |         17 |         19 |        237 |
+| /Users/user/Documents/BlueprintCAD/lib/folder-utils.js                                        | JavaScript         |        179 |         69 |         45 |        293 |
+| /Users/user/Documents/BlueprintCAD/lib/print-cost-config.js                                   | JavaScript         |        178 |         14 |         10 |        202 |
+| /Users/user/Documents/BlueprintCAD/lib/print-cost-estimator.js                                | JavaScript         |        367 |         92 |         81 |        540 |
+| /Users/user/Documents/BlueprintCAD/lib/print-cost-validator.js                                | JavaScript         |        271 |         39 |         40 |        350 |
+| /Users/user/Documents/BlueprintCAD/lib/privacy-utils.js                                       | JavaScript         |         79 |         40 |         21 |        140 |
+| /Users/user/Documents/BlueprintCAD/lib/rate-limit.js                                          | JavaScript         |         71 |         31 |         20 |        122 |
+| /Users/user/Documents/BlueprintCAD/lib/stl-printability.js                                    | JavaScript         |         96 |         17 |         20 |        133 |
+| /Users/user/Documents/BlueprintCAD/lib/stl-utils.js                                           | JavaScript         |        104 |         39 |         35 |        178 |
+| /Users/user/Documents/BlueprintCAD/lib/stripe-utils.js                                        | JavaScript         |         66 |         19 |         12 |         97 |
+| /Users/user/Documents/BlueprintCAD/lib/thumbnailGenerator.js                                  | JavaScript         |        134 |         29 |         28 |        191 |
+| /Users/user/Documents/BlueprintCAD/lib/thumbnailGeneratorSimple.js                            | JavaScript         |        211 |         36 |         26 |        273 |
+| /Users/user/Documents/BlueprintCAD/lib/ui/design-system.ts                                    | TypeScript         |        133 |         10 |         15 |        158 |
+| /Users/user/Documents/BlueprintCAD/lib/verification-middleware.js                             | JavaScript         |         23 |         12 |          7 |         42 |
+| /Users/user/Documents/BlueprintCAD/next.config.js                                             | JavaScript         |         66 |         24 |         13 |        103 |
+| /Users/user/Documents/BlueprintCAD/package-lock.json                                          | JSON               |      7,376 |          0 |          1 |      7,377 |
+| /Users/user/Documents/BlueprintCAD/package.json                                               | JSON               |         50 |          0 |          1 |         51 |
+| /Users/user/Documents/BlueprintCAD/pages/_app.tsx                                             | TypeScript JSX     |          5 |          0 |          2 |          7 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/[...nextauth].js                            | JavaScript         |        204 |         16 |         39 |        259 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/disconnect.js                               | JavaScript         |         57 |          7 |         14 |         78 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/forgot-password.ts                          | TypeScript         |         71 |         11 |         16 |         98 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/forgot-username.ts                          | TypeScript         |         60 |          6 |         13 |         79 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/login.js                                    | JavaScript         |         41 |          4 |         10 |         55 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/providers.js                                | JavaScript         |         41 |          3 |          9 |         53 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/register.js                                 | JavaScript         |         73 |         10 |         17 |        100 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/resend-verification.js                      | JavaScript         |         62 |          9 |         14 |         85 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/reset-password.ts                           | TypeScript         |         53 |          6 |         14 |         73 |
+| /Users/user/Documents/BlueprintCAD/pages/api/auth/verify-email.js                             | JavaScript         |         37 |          5 |         10 |         52 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/assemblies/[id].ts                           | TypeScript         |        139 |          4 |         25 |        168 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/assemblies/index.ts                          | TypeScript         |        112 |          2 |         17 |        131 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/files/[id].js                                | JavaScript         |         57 |          4 |         11 |         72 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/files/[id]/metadata.ts                       | TypeScript         |        126 |         13 |         29 |        168 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/files/[id]/reference.ts                      | TypeScript         |         57 |          2 |         11 |         70 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/files/[id]/save.js                           | JavaScript         |         91 |          7 |         16 |        114 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/files/[id]/versions.js                       | JavaScript         |         59 |          3 |         11 |         73 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/files/index.ts                               | TypeScript         |         40 |          0 |          9 |         49 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/files/upload.js                              | JavaScript         |         65 |          4 |         16 |         85 |
+| /Users/user/Documents/BlueprintCAD/pages/api/cad/list.js                                      | JavaScript         |         57 |          3 |          9 |         69 |
+| /Users/user/Documents/BlueprintCAD/pages/api/comments/[commentId]/reactions.ts                | TypeScript         |         40 |          3 |          8 |         51 |
+| /Users/user/Documents/BlueprintCAD/pages/api/comments/on/[entityType]/[entityId].ts           | TypeScript         |        156 |         13 |         25 |        194 |
+| /Users/user/Documents/BlueprintCAD/pages/api/dashboard/activity.js                            | JavaScript         |        136 |          8 |         19 |        163 |
+| /Users/user/Documents/BlueprintCAD/pages/api/dashboard/stats.js                               | JavaScript         |         79 |         13 |         14 |        106 |
+| /Users/user/Documents/BlueprintCAD/pages/api/dashboard/storage.js                             | JavaScript         |         82 |         10 |         16 |        108 |
+| /Users/user/Documents/BlueprintCAD/pages/api/dashboard/trending.js                            | JavaScript         |         42 |          4 |          7 |         53 |
+| /Users/user/Documents/BlueprintCAD/pages/api/files/[file].ts                                  | TypeScript         |        134 |         30 |         31 |        195 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/activity.ts                         | TypeScript         |         32 |          0 |          4 |         36 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/breadcrumb.ts                       | TypeScript         |         18 |          0 |          4 |         22 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/comments.ts                         | TypeScript         |         78 |          2 |         12 |         92 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/index.ts                            | TypeScript         |        113 |          4 |         21 |        138 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/members.ts                          | TypeScript         |         91 |          5 |         18 |        114 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/members/[memberId].ts               | TypeScript         |         76 |          4 |         18 |         98 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/members/[memberId]/role.ts          | TypeScript         |        116 |         18 |         33 |        167 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/move-folder.ts                      | TypeScript         |        121 |         11 |         24 |        156 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/[id]/rename.ts                           | TypeScript         |         80 |          7 |         19 |        106 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/index.ts                                 | TypeScript         |         92 |          6 |         18 |        116 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/move.ts                                  | TypeScript         |         35 |          0 |          7 |         42 |
+| /Users/user/Documents/BlueprintCAD/pages/api/folders/tree.ts                                  | TypeScript         |         23 |          0 |          5 |         28 |
+| /Users/user/Documents/BlueprintCAD/pages/api/forum/[id].ts                                    | TypeScript         |         88 |          8 |         25 |        121 |
+| /Users/user/Documents/BlueprintCAD/pages/api/forum/stats.js                                   | JavaScript         |         47 |          7 |         11 |         65 |
+| /Users/user/Documents/BlueprintCAD/pages/api/forum/threads.ts                                 | TypeScript         |         72 |          4 |         17 |         93 |
+| /Users/user/Documents/BlueprintCAD/pages/api/invitations/[id].ts                              | TypeScript         |         64 |          3 |         12 |         79 |
+| /Users/user/Documents/BlueprintCAD/pages/api/invitations/index.ts                             | TypeScript         |         36 |          0 |          5 |         41 |
+| /Users/user/Documents/BlueprintCAD/pages/api/issues/[id]/update.js                            | JavaScript         |         88 |          7 |         21 |        116 |
+| /Users/user/Documents/BlueprintCAD/pages/api/issues/list.js                                   | JavaScript         |        127 |          9 |         26 |        162 |
+| /Users/user/Documents/BlueprintCAD/pages/api/issues/submit.js                                 | JavaScript         |        104 |         11 |         20 |        135 |
+| /Users/user/Documents/BlueprintCAD/pages/api/manufacturing-orders/create.js                   | JavaScript         |         88 |          6 |         12 |        106 |
+| /Users/user/Documents/BlueprintCAD/pages/api/messages.ts                                      | TypeScript         |        100 |          9 |         21 |        130 |
+| /Users/user/Documents/BlueprintCAD/pages/api/messages/[username].ts                           | TypeScript         |         39 |          4 |         10 |         53 |
+| /Users/user/Documents/BlueprintCAD/pages/api/messages/unread.js                               | JavaScript         |         22 |          2 |          7 |         31 |
+| /Users/user/Documents/BlueprintCAD/pages/api/notifications/[id].js                            | JavaScript         |         55 |          5 |         13 |         73 |
+| /Users/user/Documents/BlueprintCAD/pages/api/notifications/index.js                           | JavaScript         |         34 |          3 |          8 |         45 |
+| /Users/user/Documents/BlueprintCAD/pages/api/orders/checkout.js                               | JavaScript         |         69 |         11 |         20 |        100 |
+| /Users/user/Documents/BlueprintCAD/pages/api/orders/confirm.js                                | JavaScript         |        109 |         13 |         21 |        143 |
+| /Users/user/Documents/BlueprintCAD/pages/api/orders/download.js                               | JavaScript         |         61 |         12 |         18 |         91 |
+| /Users/user/Documents/BlueprintCAD/pages/api/orders/my-orders.js                              | JavaScript         |        113 |          8 |         15 |        136 |
+| /Users/user/Documents/BlueprintCAD/pages/api/orders/refund.js                                 | JavaScript         |         92 |          9 |         18 |        119 |
+| /Users/user/Documents/BlueprintCAD/pages/api/ownership-transfer/[requestId].ts                | TypeScript         |        170 |         27 |         41 |        238 |
+| /Users/user/Documents/BlueprintCAD/pages/api/ownership-transfer/index.ts                      | TypeScript         |        137 |         11 |         19 |        167 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/comments.js                        | JavaScript         |         49 |          0 |          9 |         58 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/download.js                        | JavaScript         |        113 |         17 |         21 |        151 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/index.js                           | JavaScript         |        149 |         47 |         33 |        229 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/like.js                            | JavaScript         |         47 |          1 |          7 |         55 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/rename.ts                          | TypeScript         |         81 |          8 |         18 |        107 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/restore-version.ts                 | TypeScript         |         61 |          7 |         15 |         83 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/upload-version.ts                  | TypeScript         |        146 |         14 |         26 |        186 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/[id]/versions.ts                        | TypeScript         |         44 |          4 |          8 |         56 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/estimate.js                             | JavaScript         |        136 |          4 |         19 |        159 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/index.js                                | JavaScript         |        554 |         67 |         55 |        676 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/move.ts                                 | TypeScript         |         90 |          8 |         18 |        116 |
+| /Users/user/Documents/BlueprintCAD/pages/api/projects/starred.js                              | JavaScript         |         55 |          6 |         11 |         72 |
+| /Users/user/Documents/BlueprintCAD/pages/api/quote/analyze.js                                 | JavaScript         |        102 |          8 |         24 |        134 |
+| /Users/user/Documents/BlueprintCAD/pages/api/rename-move-history/[entityType]/[entityId].ts   | TypeScript         |         34 |          0 |          8 |         42 |
+| /Users/user/Documents/BlueprintCAD/pages/api/stats.js                                         | JavaScript         |         18 |          1 |          4 |         23 |
+| /Users/user/Documents/BlueprintCAD/pages/api/tags/index.js                                    | JavaScript         |         79 |          8 |         18 |        105 |
+| /Users/user/Documents/BlueprintCAD/pages/api/tags/seed.js                                     | JavaScript         |        256 |         27 |         32 |        315 |
+| /Users/user/Documents/BlueprintCAD/pages/api/thumbnails/[file].ts                             | TypeScript         |         60 |         12 |         19 |         91 |
+| /Users/user/Documents/BlueprintCAD/pages/api/thumbnails/generate.ts                           | TypeScript         |         62 |         12 |         16 |         90 |
+| /Users/user/Documents/BlueprintCAD/pages/api/upload.js                                        | JavaScript         |         94 |         13 |         15 |        122 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/[username]/follow.js                       | JavaScript         |         69 |          7 |         15 |         91 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/[username]/followers.js                    | JavaScript         |        131 |          9 |         16 |        156 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/[username]/following-status.js             | JavaScript         |         48 |          3 |         10 |         61 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/[username]/following.js                    | JavaScript         |        131 |         10 |         16 |        157 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/[username]/index.js                        | JavaScript         |        136 |         15 |         19 |        170 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/banner/[file].ts                           | TypeScript         |         31 |          2 |          9 |         42 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/check-pending.js                           | JavaScript         |         27 |          2 |          8 |         37 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/follow-request.js                          | JavaScript         |         69 |          9 |         16 |         94 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/follow-requests.js                         | JavaScript         |         26 |          2 |          6 |         34 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/follow.js                                  | JavaScript         |         69 |          8 |         16 |         93 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/following-list.js                          | JavaScript         |         50 |          2 |          7 |         59 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/profile-picture/[file].ts                  | TypeScript         |         31 |          2 |          8 |         41 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/profile.ts                                 | TypeScript         |        167 |         20 |         33 |        220 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/search.ts                                  | TypeScript         |        138 |         10 |         13 |        161 |
+| /Users/user/Documents/BlueprintCAD/pages/api/users/update-privacy.js                          | JavaScript         |         29 |          1 |          8 |         38 |
+| /Users/user/Documents/BlueprintCAD/pages/transfer-requests.js                                 | JavaScript         |         18 |          0 |          3 |         21 |
+| /Users/user/Documents/BlueprintCAD/patches/next+13.5.6.patch                                  | Diff               |      1,671 |          0 |          1 |      1,672 |
+| /Users/user/Documents/BlueprintCAD/postcss.config.js                                          | JavaScript         |          6 |          0 |          0 |          6 |
+| /Users/user/Documents/BlueprintCAD/postcss.config.mjs                                         | JavaScript         |          7 |          0 |          2 |          9 |
+| /Users/user/Documents/BlueprintCAD/public/file.svg                                            | XML                |          1 |          0 |          0 |          1 |
+| /Users/user/Documents/BlueprintCAD/public/globe.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| /Users/user/Documents/BlueprintCAD/public/next.svg                                            | XML                |          1 |          0 |          0 |          1 |
+| /Users/user/Documents/BlueprintCAD/public/output.css                                          | PostCSS            |      1,627 |        168 |        435 |      2,230 |
+| /Users/user/Documents/BlueprintCAD/public/vercel.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| /Users/user/Documents/BlueprintCAD/public/window.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| /Users/user/Documents/BlueprintCAD/scripts/dev.js                                             | JavaScript         |         22 |          5 |          6 |         33 |
+| /Users/user/Documents/BlueprintCAD/tailwind.config.js                                         | JavaScript         |         25 |          1 |          0 |         26 |
+| /Users/user/Documents/BlueprintCAD/tsconfig.json                                              | JSON with Comments |         60 |          0 |          1 |         61 |
+| Total                                                                                         |                    |    105,507 |     11,409 |     15,149 |    132,065 |
++-----------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+

@@ -15,21 +15,21 @@ export default async function handler(req, res) {
   const db = await getDb();
 
   try {
-    // Get all notifications for the user
+    // Get all notifications for the user (excluding message notifications - those go to messages tab)
     const notifications = await db.all(
       `SELECT n.*, u.username, u.profile_picture
        FROM notifications n
        LEFT JOIN users u ON n.related_id = u.id
-       WHERE n.user_id = ?
+       WHERE n.user_id = ? AND n.type != 'message'
        ORDER BY n.created_at DESC
        LIMIT 50`,
       [user.userId]
     );
 
-    // Get unread count
+    // Get unread count (excluding message notifications)
     const unreadCount = await db.get(
-      'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND read = 0',
-      [user.userId]
+      'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND read = 0 AND type != ?',
+      [user.userId, 'message']
     );
 
     res.status(200).json({ 

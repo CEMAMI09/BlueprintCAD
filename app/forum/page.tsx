@@ -18,6 +18,8 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, SearchBar, Tabs, EmptyState } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import SubscriptionGate from '@/frontend/components/SubscriptionGate';
+import UpgradeModal from '@/frontend/components/UpgradeModal';
 import {
   MessageSquare,
   Plus,
@@ -88,6 +90,8 @@ export default function ForumPage() {
   const [creating, setCreating] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [submittingReply, setSubmittingReply] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
 
   const formatTimeAgo = (dateString: string) => {
     if (!dateString) return 'Just now';
@@ -175,6 +179,25 @@ export default function ForumPage() {
     if (!newThread.title.trim() || !newThread.content.trim()) {
       alert('Please fill in both title and content');
       return;
+    }
+
+    // Check subscription before creating thread
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const canPost = await fetch(`/api/subscriptions/can-action?feature=canPostForums`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const postCheck = await canPost.json();
+        
+        if (!postCheck.allowed) {
+          setShowUpgradeModal(true);
+          setUpgradeTier(postCheck.requiredTier || 'pro');
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking post permission:', err);
+      }
     }
 
     setCreating(true);

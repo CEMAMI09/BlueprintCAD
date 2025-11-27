@@ -17,6 +17,8 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import SubscriptionGate from '@/frontend/components/SubscriptionGate';
+import UpgradeModal from '@/frontend/components/UpgradeModal';
 import {
   Download,
   Star,
@@ -70,6 +72,8 @@ export default function ExplorePage() {
   const [users, setUsers] = useState<UserResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchMode, setSearchMode] = useState<'all' | 'designs' | 'users'>('all');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
 
   // Helper function to map projects to designs
   const mapProjectsToDesigns = (projects: any[]): Design[] => {
@@ -221,17 +225,43 @@ export default function ExplorePage() {
             title="Explore Designs"
             actions={
               <div className="flex items-center gap-2">
-                <Link href="/upload" title="Upload a new design">
+                <SubscriptionGate
+                  feature="maxProjects"
+                  requiredTier="pro"
+                  showUpgradeModal={false}
+                >
                   <Button
                     variant="ghost"
                     size="md"
                     icon={<svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12' /></svg>}
                     iconPosition="left"
                     className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      const token = localStorage.getItem('token');
+                      if (!token) {
+                        router.push('/login');
+                        return;
+                      }
+                      try {
+                        const res = await fetch(`/api/subscriptions/can-action?feature=maxProjects`, {
+                          headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const data = await res.json();
+                        if (data.allowed) {
+                          router.push('/upload');
+                        } else {
+                          setShowUpgradeModal(true);
+                          setUpgradeTier(data.requiredTier || 'pro');
+                        }
+                      } catch (err) {
+                        router.push('/upload');
+                      }
+                    }}
                   >
                     Upload Design
                   </Button>
-                </Link>
+                </SubscriptionGate>
                 <button
                   type="button"
                   onClick={(e) => {

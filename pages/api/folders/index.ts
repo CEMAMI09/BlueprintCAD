@@ -77,6 +77,19 @@ export default async function handler(
 
       const db = await getDb();
 
+      // --- Subscription Check: Max Folders ---
+      const { canPerformAction } = require('../../../backend/lib/subscription-utils');
+      const folderCheck = await canPerformAction(userId, 'maxFolders');
+      if (!folderCheck.allowed) {
+        return res.status(403).json({
+          error: `You have reached your folder limit of ${folderCheck.limit} on the ${folderCheck.requiredTier} plan. Please upgrade to create more folders.`,
+          reason: folderCheck.reason,
+          requiredTier: folderCheck.requiredTier,
+          current: folderCheck.current,
+          limit: folderCheck.limit
+        });
+      }
+
       // Create folder
       const result = await db.run(
         `INSERT INTO folders (name, description, owner_id, parent_id, is_team_folder, color)

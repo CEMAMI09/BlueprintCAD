@@ -5,6 +5,7 @@
 
 import { getDb } from '../../../db/db';
 import { getUserFromRequest } from '../../../backend/lib/auth';
+import { getPlatformFee } from '../../../backend/lib/subscription-utils';
 const { createPaymentIntent } = require('../../../lib/stripe-utils');
 
 export default async function handler(req, res) {
@@ -57,8 +58,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'You have already purchased this project' });
     }
 
-    // Use total price with platform fee if provided, otherwise use base price
-    const amount = totalPrice ? parseFloat(totalPrice) : parseFloat(project.price);
+    // Get platform fee based on seller's subscription tier
+    const platformFee = await getPlatformFee(project.user_id);
+    const basePrice = parseFloat(project.price);
+    const feeAmount = platformFee ? basePrice * platformFee : 0;
+    const finalPrice = basePrice + feeAmount;
+    
+    // Use total price with platform fee if provided, otherwise calculate it
+    const amount = totalPrice ? parseFloat(totalPrice) : finalPrice;
     
     // Generate order number
     const orderNumber = `BLU-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;

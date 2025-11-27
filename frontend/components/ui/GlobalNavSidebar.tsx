@@ -160,30 +160,24 @@ export function GlobalNavSidebar() {
     <div className="h-full flex flex-col" style={{ backgroundColor: DS.colors.background.panel }}>
       {/* Logo / Brand */}
       <div
-        className="flex-shrink-0 px-4 py-6 flex items-center justify-between border-b"
-        style={{ borderColor: DS.colors.border.subtle }}
+        className="flex-shrink-0 px-4 flex items-center border-b"
+        style={{ borderColor: DS.colors.border.subtle, height: '90px', minHeight: '90px', padding: '0', margin: '0', lineHeight: '1' }}
       >
         {!leftPanelCollapsed ? (
-          <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white transition-all"
-              style={{ backgroundColor: DS.colors.primary.blue }}
-            >
-              B
-            </div>
-            <span
-              className="text-xl font-bold transition-colors"
-              style={{ color: DS.colors.text.primary }}
-            >
-              Blueprint
-            </span>
+          <Link href="/dashboard" className="flex items-center group" style={{ padding: '0', margin: '0', lineHeight: '1' }}>
+            <img
+              src="/bpcube2.png"
+              alt="Blueprint Logo"
+              className="logo-image"
+            />
           </Link>
         ) : (
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white mx-auto"
-            style={{ backgroundColor: DS.colors.primary.blue }}
-          >
-            B
+          <div style={{ display: 'flex', alignItems: 'center', padding: '0', margin: '0', lineHeight: '1' }}>
+            <img
+              src="/bpcube2.png"
+              alt="Blueprint Logo"
+              className="logo-image"
+            />
           </div>
         )}
       </div>

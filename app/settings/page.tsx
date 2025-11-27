@@ -15,6 +15,7 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, Tabs } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import Link from 'next/link';
 import {
   User,
   Bell,
@@ -42,9 +43,11 @@ export default function SettingsPage() {
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [userSubscription, setUserSubscription] = useState<any>(null);
 
   useEffect(() => {
     fetchUserInfo();
+    fetchSubscriptionStatus();
   }, []);
 
   const fetchUserInfo = async () => {
@@ -77,6 +80,24 @@ export default function SettingsPage() {
       console.error('Error fetching user info:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const res = await fetch('/api/subscriptions/check', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUserSubscription(data);
+      }
+    } catch (error) {
+      console.error('Error fetching subscription status:', error);
     }
   };
 
@@ -686,18 +707,65 @@ export default function SettingsPage() {
                           <div className="flex items-center justify-between mb-4">
                             <div>
                               <h4 className="font-semibold" style={{ color: DS.colors.text.primary }}>Current Plan</h4>
-                              <p className="text-sm" style={{ color: DS.colors.text.secondary }}>Free Plan</p>
+                              <p className="text-sm capitalize" style={{ color: DS.colors.text.secondary }}>
+                                {userSubscription?.tier ? `${userSubscription.tier.charAt(0).toUpperCase() + userSubscription.tier.slice(1)} Plan` : 'Free Plan'}
+                              </p>
+                              {userSubscription?.subscription && (
+                                <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
+                                  {userSubscription.subscription.cancelAtPeriodEnd 
+                                    ? `Cancels on ${new Date(userSubscription.subscription.currentPeriodEnd).toLocaleDateString()}`
+                                    : `Renews on ${new Date(userSubscription.subscription.currentPeriodEnd).toLocaleDateString()}`
+                                  }
+                                </p>
+                              )}
                             </div>
-                            <Badge variant="primary" size="lg">Active</Badge>
+                            <Badge 
+                              variant={userSubscription?.tier && userSubscription.tier !== 'free' ? 'primary' : 'secondary'} 
+                              size="lg"
+                            >
+                              {userSubscription?.subscription?.status === 'active' ? 'Active' : 'Free'}
+                            </Badge>
                           </div>
-                          <Button variant="primary">Upgrade to Pro</Button>
+                          <Link href="/subscription">
+                            <Button variant="primary" fullWidth>
+                              {userSubscription?.tier && userSubscription.tier !== 'free' ? 'Manage Subscription' : 'Upgrade Plan'}
+                            </Button>
+                          </Link>
                         </div>
+                        {userSubscription?.storage && (
+                          <div className="pt-6 border-t" style={{ borderColor: DS.colors.border.default }}>
+                            <h4 className="font-semibold mb-3" style={{ color: DS.colors.text.primary }}>Storage Usage</h4>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span style={{ color: DS.colors.text.secondary }}>Used</span>
+                                <span style={{ color: DS.colors.text.primary }}>
+                                  {userSubscription.storage.used.toFixed(2)} GB / {userSubscription.storage.limit} GB
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-800 rounded-full h-2">
+                                <div
+                                  className="h-2 rounded-full transition-all"
+                                  style={{
+                                    width: `${Math.min(userSubscription.storage.percentUsed, 100)}%`,
+                                    backgroundColor: userSubscription.storage.percentUsed > 90 
+                                      ? DS.colors.accent.error 
+                                      : DS.colors.primary.blue
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         <div className="pt-6 border-t" style={{ borderColor: DS.colors.border.default }}>
                           <h4 className="font-semibold mb-3" style={{ color: DS.colors.text.primary }}>Payment Method</h4>
                           <p className="text-sm mb-4" style={{ color: DS.colors.text.secondary }}>
-                            No payment method on file
+                            Payment methods are managed through Stripe during checkout
                           </p>
-                          <Button variant="secondary" icon={<CreditCard size={18} />}>Add Payment Method</Button>
+                          <Link href="/subscription">
+                            <Button variant="secondary" icon={<CreditCard size={18} />}>
+                              Manage Payment Methods
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                     </Card>

@@ -45,9 +45,9 @@ export default function OAuthCallback() {
           window.dispatchEvent(new Event('userChanged'));
           window.dispatchEvent(new Event('storage'));
 
-          // Redirect to home
+          // Redirect to dashboard
           setTimeout(() => {
-            window.location.href = '/';
+            window.location.href = '/dashboard';
           }, 1000);
         } catch (err) {
           console.error('Callback error:', err);

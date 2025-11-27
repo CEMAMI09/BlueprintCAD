@@ -61,6 +61,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
+      // Check if user can post in forums
+      const { canPerformAction } = require('../../../backend/lib/subscription-utils');
+      const postCheck = await canPerformAction((user as any).userId, 'canPostForums');
+      if (!postCheck.allowed) {
+        return res.status(403).json({ 
+          error: 'Posting in forums requires Pro subscription',
+          reason: postCheck.reason,
+          requiredTier: postCheck.requiredTier
+        });
+      }
+
       const { title, content, category } = req.body;
 
       if (!title || !content) {

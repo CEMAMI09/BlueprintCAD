@@ -9,6 +9,8 @@ import { ThreePanelLayout, LeftPanel, CenterPanel, RightPanel, PanelHeader, Pane
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Upload as UploadIcon, Globe, Lock, DollarSign, ChevronRight, ChevronDown, Folder as FolderIcon } from 'lucide-react';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import SubscriptionGate from '@/frontend/components/SubscriptionGate';
+import UpgradeModal from '@/frontend/components/UpgradeModal';
 
 interface FormData {
   title: string;
@@ -73,6 +75,9 @@ export default function Upload() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
+  const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
 
 useEffect(() => {
   // Read ?folder= param in App Router
@@ -773,28 +778,47 @@ const fetchFolders = async () => {
                     <input
                       type="checkbox"
                       checked={formData.is_public}
-                      onChange={(e) => setFormData({...formData, is_public: e.target.checked})}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({...formData, is_public: true});
+                        } else {
+                          // Trying to make private - check subscription
+                          checkSubscription('maxPrivateProjects', () => {
+                            setFormData({...formData, is_public: false});
+                          });
+                        }
+                      }}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">For Sale</label>
-                    <p className="text-sm text-gray-400">List this design in the marketplace</p>
+                <SubscriptionGate
+                  feature="canSell"
+                  requiredTier="pro"
+                  showUpgradeModal={false}
+                >
+                  <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">For Sale</label>
+                      <p className="text-sm text-gray-400">List this design in the marketplace</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.for_sale}
+                        onChange={(e) => {
+                          checkSubscription('canSell', () => {
+                            setFormData({...formData, for_sale: e.target.checked});
+                          });
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.for_sale}
-                      onChange={(e) => setFormData({...formData, for_sale: e.target.checked})}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                  </label>
-                </div>
+                </SubscriptionGate>
 
                 {formData.for_sale && (
                   <div className="p-4 bg-gray-800/50 rounded-lg">
@@ -871,5 +895,14 @@ const fetchFolders = async () => {
         </CenterPanel>
       }
     />
+    
+    {showUpgradeModal && (
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        requiredTier={upgradeTier}
+        feature="maxPrivateProjects"
+      />
+    )}
   );
 }

@@ -70,8 +70,8 @@ export default function Register() {
       window.dispatchEvent(new Event('userChanged'));
       window.dispatchEvent(new Event('storage'));
 
-      // Redirect to home with full page reload to clear all state
-      window.location.href = '/';
+      // Redirect to dashboard with full page reload to clear all state
+      window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -103,20 +103,21 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: DS.colors.background.app }}>
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-3 mb-6">
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-lg"
-              style={{ backgroundColor: DS.colors.primary.blue }}
-            >
-              B
-            </div>
-            <span className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
-              Blueprint
-            </span>
-          </Link>
+    <div className="min-h-screen flex flex-col px-4 py-12" style={{ backgroundColor: DS.colors.background.app }}>
+      {/* Logo at top */}
+      <div className="w-full flex justify-center mb-8" style={{ paddingTop: '5px' }}>
+        <Link href="/" className="inline-flex items-center justify-center">
+          <img
+            src="/bpcube2.png"
+            alt="Blueprint Logo"
+            className="logo-image-large"
+          />
+        </Link>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-2" style={{ color: DS.colors.text.primary }}>
             Create your account
           </h2>
@@ -297,6 +298,7 @@ export default function Register() {
             </p>
           </form>
         </Card>
+        </div>
       </div>
     </div>
   );

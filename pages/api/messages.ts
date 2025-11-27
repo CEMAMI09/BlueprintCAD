@@ -77,6 +77,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
+      // Check conversation limit
+      const { canPerformAction } = require('../../backend/lib/subscription-utils');
+      const conversationCheck = await canPerformAction(userId, 'maxConversations');
+      if (!conversationCheck.allowed) {
+        return res.status(403).json({ 
+          error: 'Conversation limit reached',
+          reason: conversationCheck.reason,
+          requiredTier: conversationCheck.requiredTier,
+          current: conversationCheck.current,
+          limit: conversationCheck.limit
+        });
+      }
+
       const db = await getDb();
       
       // Get receiver ID if username was provided

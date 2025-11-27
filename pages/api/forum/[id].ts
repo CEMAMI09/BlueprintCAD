@@ -51,6 +51,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Content is required' });
       }
 
+      // Check subscription for posting forum messages
+      const { canPerformAction } = require('../../../backend/lib/subscription-utils');
+      const postCheck = await canPerformAction((user as any).userId, 'canPostForums');
+      if (!postCheck.allowed) {
+        return res.status(403).json({ 
+          error: 'Posting in forums requires Pro subscription',
+          reason: postCheck.reason,
+          requiredTier: postCheck.requiredTier
+        });
+      }
+
       // Check if thread exists and is not locked
       const db = await getDb();
       const thread = await db.get('SELECT is_locked, user_id FROM forum_threads WHERE id = ?', [id]);

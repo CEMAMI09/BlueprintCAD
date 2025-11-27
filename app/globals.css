@@ -60,3 +60,25 @@ body {
   border: 1px solid #1a2333;
   display: block;
 }
+
+/* Logo styling - force size */
+.logo-image {
+  height: 90px !important;
+  width: auto !important;
+  min-height: 90px !important;
+  max-width: 100% !important;
+  max-height: 90px !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Larger logo for auth pages */
+.logo-image-large {
+  height: 160px !important;
+  width: auto !important;
+  max-height: 160px !important;
+  object-fit: contain !important;
+  display: block !important;
+}

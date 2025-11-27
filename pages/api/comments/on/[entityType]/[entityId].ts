@@ -166,6 +166,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
+      // Notify project owner if this is a comment on their design (not a reply)
+      if (entityType === 'project' && !parent_id) {
+        const project = await db.get('SELECT user_id, title FROM projects WHERE id = ?', [entityId]);
+        if (project && project.user_id !== authUser.userId) {
+          await db.run(`
+            INSERT INTO notifications (user_id, type, content, project_id, comment_id)
+            VALUES (?, 'comment', ?, ?, ?)
+          `, [
+            project.user_id,
+            `${currentUser.username} commented on your design "${project.title}"`,
+            entityId,
+            commentId
+          ]);
+        }
+      }
+
       // Fetch the created comment with user info
       const newComment = await db.get(`
         SELECT 

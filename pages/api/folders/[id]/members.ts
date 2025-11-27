@@ -89,6 +89,34 @@ export default async function handler(
         return res.status(400).json({ error: 'User is already a member' });
       }
 
+      // --- Subscription Check: Max Team Members ---
+      const teamMembersCount = await db.get(`
+        SELECT COUNT(DISTINCT fm.user_id) as count
+        FROM folder_members fm
+        WHERE fm.folder_id = ? AND fm.user_id != ?
+      `, [id, folder.owner_id]); // Count members excluding the owner
+
+      const { canPerformAction } = require('../../../../backend/lib/subscription-utils');
+      const teamMemberCheck = await canPerformAction(userId, 'maxTeamMembers');
+      if (!teamMemberCheck.allowed) {
+        return res.status(403).json({
+          error: `You have reached your team member limit of ${teamMemberCheck.limit} on the ${teamMemberCheck.requiredTier} plan. Please upgrade to invite more members.`,
+          reason: teamMemberCheck.reason,
+          requiredTier: teamMemberCheck.requiredTier,
+          current: teamMembersCount.count,
+          limit: teamMemberCheck.limit
+        });
+      }
+      if (!memberCheck.can) {
+        return res.status(403).json({ 
+          error: 'Team member limit reached',
+          reason: `You have reached your limit of ${memberCheck.limit} team members on the ${memberCheck.tier} plan.`,
+          requiredTier: 'pro',
+          current: memberCheck.current,
+          limit: memberCheck.limit
+        });
+      }
+
       // Create invitation
       await db.run(
         `INSERT INTO folder_invitations (folder_id, invited_user_id, invited_by, role)

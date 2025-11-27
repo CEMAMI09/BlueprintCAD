@@ -97,12 +97,46 @@ export default async function handler(req, res) {
         `UPDATE projects SET downloads = COALESCE(downloads, 0) + 1 WHERE id = ?`,
         [id]
       );
+      
+      // Create notification for project owner if it's not their own download
+      if (userId && project.user_id !== userId) {
+        const downloader = await db.get('SELECT username FROM users WHERE id = ?', [userId]);
+        if (downloader) {
+          await db.run(
+            'INSERT INTO notifications (user_id, type, related_id, message) VALUES (?, ?, ?, ?)',
+            [project.user_id, 'download', id, `${downloader.username} downloaded your design "${project.title}"`]
+          );
+        }
+      } else if (!userId) {
+        // Anonymous download
+        await db.run(
+          'INSERT INTO notifications (user_id, type, related_id, message) VALUES (?, ?, ?, ?)',
+          [project.user_id, 'download', id, `Someone downloaded your design "${project.title}"`]
+        );
+      }
     } catch (err) {
       // If downloads column doesn't exist, add it and try again
       if (err.message && err.message.includes('no such column')) {
         try {
           await db.run(`ALTER TABLE projects ADD COLUMN downloads INTEGER DEFAULT 0`);
           await db.run(`UPDATE projects SET downloads = 1 WHERE id = ?`, [id]);
+          
+          // Create notification for project owner if it's not their own download
+          if (userId && project.user_id !== userId) {
+            const downloader = await db.get('SELECT username FROM users WHERE id = ?', [userId]);
+            if (downloader) {
+              await db.run(
+                'INSERT INTO notifications (user_id, type, related_id, message) VALUES (?, ?, ?, ?)',
+                [project.user_id, 'download', id, `${downloader.username} downloaded your design "${project.title}"`]
+              );
+            }
+          } else if (!userId) {
+            // Anonymous download
+            await db.run(
+              'INSERT INTO notifications (user_id, type, related_id, message) VALUES (?, ?, ?, ?)',
+              [project.user_id, 'download', id, `Someone downloaded your design "${project.title}"`]
+            );
+          }
         } catch (alterErr) {
           console.error('Failed to add downloads column:', alterErr);
           // Continue anyway - download will still work

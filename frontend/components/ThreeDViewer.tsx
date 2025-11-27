@@ -117,7 +117,7 @@ export default function ThreeDViewer({
   const finalShowInstructions = showInstructions ?? config.showInstructions;
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className} overflow-hidden`} style={{ borderRadius: '0.75rem' }}>
       {/* Header */}
       {finalShowHeader && fileName && (
         <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 flex items-center justify-between">
@@ -132,51 +132,51 @@ export default function ThreeDViewer({
       )}
 
       {/* Viewer */}
-      <div className={`${finalHeight} w-full relative`} style={{ minHeight: '400px' }}>
-        <Suspense
-          fallback={
-            <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-              <div className="text-center">
-                <div className="inline-block w-8 h-8 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin mb-3"></div>
-                <p className="text-gray-400 text-sm">Loading 3D Model...</p>
+      <div className={`${finalHeight} w-full relative flex flex-col`} style={{ margin: 0, padding: 0 }}>
+        <div className="flex-1 relative" style={{ margin: 0, padding: 0 }}>
+          <Suspense
+            fallback={
+              <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="inline-block w-8 h-8 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin mb-3"></div>
+                  <p className="text-gray-400 text-sm">Loading 3D Model...</p>
+                </div>
               </div>
-            </div>
-          }
-        >
-          <CADViewer
-            fileUrl={fileUrl}
-            fileName={fileName}
-            fileType={fileType}
-            height={finalHeight}
-            showControls={false}
-            autoRotate={finalAutoRotate}
-            noWrapper={true}
-          />
-        </Suspense>
+            }
+          >
+            <CADViewer
+              fileUrl={fileUrl}
+              fileName={fileName}
+              fileType={fileType}
+              height={finalHeight}
+              showControls={false}
+              autoRotate={finalAutoRotate}
+              noWrapper={true}
+            />
+          </Suspense>
+        </div>
 
-        {/* Instructions Overlay */}
+        {/* Instructions - Full width like header with rounded bottom */}
         {finalShowInstructions && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-gray-700 pointer-events-none">
-            <div className="flex items-center gap-4 text-xs text-gray-300">
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                </svg>
-                <span>Rotate: Click + Drag</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
-                </svg>
-                <span>Zoom: Scroll</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                </svg>
-                <span>Pan: Right Click + Drag</span>
-              </span>
-            </div>
+          <div className="bg-gray-800 px-4 py-2 border-t border-gray-700 flex items-center justify-center gap-4 pointer-events-none rounded-b-xl" style={{ flexShrink: 0 }}>
+            <span className="flex items-center gap-1 text-xs text-gray-300">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+              </svg>
+              <span>Rotate: Click + Drag</span>
+            </span>
+            <span className="flex items-center gap-1 text-xs text-gray-300">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+              </svg>
+              <span>Zoom: Scroll</span>
+            </span>
+            <span className="flex items-center gap-1 text-xs text-gray-300">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+              <span>Pan: Right Click + Drag</span>
+            </span>
           </div>
         )}
       </div>

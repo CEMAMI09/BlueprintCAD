@@ -40,6 +40,17 @@ export default async function handler(req, res) {
         await db.run('DELETE FROM project_likes WHERE user_id = ? AND project_id = ?', [user.userId, id]);
       } else {
         await db.run('INSERT INTO project_likes (user_id, project_id) VALUES (?, ?)', [user.userId, id]);
+        
+        // Get project owner
+        const project = await db.get('SELECT user_id, title FROM projects WHERE id = ?', [id]);
+        
+        // Create notification for project owner if it's not their own like
+        if (project && project.user_id !== user.userId) {
+          await db.run(
+            'INSERT INTO notifications (user_id, type, related_id, message) VALUES (?, ?, ?, ?)',
+            [project.user_id, 'like', id, `${user.username} liked your design "${project.title}"`]
+          );
+        }
       }
       const newCount = await db.get('SELECT COUNT(*) as cnt FROM project_likes WHERE project_id = ?', [id]);
       await db.run('UPDATE projects SET likes = ? WHERE id = ?', [newCount.cnt, id]);

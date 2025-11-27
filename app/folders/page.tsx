@@ -20,6 +20,8 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import SubscriptionGate from '@/frontend/components/SubscriptionGate';
+import UpgradeModal from '@/frontend/components/UpgradeModal';
 import {
   Folder,
   File,
@@ -37,6 +39,7 @@ import {
   Eye,
   Lock,
   Globe,
+  Upload,
 } from 'lucide-react';
 
 interface FolderItem {
@@ -65,6 +68,8 @@ export default function FoldersPage() {
   const [items, setItems] = useState<FolderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentParentId] = useState<number | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
 
   useEffect(() => {
     fetchFolders();
@@ -216,7 +221,13 @@ export default function FoldersPage() {
                 <Button variant="secondary" size="sm" icon={<Plus size={16} />} onClick={handleNewFolder}>
                   New Folder
                 </Button>
-                <Button variant="primary" size="sm" icon={<Plus size={16} />} onClick={handleUploadFile}>
+                <Button 
+                  variant="ghost" 
+                  size="md"
+                  icon={<Upload size={18} />}
+                  onClick={handleUploadFile}
+                  className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                >
                   Upload File
                 </Button>
               </div>
@@ -367,177 +378,7 @@ export default function FoldersPage() {
           </PanelContent>
         </CenterPanel>
       }
-      rightPanel={
-        <RightPanel>
-          {selectedItem ? (
-            <>
-              <PanelHeader title={selectedItem.type === 'folder' ? 'Folder Details' : 'File Details'} />
-              <PanelContent>
-                {/* Icon */}
-                <div
-                  className="w-full h-32 rounded-lg flex items-center justify-center mb-4"
-                  style={{
-                    backgroundColor: selectedItem.type === 'folder' ? `${DS.colors.primary.blue}22` : `${DS.colors.accent.cyan}22`,
-                  }}
-                >
-                  {selectedItem.type === 'folder' ? (
-                    <Folder size={64} style={{ color: DS.colors.primary.blue }} />
-                  ) : (
-                    <FileText size={64} style={{ color: DS.colors.accent.cyan }} />
-                  )}
-                </div>
-
-                {/* Name */}
-                <h3 className="text-lg font-bold mb-4" style={{ color: DS.colors.text.primary }}>
-                  {selectedItem.name}
-                </h3>
-
-                {/* Metadata */}
-                <div className="space-y-3 mb-6 text-sm" style={{ color: DS.colors.text.secondary }}>
-                  <div className="flex items-center justify-between">
-                    <span>Owner:</span>
-                    <span className="font-medium" style={{ color: DS.colors.text.primary }}>
-                      {selectedItem.owner}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Modified:</span>
-                    <span className="font-medium" style={{ color: DS.colors.text.primary }}>
-                      {selectedItem.modified}
-                    </span>
-                  </div>
-                  {selectedItem.size && (
-                    <div className="flex items-center justify-between">
-                      <span>Size:</span>
-                      <span className="font-medium" style={{ color: DS.colors.text.primary }}>
-                        {selectedItem.size}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span>Visibility:</span>
-                    <Badge variant={selectedItem.visibility === 'public' ? 'success' : 'default'} size="sm">
-                      {selectedItem.visibility === 'public' ? <Globe size={12} className="mr-1" /> : <Lock size={12} className="mr-1" />}
-                      {selectedItem.visibility}
-                    </Badge>
-                  </div>
-                  {selectedItem.versions && (
-                    <div className="flex items-center justify-between">
-                      <span>Versions:</span>
-                      <span className="font-medium" style={{ color: DS.colors.text.primary }}>
-                        {selectedItem.versions}
-                      </span>
-                    </div>
-                  )}
-                  {selectedItem.collaborators && (
-                    <div className="flex items-center justify-between">
-                      <span>Collaborators:</span>
-                      <span className="font-medium" style={{ color: DS.colors.text.primary }}>
-                        {selectedItem.collaborators}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="space-y-2 mb-6">
-                  {selectedItem.type === 'file' && (
-                    <Button variant="primary" fullWidth icon={<Download size={16} />} iconPosition="left">
-                      Download
-                    </Button>
-                  )}
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button variant="ghost" size="sm" icon={<Star size={16} />} />
-                    <Button variant="ghost" size="sm" icon={<Share2 size={16} />} />
-                    <Button variant="ghost" size="sm" icon={<MoreVertical size={16} />} />
-                  </div>
-                </div>
-
-                {/* Version History (for files) */}
-                {selectedItem.type === 'file' && (
-                  <div>
-                    <h4 className="text-sm font-semibold mb-3" style={{ color: DS.colors.text.primary }}>
-                      Version History
-                    </h4>
-                    <div className="space-y-3">
-                      {versions.map((version, index) => (
-                        <div
-                          key={index}
-                          className="p-3 rounded-lg border"
-                          style={{
-                            backgroundColor: DS.colors.background.panel,
-                            borderColor: DS.colors.border.subtle,
-                          }}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <Badge variant="primary" size="sm">
-                              {version.version}
-                            </Badge>
-                            <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                              {version.size}
-                            </span>
-                          </div>
-                          <p className="text-sm mb-1" style={{ color: DS.colors.text.primary }}>
-                            {version.message}
-                          </p>
-                          <div className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                            {version.author} • {version.date}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Recent Activity (for folders) */}
-                {selectedItem.type === 'folder' && (
-                  <div>
-                    <h4 className="text-sm font-semibold mb-3" style={{ color: DS.colors.text.primary }}>
-                      Recent Activity
-                    </h4>
-                    <div className="space-y-3">
-                      {recentActivity.map((activity, index) => (
-                        <div key={index} className="text-sm">
-                          <p style={{ color: DS.colors.text.primary }}>
-                            <span className="font-medium">{activity.user}</span>{' '}
-                            <span style={{ color: DS.colors.text.secondary }}>{activity.action}</span>{' '}
-                            <span className="font-medium">{activity.file}</span>
-                          </p>
-                          <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
-                            {activity.time}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </PanelContent>
-            </>
-          ) : (
-            <>
-              <PanelHeader title="Quick Actions" />
-              <PanelContent>
-                <div className="space-y-2 mb-6">
-                  <Button variant="primary" fullWidth icon={<Plus size={16} />} iconPosition="left">
-                    New Folder
-                  </Button>
-                  <Button variant="secondary" fullWidth icon={<Plus size={16} />} iconPosition="left">
-                    Upload File
-                  </Button>
-                </div>
-
-                <div className="text-center py-8">
-                  <EmptyState
-                    icon={<Folder />}
-                    title="No item selected"
-                    description="Click on a file or folder to view details"
-                  />
-                </div>
-              </PanelContent>
-            </>
-          )}
-        </RightPanel>
-      }
+      hideRightPanel={true}
     />
 
       <CreateFolderModal 

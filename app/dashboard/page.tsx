@@ -44,7 +44,25 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchSubscriptionTier();
   }, []);
+
+  const fetchSubscriptionTier = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      const res = await fetch('/api/subscriptions/check', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSubscriptionTier(data.tier || 'free');
+      }
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {

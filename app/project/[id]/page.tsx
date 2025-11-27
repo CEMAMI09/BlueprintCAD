@@ -8,12 +8,14 @@ import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ThreeDViewer from '@/frontend/components/ThreeDViewer';
-import RenameModal from '@/components/RenameModal';
+import RenameModal from '@/frontend/components/RenameModal';
 import HistoryModal from '@/components/HistoryModal';
 import CommentSystem from '@/components/CommentSystem';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import Link from 'next/link';
 import { MapPin, Link as LinkIcon, Github, Twitter, Instagram, Youtube } from 'lucide-react';
+import SubscriptionGate from '@/frontend/components/SubscriptionGate';
+import UpgradeModal from '@/frontend/components/UpgradeModal';
 
 interface Comment {
   id: string;
@@ -44,6 +46,7 @@ interface Project {
   print_time_hours?: number;
   canViewCostData?: boolean;
   isOwner?: boolean;
+  is_public?: number | boolean;
 }
 
 export default function ProjectDetail() {
@@ -59,6 +62,8 @@ export default function ProjectDetail() {
   const [actionError, setActionError] = useState<string>('');
   const [fetchError, setFetchError] = useState<string>('');
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -219,7 +224,14 @@ export default function ProjectDetail() {
 
   const handleLike = async () => { // Handles star/unstar
     if (!user) {
-      router.push('/login');
+      try {
+        if (typeof window !== 'undefined') {
+          setTimeout(() => router.push('/login'), 0);
+        }
+      } catch (err) {
+        console.error('Navigation error:', err);
+        window.location.href = '/login';
+      }
       return;
     }
 
@@ -249,7 +261,14 @@ export default function ProjectDetail() {
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      router.push('/login');
+      try {
+        if (typeof window !== 'undefined') {
+          setTimeout(() => router.push('/login'), 0);
+        }
+      } catch (err) {
+        console.error('Navigation error:', err);
+        window.location.href = '/login';
+      }
       return;
     }
 
@@ -366,7 +385,16 @@ export default function ProjectDetail() {
       });
 
       if (res.ok) {
-        router.push(`/profile/${user?.username}`);
+        try {
+          if (typeof window !== 'undefined' && user?.username) {
+            setTimeout(() => router.push(`/profile/${user.username}`), 0);
+          }
+        } catch (err) {
+          console.error('Navigation error:', err);
+          if (user?.username) {
+            window.location.href = `/profile/${user.username}`;
+          }
+        }
       } else {
         const err = await res.json().catch(() => ({}));
         setActionError(err.error || 'Failed to delete project');
@@ -413,9 +441,6 @@ export default function ProjectDetail() {
                 {fetchError && (
                   <p className="mb-4" style={{ color: DS.colors.accent.error }}>{fetchError}</p>
                 )}
-                <Link href="/explore" className="hover:underline" style={{ color: DS.colors.primary.blue }}>
-                  Back to Explore
-                </Link>
               </div>
             </PanelContent>
           </CenterPanel>
@@ -434,10 +459,12 @@ export default function ProjectDetail() {
             title={project.title}
             actions={
               <div className="flex items-center gap-4">
-                <Link href="/explore" className="hover:underline" style={{ color: DS.colors.primary.blue }}>
-                  &larr; Back to Explore
-                </Link>
-                {project.for_sale && (
+                {project.is_public && (
+                  <Link href="/explore" className="hover:underline" style={{ color: DS.colors.primary.blue }}>
+                    &larr; Back to Explore
+                  </Link>
+                )}
+                {project.for_sale && project.price && project.price > 0 && (
                   <span className="text-2xl font-bold" style={{ color: DS.colors.accent.success }}>
                     ${project.price}
                   </span>
@@ -458,7 +485,7 @@ export default function ProjectDetail() {
                       const viewableTypes = ['stl', 'obj', 'fbx', 'gltf', 'glb', 'ply', 'dae', 'collada'];
                       if (viewableTypes.includes(fileType)) {
                         return (
-                          <div style={{ minHeight: '600px', width: '100%' }}>
+                          <div style={{ width: '100%', margin: 0, padding: 0 }}>
                             <ThreeDViewer
                               fileUrl={`/api/files/${encodeURIComponent(project.file_path)}`}
                               fileName={`${project.title}${project.file_type.startsWith('.') ? project.file_type : `.${project.file_type}`}`}
@@ -539,25 +566,25 @@ export default function ProjectDetail() {
                     onClick={handleLike}
                     className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
                     style={liked 
-                      ? { background: '#FFD700', color: '#000', fontWeight: '600' }
+                      ? { background: DS.colors.primary.blue, color: '#fff', fontWeight: '600' }
                       : { background: DS.colors.background.panel, color: DS.colors.text.primary }
                     }
                   >
                     <svg className="w-5 h-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                     </svg>
-                    {project.likes || 0} Stars
+                    {project.likes ? `${project.likes} Stars` : 'Star'}
                   </button>
                   {!project.for_sale || project.username === user?.username || hasPurchased ? (
                     <button
                       onClick={handleDownload}
                       className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
-                      style={{ background: DS.colors.primary.blue, color: '#fff' }}
+                      style={{ background: 'transparent', border: '1px solid #fff', color: '#fff' }}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                      Download {project.downloads ? `(${project.downloads})` : ''}
+                      Download
                     </button>
                   ) : null}
                   {project.for_sale && project.username !== user?.username && (
@@ -603,26 +630,18 @@ export default function ProjectDetail() {
                   {/* Owner actions */}
                   {user?.username === project.username && (
                     <>
-                      <button
-                        onClick={() => setIsRenameModalOpen(true)}
-                        className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
-                        style={{ background: DS.colors.accent.purple, color: '#fff' }}
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Rename File
-                      </button>
-                      <button
-                        onClick={() => setIsHistoryModalOpen(true)}
-                        className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
-                        style={{ background: DS.colors.background.panel, color: DS.colors.text.primary }}
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        View History
-                      </button>
+                      {!project.is_public && (
+                        <button
+                          onClick={() => setIsRenameModalOpen(true)}
+                          className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
+                          style={{ background: DS.colors.accent.purple, color: '#fff' }}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Rename File
+                        </button>
+                      )}
                       <button
                         onClick={() => setIsDeleteModalOpen(true)}
                         className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
@@ -931,6 +950,14 @@ export default function ProjectDetail() {
           </div>
         ) : null
       }
+      />
+      <RenameModal
+        isOpen={isRenameModalOpen}
+        onClose={() => setIsRenameModalOpen(false)}
+        onSubmit={handleRename}
+        currentName={project?.title || ''}
+        entityType="project"
+        title="Rename File"
       />
       <ConfirmationModal
         isOpen={isDeleteModalOpen}

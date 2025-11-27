@@ -17,6 +17,8 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import SubscriptionGate from '@/frontend/components/SubscriptionGate';
+import UpgradeModal from '@/frontend/components/UpgradeModal';
 import {
   Send,
   Search,
@@ -75,6 +77,8 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [sharedFiles] = useState<any[]>([]);
   const [mutualFolders] = useState<any[]>([]);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
 
   useEffect(() => {
     fetchConversations();
