@@ -1,13 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../backend/lib/auth';
+import { getDb } from '@/db/db';
+import { getUserFromRequest } from '@/lib/auth';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const user = getUserFromRequest(req);
-
+  
   if (!user || typeof user === 'string') {
     return res.status(401).json({ error: 'Unauthorized' });
   }
@@ -17,11 +17,19 @@ export default async function handler(
 
   if (req.method === 'GET') {
     try {
+      // Get all pending invitations for the current user
       const invitations = await db.all(
         `SELECT 
-          fi.*,
+          fi.id,
+          fi.folder_id,
+          fi.role,
+          fi.status,
+          fi.created_at,
           f.name as folder_name,
-          u.username as invited_by_username
+          f.description as folder_description,
+          f.color as folder_color,
+          u.username as invited_by_username,
+          u.avatar as invited_by_avatar
          FROM folder_invitations fi
          JOIN folders f ON fi.folder_id = f.id
          JOIN users u ON fi.invited_by = u.id

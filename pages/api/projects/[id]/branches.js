@@ -162,6 +162,16 @@ export default async function handler(req, res) {
             ]
           );
 
+          // Update branch count
+          const branchCount = await db.get(
+            'SELECT COUNT(*) as count FROM file_branches WHERE project_id = ?',
+            [id]
+          );
+          await db.run(
+            'UPDATE projects SET branch_count = ? WHERE id = ?',
+            [branchCount.count, id]
+          );
+
           // If this is the master branch, update the project's file_path
           if (isMaster) {
             await db.run(
@@ -177,6 +187,22 @@ export default async function handler(req, res) {
              WHERE fb.id = ?`,
             [result.lastID]
           );
+
+          // Log activity
+          const { logActivity } = require('../../../../backend/lib/activity-logger');
+          await logActivity({
+            userId: userId,
+            action: 'branch_created',
+            entityType: 'branch',
+            folderId: project.folder_id || null,
+            projectId: parseInt(id),
+            entityId: result.lastID,
+            entityName: branchName.trim(),
+            details: {
+              is_master: isMaster,
+              description: description || null
+            }
+          });
 
           if (!res.headersSent) {
             res.status(201).json(branch);
@@ -344,6 +370,26 @@ export default async function handler(req, res) {
               return resolve();
             }
 
+            // Log activity
+            const { logActivity } = require('../../../../backend/lib/activity-logger');
+            const project = await db.get('SELECT folder_id FROM projects WHERE id = ?', [id]);
+            const actionType = branch_name && branch_name !== branch.branch_name ? 'branch_renamed' : 
+                             is_master === true ? 'branch_master_changed' : 'branch_updated';
+            await logActivity({
+              userId: userId,
+              action: actionType,
+              entityType: 'branch',
+              folderId: project?.folder_id || null,
+              projectId: parseInt(id),
+              entityId: branch_id,
+              entityName: updated.branch_name,
+              details: {
+                old_name: branch_name && branch_name !== branch.branch_name ? branch.branch_name : null,
+                new_name: branch_name && branch_name !== branch.branch_name ? branch_name : null,
+                is_master: is_master !== undefined ? is_master : null
+              }
+            });
+
             res.status(200).json(updated);
             resolve();
           } catch (error) {
@@ -385,8 +431,34 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Cannot delete the only branch. Create another branch first.' });
       }
 
+      // Log activity before deletion
+      const { logActivity } = require('../../../../backend/lib/activity-logger');
+      const project = await db.get('SELECT folder_id FROM projects WHERE id = ?', [id]);
+      await logActivity({
+        userId: userId,
+        action: 'branch_deleted',
+        entityType: 'branch',
+        folderId: project?.folder_id || null,
+        projectId: parseInt(id),
+        entityId: branch_id,
+        entityName: branch.branch_name,
+        details: {
+          was_master: branch.is_master === 1
+        }
+      });
+
       // Delete branch
       await db.run('DELETE FROM file_branches WHERE id = ?', [branch_id]);
+
+      // Update branch count after deletion
+      const branchCountAfterDelete = await db.get(
+        'SELECT COUNT(*) as count FROM file_branches WHERE project_id = ?',
+        [id]
+      );
+      await db.run(
+        'UPDATE projects SET branch_count = ? WHERE id = ?',
+        [branchCountAfterDelete.count, id]
+      );
 
       // If master was deleted, set the most recent branch as master
       if (branch.is_master) {

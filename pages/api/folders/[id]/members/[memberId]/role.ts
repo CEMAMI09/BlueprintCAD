@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { folderId, memberId } = req.query;
+  const { id: folderId, memberId } = req.query;
   const { role } = req.body;
 
   if (!role || !['viewer', 'editor', 'admin', 'owner'].includes(role)) {
@@ -116,11 +116,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           VALUES (?, 'ownership_transferred', ?)
         `, [targetMember.user_id, `${fromUsername} transferred ownership of "${folderName}" to you`]);
 
-        // Log activity
-        await db.run(`
-          INSERT INTO folder_activity (folder_id, user_id, action)
-          VALUES (?, ?, 'ownership_transferred')
-        `, [folderId, authUser.userId]);
+        // Log activity (already logged above)
 
         await db.run('COMMIT');
 
@@ -141,10 +137,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     // Log activity
-    await db.run(`
-      INSERT INTO folder_activity (folder_id, user_id, action)
-      VALUES (?, ?, 'updated_member_role')
-    `, [folderId, authUser.userId]);
+    const { logActivity } = require('../../../../backend/lib/activity-logger');
+    await logActivity({
+      userId: authUser.userId,
+      action: role === 'owner' ? 'ownership_transferred' : 'role_changed',
+      entityType: 'role',
+      folderId: parseInt(folderId as string),
+      entityId: parseInt(memberId as string),
+      entityName: targetMember.user_id.toString(),
+      details: {
+        old_role: targetMember.role,
+        new_role: role,
+        target_user_id: targetMember.user_id
+      }
+    });
 
     // Create notification
     const folderName = (await db.get('SELECT name FROM folders WHERE id = ?', [folderId])).name;

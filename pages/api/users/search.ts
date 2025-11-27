@@ -126,31 +126,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
       } else {
-        // Search all users
+        // Search all users by username or email
         users = await db.all(`
-          SELECT id, username, avatar, profile_picture
+          SELECT id, username, email, avatar, profile_picture
           FROM users
-          WHERE username LIKE ? COLLATE NOCASE
+          WHERE username LIKE ? COLLATE NOCASE OR email LIKE ? COLLATE NOCASE
           ORDER BY username ASC
           LIMIT 10
-        `, [searchTerm]);
+        `, [searchTerm, searchTerm]);
       }
 
       return res.status(200).json(users.map((u: any) => ({
         id: u.id,
         username: u.username,
+        email: u.email,
         avatar: u.avatar || u.profile_picture
       })));
     }
     
-    // For general search, return full user data
+    // For general search, return full user data (search by username or email)
     const users = await db.all(`
-      SELECT id, username, bio, profile_picture, created_at
+      SELECT id, username, email, bio, profile_picture, created_at
       FROM users
-      WHERE username LIKE ? COLLATE NOCASE
+      WHERE username LIKE ? COLLATE NOCASE OR email LIKE ? COLLATE NOCASE
       ORDER BY username ASC
       LIMIT 20
-    `, [searchTerm]);
+    `, [searchTerm, searchTerm]);
 
     return res.status(200).json(users);
   } catch (error) {

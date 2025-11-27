@@ -7,13 +7,13 @@ import FolderContextSidebar from '@/frontend/components/FolderContextSidebar';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import ThreeDViewer from '@/frontend/components/ThreeDViewer';
 import RenameModal from '@/frontend/components/RenameModal';
 import HistoryModal from '@/components/HistoryModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import Link from 'next/link';
-import { MapPin, Link as LinkIcon, Github, Twitter, Instagram, Youtube } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Copy, Check } from 'lucide-react';
 import SubscriptionGate from '@/frontend/components/SubscriptionGate';
 import UpgradeModal from '@/frontend/components/UpgradeModal';
 
@@ -42,11 +42,21 @@ interface Project {
   isOwner?: boolean;
   is_public?: number | boolean;
   folder_id?: number | null;
+  // Metadata fields
+  file_size_bytes?: number | null;
+  bounding_box_width?: number | null;
+  bounding_box_height?: number | null;
+  bounding_box_depth?: number | null;
+  file_format?: string | null;
+  upload_timestamp?: string | null;
+  file_checksum?: string | null;
+  branch_count?: number | null;
 }
 
 export default function ProjectDetail() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const id = (params?.id || '') as string;
   const [project, setProject] = useState<Project | null>(null);
   const [user, setUser] = useState<any>(null);
@@ -63,6 +73,23 @@ export default function ProjectDetail() {
   const [hasPurchased, setHasPurchased] = useState(false);
   const [authorProfile, setAuthorProfile] = useState<any>(null);
   const [currentBranchId, setCurrentBranchId] = useState<number | null>(null);
+  const [checksumCopied, setChecksumCopied] = useState(false);
+  
+  // Check if user came from a folder page
+  // Only true if explicitly set to 'folder', false otherwise (including undefined/null)
+  const fromFolder = searchParams?.get('from') === 'folder';
+  
+  const copyChecksum = async () => {
+    if (project?.file_checksum) {
+      try {
+        await navigator.clipboard.writeText(project.file_checksum);
+        setChecksumCopied(true);
+        setTimeout(() => setChecksumCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy checksum:', err);
+      }
+    }
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -107,6 +134,7 @@ export default function ProjectDetail() {
   };
 
   useEffect(() => {
+    // Always fetch author profile - we'll decide which sidebar to show based on fromFolder
     if (project?.username) {
       fetchAuthorProfile();
     }
@@ -187,7 +215,14 @@ export default function ProjectDetail() {
             thumbnail_path: data.thumbnail_path,
             hasThumbnail: !!data.thumbnail_path,
             thumbnailUrl: data.thumbnail_path ? `/api/thumbnails/${data.thumbnail_path.replace('thumbnails/', '')}` : null,
-            fileUrl: data.file_path ? `/api/files/${encodeURIComponent(data.file_path)}` : null 
+            fileUrl: data.file_path ? `/api/files/${encodeURIComponent(data.file_path)}` : null,
+            metadata: {
+              file_size_bytes: data.file_size_bytes,
+              bounding_box: data.bounding_box_width ? `${data.bounding_box_width}x${data.bounding_box_height}x${data.bounding_box_depth}` : null,
+              file_format: data.file_format,
+              checksum: data.file_checksum ? data.file_checksum.substring(0, 16) + '...' : null,
+              branch_count: data.branch_count
+            }
           });
           
           if (!data.thumbnail_path) {
@@ -619,6 +654,76 @@ export default function ProjectDetail() {
                 {/* Details */}
                 <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">
                   <h3 className="font-bold mb-4" style={{ color: DS.colors.text.primary }}>Details</h3>
+                  
+                  {/* File Metadata */}
+                  {(project.file_size_bytes || project.bounding_box_width || project.bounding_box_height || project.bounding_box_depth || project.file_format || project.file_checksum || (project.branch_count !== null && project.branch_count !== undefined)) && (
+                    <div className="mb-6 pb-6 border-b" style={{ borderColor: DS.colors.border.default }}>
+                      <h4 className="font-semibold text-sm mb-3" style={{ color: DS.colors.text.secondary }}>File Metadata</h4>
+                      <div className="space-y-2 text-sm">
+                        {project.file_size_bytes && (
+                          <div className="flex items-center justify-between">
+                            <span style={{ color: DS.colors.text.secondary }}>File Size</span>
+                            <span style={{ color: DS.colors.text.primary }}>
+                              {project.file_size_bytes < 1024 
+                                ? `${project.file_size_bytes} B`
+                                : project.file_size_bytes < 1024 * 1024
+                                ? `${(project.file_size_bytes / 1024).toFixed(2)} KB`
+                                : `${(project.file_size_bytes / (1024 * 1024)).toFixed(2)} MB`}
+                            </span>
+                          </div>
+                        )}
+                        {project.file_format && (
+                          <div className="flex items-center justify-between">
+                            <span style={{ color: DS.colors.text.secondary }}>Format</span>
+                            <span style={{ color: DS.colors.text.primary }} className="uppercase">{project.file_format}</span>
+                          </div>
+                        )}
+                        {(project.bounding_box_width || project.bounding_box_height || project.bounding_box_depth) && (
+                          <div className="flex items-center justify-between">
+                            <span style={{ color: DS.colors.text.secondary }}>Dimensions</span>
+                            <span style={{ color: DS.colors.text.primary }}>
+                              {project.bounding_box_width?.toFixed(2) || '?'} × {project.bounding_box_height?.toFixed(2) || '?'} × {project.bounding_box_depth?.toFixed(2) || '?'} mm
+                            </span>
+                          </div>
+                        )}
+                        {project.upload_timestamp && (
+                          <div className="flex items-center justify-between">
+                            <span style={{ color: DS.colors.text.secondary }}>Uploaded</span>
+                            <span style={{ color: DS.colors.text.primary }}>
+                              {new Date(project.upload_timestamp).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                        {project.file_checksum && (
+                          <div className="flex items-center justify-between gap-2">
+                            <span style={{ color: DS.colors.text.secondary }}>Checksum</span>
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <span style={{ color: DS.colors.text.primary }} className="font-mono text-xs truncate flex-1" title={project.file_checksum}>
+                                {project.file_checksum.substring(0, 16)}...
+                              </span>
+                              <button
+                                onClick={copyChecksum}
+                                className="p-1.5 rounded hover:bg-gray-700 transition-colors flex-shrink-0"
+                                title="Copy full checksum"
+                              >
+                                {checksumCopied ? (
+                                  <Check size={14} style={{ color: DS.colors.accent.success }} />
+                                ) : (
+                                  <Copy size={14} style={{ color: DS.colors.text.secondary }} />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {project.branch_count !== null && project.branch_count !== undefined && project.branch_count > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span style={{ color: DS.colors.text.secondary }}>Branches</span>
+                            <span style={{ color: DS.colors.text.primary }}>{project.branch_count}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div className="space-y-3 text-sm">
                     <div>
                       <span style={{ color: DS.colors.text.secondary }}>File Type:</span>
@@ -646,82 +751,6 @@ export default function ProjectDetail() {
                     </div>
                   </div>
                 </div>
-                {/* Dimensions & Specifications - Show based on permissions */}
-                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">
-                  <h3 className="font-bold mb-4" style={{ color: DS.colors.text.primary }}>Specifications</h3>
-                  <div className="space-y-3 text-sm">
-                    {project.dimensions ? (
-                      <div>
-                        <span style={{ color: DS.colors.text.secondary }}>Dimensions:</span>
-                        <span className="ml-2" style={{ color: DS.colors.text.primary, fontWeight: 500 }}>{project.dimensions}</span>
-                      </div>
-                    ) : project.canViewCostData ? (
-                      <div>
-                        <span style={{ color: DS.colors.text.secondary }}>Dimensions:</span>
-                        <span className="ml-2 italic" style={{ color: DS.colors.text.tertiary }}>Not yet analyzed</span>
-                      </div>
-                    ) : null}
-                    {project.scale_percentage && project.scale_percentage !== 100 ? (
-                      <div>
-                        <span style={{ color: DS.colors.text.secondary }}>Scale:</span>
-                        <span className="ml-2" style={{ color: DS.colors.text.primary }}>{project.scale_percentage}%</span>
-                      </div>
-                    ) : project.canViewCostData ? (
-                      <div>
-                        <span style={{ color: DS.colors.text.secondary }}>Scale:</span>
-                        <span className="ml-2" style={{ color: DS.colors.text.primary }}>100% (Original)</span>
-                      </div>
-                    ) : null}
-                    {project.canViewCostData && project.weight_grams ? (
-                      <div>
-                        <span style={{ color: DS.colors.text.secondary }}>Weight:</span>
-                        <span className="ml-2" style={{ color: DS.colors.text.primary }}>
-                          {project.weight_grams.toFixed(1)}g ({(project.weight_grams / 28.3495).toFixed(2)} oz)
-                        </span>
-                      </div>
-                    ) : project.canViewCostData ? (
-                      <div>
-                        <span style={{ color: DS.colors.text.secondary }}>Weight:</span>
-                        <span className="ml-2 italic" style={{ color: DS.colors.text.tertiary }}>Not yet calculated</span>
-                      </div>
-                    ) : null}
-                    {project.canViewCostData && project.print_time_hours ? (
-                      <div>
-                        <span style={{ color: DS.colors.text.secondary }}>Print Time:</span>
-                        <span className="ml-2" style={{ color: DS.colors.text.primary }}>
-                          {Math.floor(project.print_time_hours)}h {Math.round((project.print_time_hours % 1) * 60)}m
-                        </span>
-                      </div>
-                    ) : project.canViewCostData ? (
-                      <div>
-                        <span style={{ color: DS.colors.text.secondary }}>Print Time:</span>
-                        <span className="ml-2 italic" style={{ color: DS.colors.text.tertiary }}>Not yet estimated</span>
-                      </div>
-                    ) : null}
-                    {!project.canViewCostData && (
-                      <div className="p-3 rounded-lg" style={{ background: DS.colors.background.panel, border: `1px solid ${DS.colors.border.default}` }}>
-                        <p className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                          🔒 Cost and manufacturing data visible to owner and team members only
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  {project.canViewCostData && (!project.dimensions || !project.weight_grams || !project.print_time_hours) && (
-                    <div className="mt-4 pt-4 border-t" style={{ borderColor: DS.colors.border.default }}>
-                      <p className="text-xs mb-2" style={{ color: DS.colors.text.tertiary }}>
-                        💡 <strong>Missing specifications?</strong>
-                      </p>
-                      <p className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                        Upload a new version or use the <Link href="/quote" className="hover:underline" style={{ color: DS.colors.primary.blue }}>estimate tool</Link> to calculate dimensions, weight, and print time.
-                      </p>
-                    </div>
-                  )}
-                  <div className="mt-4 pt-4 border-t" style={{ borderColor: DS.colors.border.default }}>
-                    <p className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                      📁 File Type: <span style={{ color: DS.colors.text.primary }}>.{project.file_type?.toUpperCase()}</span>
-                    </p>
-                  </div>
-                </div>
                 {/* Tags */}
                 {project.tags && (
                   <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">
@@ -742,7 +771,9 @@ export default function ProjectDetail() {
         </CenterPanel>
       }
       rightPanel={
-        project?.folder_id ? (
+        // Show folder context ONLY if explicitly coming from a folder page
+        // Otherwise, always show author profile (even for projects in folders)
+        (project?.folder_id && fromFolder) ? (
           <RightPanel>
             <PanelHeader title="Folder Context" />
             <PanelContent>
@@ -754,7 +785,12 @@ export default function ProjectDetail() {
               />
             </PanelContent>
           </RightPanel>
-        ) : authorProfile ? (
+        ) : (
+          // Show author profile when:
+          // - Not coming from folder, OR
+          // - Project not in folder, OR
+          // - Author profile is available
+          authorProfile ? (
           <div className="p-6 space-y-6">
             {/* Author Profile */}
             <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">
@@ -849,8 +885,11 @@ export default function ProjectDetail() {
                       className="hover:opacity-80 transition"
                       style={{ color: DS.colors.text.secondary }}
                       onClick={(e) => e.stopPropagation()}
+                      title="X (Twitter)"
                     >
-                      <Twitter size={20} />
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
                     </a>
                   )}
                   {authorProfile.social_links.instagram && (
@@ -921,7 +960,18 @@ export default function ProjectDetail() {
               </Link>
             </div>
           </div>
-        ) : null
+          ) : (
+            // Loading or no author profile yet
+            <RightPanel>
+              <PanelHeader title="Designer" />
+              <PanelContent>
+                <div className="p-6 text-center" style={{ color: DS.colors.text.secondary }}>
+                  Loading...
+                </div>
+              </PanelContent>
+            </RightPanel>
+          )
+        )
       }
       />
       <RenameModal

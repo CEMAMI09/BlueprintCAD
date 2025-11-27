@@ -17,7 +17,15 @@ export default async function handler(req, res) {
           p.*, 
           u.username, 
           u.profile_private,
-          COALESCE(fb.file_path, p.file_path) as display_file_path
+          COALESCE(fb.file_path, p.file_path) as display_file_path,
+          p.file_size_bytes,
+          p.bounding_box_width,
+          p.bounding_box_height,
+          p.bounding_box_depth,
+          p.file_format,
+          p.upload_timestamp,
+          p.file_checksum,
+          p.branch_count
          FROM projects p 
          JOIN users u ON p.user_id = u.id 
          LEFT JOIN file_branches fb ON p.id = fb.project_id AND fb.is_master = 1
@@ -60,6 +68,22 @@ export default async function handler(req, res) {
       // Only increment views if not owner
       if (!isOwner) {
         const result = await db.run('UPDATE projects SET views = views + 1 WHERE id = ?', [id]);
+        
+        // Track detailed view event
+        try {
+          const ipAddress = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection?.remoteAddress || null;
+          const userAgent = req.headers['user-agent'] || null;
+          const referrer = req.headers['referer'] || req.headers['referrer'] || null;
+          
+          await db.run(
+            `INSERT INTO project_views (project_id, user_id, ip_address, user_agent, referrer)
+             VALUES (?, ?, ?, ?, ?)`,
+            [id, viewerId, ipAddress, userAgent, referrer]
+          );
+        } catch (viewError) {
+          // Don't fail the request if view tracking fails
+          console.error('Error tracking view:', viewError);
+        }
         
         // Check if views just hit 1000 milestone
         const updatedProject = await db.get('SELECT views FROM projects WHERE id = ?', [id]);
@@ -200,6 +224,21 @@ export default async function handler(req, res) {
           console.warn('Error handling orders (table may not exist):', deleteErr.message);
         }
       }
+
+      // Log activity before deletion
+      const { logActivity } = require('../../../../backend/lib/activity-logger');
+      await logActivity({
+        userId: user.userId,
+        action: 'delete',
+        entityType: 'file',
+        folderId: project.folder_id || null,
+        projectId: parseInt(id),
+        entityId: parseInt(id),
+        entityName: project.title,
+        details: {
+          file_type: project.file_type
+        }
+      });
 
       // Delete the project
       const deleteResult = await db.run('DELETE FROM projects WHERE id = ?', [id]);

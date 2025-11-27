@@ -16,8 +16,12 @@ export default async function handler(req, res) {
 
   try {
     // Get all notifications for the user (excluding message notifications - those go to messages tab)
+    // Include dismissed field (default to 0 if NULL for backwards compatibility)
     const notifications = await db.all(
-      `SELECT n.*, u.username, u.profile_picture
+      `SELECT n.*, 
+              COALESCE(n.dismissed, 0) as dismissed,
+              u.username, 
+              u.profile_picture
        FROM notifications n
        LEFT JOIN users u ON n.related_id = u.id
        WHERE n.user_id = ? AND n.type != 'message'
@@ -26,9 +30,15 @@ export default async function handler(req, res) {
       [user.userId]
     );
 
-    // Get unread count (excluding message notifications)
+    // Get unread count (excluding message notifications and dismissed notifications)
+    // Important notifications (follow_request, folder_invitation, order_*) require dismissal
     const unreadCount = await db.get(
-      'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND read = 0 AND type != ?',
+      `SELECT COUNT(*) as count 
+       FROM notifications 
+       WHERE user_id = ? 
+         AND read = 0 
+         AND (dismissed = 0 OR dismissed IS NULL)
+         AND type != ?`,
       [user.userId, 'message']
     );
 

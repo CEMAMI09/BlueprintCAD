@@ -35,6 +35,16 @@ interface Note {
   branch_name?: string;
 }
 
+interface Collaborator {
+  id: number;
+  user_id: number;
+  username: string;
+  email: string;
+  avatar: string | null;
+  role: 'owner' | 'admin' | 'editor' | 'viewer';
+  joined_at: string;
+}
+
 
 interface FolderContextSidebarProps {
   projectId: string;
@@ -52,6 +62,7 @@ export default function FolderContextSidebar({
   const [folder, setFolder] = useState<FolderInfo | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'notes' | 'info'>('info');
   const [newNote, setNewNote] = useState('');
@@ -61,6 +72,7 @@ export default function FolderContextSidebar({
     if (folderId) {
       fetchFolderData();
       fetchNotes();
+      fetchCollaborators();
     }
   }, [folderId, branchId]);
 
@@ -133,6 +145,24 @@ export default function FolderContextSidebar({
       }
     } catch (error) {
       console.error('Error fetching notes:', error);
+    }
+  };
+
+  const fetchCollaborators = async () => {
+    if (!folderId) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/folders/${folderId}/members`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setCollaborators(data);
+      }
+    } catch (error) {
+      console.error('Error fetching collaborators:', error);
     }
   };
 
@@ -287,23 +317,126 @@ export default function FolderContextSidebar({
                   <Card padding="md">
                     <h3 className="font-semibold mb-3 text-sm flex items-center gap-2" style={{ color: DS.colors.text.primary }}>
                       <Users size={16} />
-                      Members
+                      Collaborators ({collaborators.length})
                     </h3>
-                    <p className="text-xs" style={{ color: DS.colors.text.secondary }}>
-                      View all members in folder settings
-                    </p>
+                    {collaborators.length === 0 ? (
+                      <p className="text-xs" style={{ color: DS.colors.text.tertiary }}>
+                        No collaborators yet
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {collaborators.map((collab) => (
+                          <div
+                            key={collab.id}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                              style={{
+                                backgroundColor: collab.avatar ? 'transparent' : DS.colors.primary.blue,
+                                color: '#ffffff'
+                              }}
+                            >
+                              {collab.avatar ? (
+                                <img
+                                  src={`/api/users/profile-picture/${collab.avatar}`}
+                                  alt={collab.username}
+                                  className="w-full h-full rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const parent = e.currentTarget.parentElement;
+                                    if (parent) {
+                                      parent.style.backgroundColor = DS.colors.primary.blue;
+                                      parent.textContent = collab.username.substring(0, 2).toUpperCase();
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                collab.username.substring(0, 2).toUpperCase()
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate" style={{ color: DS.colors.text.primary }}>
+                                {collab.username}
+                              </p>
+                              <p className="text-xs truncate" style={{ color: DS.colors.text.tertiary }}>
+                                {collab.role}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </Card>
                 )}
               </>
             ) : (
-              <Card padding="md">
-                <h3 className="font-semibold mb-2 text-sm" style={{ color: DS.colors.text.primary }}>
-                  Current Folder
-                </h3>
-                <p className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                  {folder.name}
-                </p>
-              </Card>
+              <>
+                <Card padding="md">
+                  <h3 className="font-semibold mb-2 text-sm" style={{ color: DS.colors.text.primary }}>
+                    Current Folder
+                  </h3>
+                  <p className="text-sm" style={{ color: DS.colors.text.secondary }}>
+                    {folder.name}
+                  </p>
+                </Card>
+
+                {folder.is_team_folder === 1 && collaborators.length > 0 && (
+                  <Card padding="md">
+                    <h3 className="font-semibold mb-3 text-sm flex items-center gap-2" style={{ color: DS.colors.text.primary }}>
+                      <Users size={16} />
+                      Collaborators
+                    </h3>
+                    <div className="space-y-2">
+                      {collaborators.slice(0, 5).map((collab) => (
+                        <div
+                          key={collab.id}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                            style={{
+                              backgroundColor: collab.avatar ? 'transparent' : DS.colors.primary.blue,
+                              color: '#ffffff'
+                            }}
+                          >
+                            {collab.avatar ? (
+                              <img
+                                src={`/api/users/profile-picture/${collab.avatar}`}
+                                alt={collab.username}
+                                className="w-full h-full rounded-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const parent = e.currentTarget.parentElement;
+                                  if (parent) {
+                                    parent.style.backgroundColor = DS.colors.primary.blue;
+                                    parent.textContent = collab.username.substring(0, 2).toUpperCase();
+                                  }
+                                }}
+                              />
+                            ) : (
+                              collab.username.substring(0, 2).toUpperCase()
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate" style={{ color: DS.colors.text.primary }}>
+                              {collab.username}
+                            </p>
+                            <p className="text-xs truncate" style={{ color: DS.colors.text.tertiary }}>
+                              {collab.role}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                      {collaborators.length > 5 && (
+                        <p className="text-xs text-center pt-2" style={{ color: DS.colors.text.tertiary }}>
+                          +{collaborators.length - 5} more
+                        </p>
+                      )}
+                    </div>
+                  </Card>
+                )}
+              </>
             )}
 
             {branches.length > 0 && (

@@ -30,7 +30,9 @@ import {
   HardDrive,
   Crown,
   Upload,
+  BarChart3,
 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -171,14 +173,25 @@ export default function DashboardPage() {
                   Welcome back! Here's what's happening.
                 </p>
               </div>
-              <Button 
-                variant="ghost" 
-                icon={<Upload size={18} />} 
-                onClick={() => router.push('/upload')}
-                className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
-              >
-                Upload Design
-              </Button>
+              <div className="flex items-center gap-3">
+                <Link href="/dashboard/analytics">
+                  <Button 
+                    variant="ghost" 
+                    icon={<BarChart3 size={18} />} 
+                    className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                  >
+                    Analytics
+                  </Button>
+                </Link>
+                <Button 
+                  variant="ghost" 
+                  icon={<Upload size={18} />} 
+                  onClick={() => router.push('/upload')}
+                  className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                >
+                  Upload Design
+                </Button>
+              </div>
             </div>
           </PanelHeader>
 

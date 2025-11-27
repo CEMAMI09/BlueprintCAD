@@ -60,6 +60,21 @@ export default async function handler(req, res) {
       [order.id]
     );
 
+    // Track detailed download event
+    try {
+      const ipAddress = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection?.remoteAddress || null;
+      const userAgent = req.headers['user-agent'] || null;
+      
+      await db.run(
+        `INSERT INTO project_downloads (project_id, user_id, order_id, ip_address, user_agent)
+         VALUES (?, ?, ?, ?, ?)`,
+        [order.project_id, order.buyer_id, order.id, ipAddress, userAgent]
+      );
+    } catch (downloadError) {
+      // Don't fail the download if tracking fails
+      console.error('Error tracking download:', downloadError);
+    }
+
     // Get file stats
     const stats = fs.statSync(filePath);
     const fileSize = stats.size;

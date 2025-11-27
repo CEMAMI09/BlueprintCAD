@@ -80,14 +80,21 @@ export default async function handler(
       [id, oldTitle, newTitle, authUserId]
     );
 
-    // Log activity if in folder
-    if (project.folder_id) {
-      await db.run(
-        `INSERT INTO folder_activity (folder_id, user_id, action, target_type, target_id, details)
-         VALUES (?, ?, 'renamed_file', 'project', ?, ?)`,
-        [project.folder_id, authUserId, id, JSON.stringify({ old_name: oldTitle, new_name: newTitle })]
-      );
-    }
+    // Log activity
+    const { logActivity } = require('../../../../backend/lib/activity-logger');
+    await logActivity({
+      userId: authUserId,
+      action: 'rename',
+      entityType: 'file',
+      folderId: project.folder_id || null,
+      projectId: parseInt(id as string),
+      entityId: parseInt(id as string),
+      entityName: newTitle,
+      details: {
+        old_name: oldTitle,
+        new_name: newTitle
+      }
+    });
 
     res.status(200).json({
       success: true,

@@ -198,12 +198,57 @@ export default async function handler(req, res) {
         }
       }
 
+      // Extract file metadata
+      let fileMetadata = {
+        file_size_bytes: null,
+        bounding_box_width: null,
+        bounding_box_height: null,
+        bounding_box_depth: null,
+        file_format: null,
+        upload_timestamp: new Date().toISOString(),
+        file_checksum: null,
+        branch_count: 0
+      };
+
+      try {
+        const { extractFileMetadata } = require('../../../backend/lib/file-metadata-utils');
+        // Handle different file path formats
+        let fullFilePath;
+        if (file_path.startsWith('/storage/')) {
+          // Path like /storage/uploads/filename.stl
+          fullFilePath = path.join(process.cwd(), file_path.replace('/storage/', 'storage/'));
+        } else if (file_path.startsWith('storage/')) {
+          // Path like storage/uploads/filename.stl
+          fullFilePath = path.join(process.cwd(), file_path);
+        } else {
+          // Relative path like filename.stl or uploads/filename.stl
+          fullFilePath = path.join(process.cwd(), 'storage', 'uploads', file_path);
+        }
+        
+        if (fs.existsSync(fullFilePath)) {
+          fileMetadata = extractFileMetadata(fullFilePath, file_type);
+          fileMetadata.upload_timestamp = new Date().toISOString();
+          console.log(`[Metadata] Extracted metadata for project:`, {
+            file_size_bytes: fileMetadata.file_size_bytes,
+            checksum: fileMetadata.file_checksum ? fileMetadata.file_checksum.substring(0, 16) + '...' : null,
+            bounding_box: fileMetadata.bounding_box_width ? `${fileMetadata.bounding_box_width}x${fileMetadata.bounding_box_height}x${fileMetadata.bounding_box_depth}` : null
+          });
+        } else {
+          console.warn(`[Metadata] File not found for metadata extraction: ${fullFilePath}`);
+        }
+      } catch (metadataError) {
+        console.error('[Metadata] Error extracting file metadata (non-fatal):', metadataError);
+        // Continue with project creation even if metadata extraction fails
+      }
+
       const result = await db.run(
         `INSERT INTO projects (
           user_id, title, description, file_path, file_type,
           tags, is_public, for_sale, price, ai_estimate, folder_id, thumbnail_path,
-          dimensions, scale_percentage, weight_grams, print_time_hours
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          dimensions, scale_percentage, weight_grams, print_time_hours,
+          file_size_bytes, bounding_box_width, bounding_box_height, bounding_box_depth,
+          file_format, upload_timestamp, file_checksum, branch_count
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           user.userId,
           title,
@@ -220,7 +265,15 @@ export default async function handler(req, res) {
           dimensions || null,
           scale_percentage || 100,
           weight_grams || null,
-          print_time_hours || null
+          print_time_hours || null,
+          fileMetadata.file_size_bytes,
+          fileMetadata.bounding_box_width,
+          fileMetadata.bounding_box_height,
+          fileMetadata.bounding_box_depth,
+          fileMetadata.file_format || file_type,
+          fileMetadata.upload_timestamp,
+          fileMetadata.file_checksum,
+          fileMetadata.branch_count
         ]
       );
 
@@ -236,11 +289,34 @@ export default async function handler(req, res) {
             [projectId, folder_id, branchName, file_path, user.userId]
           );
           console.log(`Created master branch "${branchName}" for project ${projectId} in folder ${folder_id}`);
+          
+          // Update branch count
+          await db.run(
+            'UPDATE projects SET branch_count = 1 WHERE id = ?',
+            [projectId]
+          );
         } catch (branchError) {
           console.error('Error creating default branch:', branchError);
           // Don't fail project creation if branch creation fails
         }
       }
+
+      // Log activity
+      const { logActivity } = require('../../../backend/lib/activity-logger');
+      await logActivity({
+        userId: user.userId,
+        action: 'upload',
+        entityType: 'file',
+        folderId: folder_id || null,
+        projectId: projectId,
+        entityId: projectId,
+        entityName: title,
+        details: {
+          file_type: file_type,
+          is_public: is_public,
+          for_sale: for_sale
+        }
+      });
 
       // Save tags to tags table if tags are provided
       if (tags) {

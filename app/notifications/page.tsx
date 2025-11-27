@@ -20,10 +20,23 @@ interface Notification {
   related_id: number | null;
   message: string;
   read: number;
+  dismissed: number;
   created_at: string;
   username?: string;
   profile_picture?: string | null;
 }
+
+// Important notification types that require dismissal
+const REQUIRES_DISMISSAL = [
+  'follow_request',
+  'folder_invitation',
+  'folder_member_joined',
+  'order_created',
+  'order_updated',
+  'order_shipped',
+  'order_delivered',
+  'order_cancelled'
+];
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -66,6 +79,14 @@ export default function NotificationsPage() {
 
   const markAsRead = async (id: number) => {
     try {
+      const notification = notifications.find(n => n.id === id);
+      
+      // Important notifications must be dismissed, not just marked as read
+      if (notification && REQUIRES_DISMISSAL.includes(notification.type)) {
+        await dismissNotification(id);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       await fetch(`/api/notifications/${id}`, {
         method: 'PUT',
@@ -83,6 +104,44 @@ export default function NotificationsPage() {
     }
   };
 
+  const dismissNotification = async (id: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Get the notification before dismissing to check if it was unread
+      const dismissedNotification = notifications.find(n => n.id === id);
+      
+      // Optimistically update UI immediately
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, dismissed: 1, read: 1 } : n)
+      );
+      
+      // Update unread count if it was unread
+      if (dismissedNotification && dismissedNotification.read === 0) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+      
+      // Actually dismiss on server
+      const res = await fetch(`/api/notifications/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!res.ok) {
+        // If dismissal failed, re-fetch to restore state
+        fetchNotifications();
+        alert('Failed to dismiss notification. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error dismissing notification:', error);
+      // Re-fetch to restore state on error
+      fetchNotifications();
+      alert('Error dismissing notification. Please try again.');
+    }
+  };
+
   const deleteNotification = async (id: number) => {
     try {
       const token = localStorage.getItem('token');
@@ -93,8 +152,8 @@ export default function NotificationsPage() {
       // Optimistically remove from UI immediately
       setNotifications(prev => prev.filter(n => n.id !== id));
       
-      // Update unread count if it was unread
-      if (deletedNotification && deletedNotification.read === 0) {
+      // Update unread count if it was unread and not dismissed
+      if (deletedNotification && deletedNotification.read === 0 && (deletedNotification.dismissed === 0 || !deletedNotification.dismissed)) {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
       
@@ -135,16 +194,53 @@ export default function NotificationsPage() {
       });
 
       if (res.ok) {
-        // Remove the notification
-        setNotifications(prev => prev.filter(n => 
-          !(n.type === 'follow_request' && n.related_id === followerId)
-        ));
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        // Dismiss the notification (it will stay visible but won't count toward badge)
+        const notification = notifications.find(n => 
+          n.type === 'follow_request' && n.related_id === followerId
+        );
+        if (notification) {
+          await dismissNotification(notification.id);
+        }
         // Refresh notifications to show the follow_accepted notification
         setTimeout(fetchNotifications, 500);
       }
     } catch (error) {
       console.error('Error handling follow request:', error);
+    }
+  };
+
+  const handleFolderInvitation = async (invitationId: number, action: 'accept' | 'decline') => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/invitations/${invitationId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ action })
+      });
+
+      if (res.ok) {
+        // Dismiss the notification (it will stay visible but won't count toward badge)
+        const notification = notifications.find(n => 
+          n.type === 'folder_invitation' && n.related_id === invitationId
+        );
+        if (notification) {
+          await dismissNotification(notification.id);
+        }
+        
+        if (action === 'accept') {
+          // Refresh notifications to show any new notifications
+          setTimeout(fetchNotifications, 500);
+        }
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to respond to invitation');
+      }
+    } catch (error) {
+      console.error('Error handling folder invitation:', error);
+      alert('Failed to respond to invitation. Please try again.');
     }
   };
 
@@ -251,44 +347,90 @@ export default function NotificationsPage() {
                               </p>
                             </div>
 
-                            {notification.type === 'follow_request' && notification.related_id && (
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  icon={<Check size={14} />}
-                                  onClick={() => handleFollowRequest(notification.related_id!, 'accept')}
-                                >
-                                  Accept
-                                </Button>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {/* Folder Invitation Actions */}
+                              {notification.type === 'folder_invitation' && notification.related_id && 
+                               (notification.dismissed === 0 || !notification.dismissed) && (
+                                <>
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    icon={<Check size={14} />}
+                                    onClick={() => handleFolderInvitation(notification.related_id!, 'accept')}
+                                  >
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    icon={<X size={14} />}
+                                    onClick={() => handleFolderInvitation(notification.related_id!, 'decline')}
+                                  >
+                                    Decline
+                                  </Button>
+                                </>
+                              )}
+
+                              {/* Follow Request Actions */}
+                              {notification.type === 'follow_request' && notification.related_id && 
+                               (notification.dismissed === 0 || !notification.dismissed) && (
+                                <>
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    icon={<Check size={14} />}
+                                    onClick={() => handleFollowRequest(notification.related_id!, 'accept')}
+                                  >
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    icon={<X size={14} />}
+                                    onClick={() => handleFollowRequest(notification.related_id!, 'reject')}
+                                  >
+                                    Decline
+                                  </Button>
+                                </>
+                              )}
+
+                              {/* Dismiss button for other important notifications that require dismissal */}
+                              {REQUIRES_DISMISSAL.includes(notification.type) && 
+                               notification.type !== 'folder_invitation' &&
+                               notification.type !== 'follow_request' &&
+                               (notification.dismissed === 0 || !notification.dismissed) && (
                                 <Button
                                   variant="secondary"
                                   size="sm"
-                                  icon={<X size={14} />}
-                                  onClick={() => handleFollowRequest(notification.related_id!, 'reject')}
+                                  onClick={() => dismissNotification(notification.id)}
                                 >
-                                  Decline
+                                  Dismiss
                                 </Button>
-                              </div>
-                            )}
+                              )}
 
-                            {notification.read === 0 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => markAsRead(notification.id)}
-                              >
-                                Mark read
-                              </Button>
-                            )}
+                              {/* Show mark as read for non-important notifications or already dismissed ones */}
+                              {notification.read === 0 && 
+                               (!REQUIRES_DISMISSAL.includes(notification.type) || notification.dismissed === 1) && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => markAsRead(notification.id)}
+                                >
+                                  Mark read
+                                </Button>
+                              )}
 
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteNotification(notification.id)}
-                            >
-                              ×
-                            </Button>
+                              {/* Delete button - only show for non-dismissible notifications or already dismissed ones */}
+                              {(!REQUIRES_DISMISSAL.includes(notification.type) || notification.dismissed === 1) && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteNotification(notification.id)}
+                                >
+                                  ×
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>

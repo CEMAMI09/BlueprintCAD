@@ -38,9 +38,12 @@ import {
   ArrowLeft,
   Trash2,
   MessageSquare,
+  X,
+  Settings,
 } from 'lucide-react';
 import BranchManagementModal from '@/frontend/components/BranchManagementModal';
 import { Textarea } from '@/components/ui/UIComponents';
+import ActivityPanel from '@/frontend/components/ActivityPanel';
 
 interface FolderData {
   id: number;
@@ -104,8 +107,21 @@ export default function FolderDetailPage() {
   const [projectMenuOpen, setProjectMenuOpen] = useState<number | null>(null);
   const [notes, setNotes] = useState<any[]>([]);
   const [newNote, setNewNote] = useState('');
-  const [activeTab, setActiveTab] = useState<'info' | 'notes'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'notes' | 'members' | 'activity'>('info');
   const [submittingNote, setSubmittingNote] = useState(false);
+  const [members, setMembers] = useState<any[]>([]);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'viewer' | 'editor' | 'admin'>('editor');
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [newRole, setNewRole] = useState<'viewer' | 'editor' | 'admin' | 'owner'>('viewer');
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -114,6 +130,12 @@ export default function FolderDetailPage() {
       fetchNotes();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (folder?.is_team_folder === 1 && activeTab === 'members') {
+      fetchMembers();
+    }
+  }, [folder?.id, folder?.is_team_folder, activeTab]);
 
   const fetchFolderData = async () => {
     setLoading(true);
@@ -217,6 +239,184 @@ export default function FolderDetailPage() {
       }
     } catch (error) {
       console.error('Error deleting note:', error);
+    }
+  };
+
+  const fetchMembers = async () => {
+    if (!id) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/folders/${id}/members`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setMembers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    }
+  };
+
+  const searchUsers = async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Filter out users who are already members
+        const memberUserIds = new Set(members.map((m: any) => m.user_id));
+        const filtered = data.filter((user: any) => !memberUserIds.has(user.id));
+        setSearchResults(filtered);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleInviteClick = (user: any) => {
+    setSelectedUser(user);
+    setSelectedRole('editor'); // Reset to default
+    setShowInviteModal(true);
+  };
+
+  const handleInviteMember = async () => {
+    if (!id || !selectedUser) return;
+
+    setInviting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/folders/${id}/members`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ username: selectedUser.username, role: selectedRole })
+      });
+
+      if (res.ok) {
+        setMemberSearchQuery('');
+        setSearchResults([]);
+        setShowInviteModal(false);
+        setSelectedUser(null);
+        await fetchMembers();
+        await fetchFolderData(); // Refresh folder data to update member count
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to invite member');
+      }
+    } catch (error) {
+      console.error('Error inviting member:', error);
+      alert('Failed to invite member. Please try again.');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleRemoveMember = async (memberId: number) => {
+    if (!id || !confirm('Are you sure you want to remove this member?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/folders/${id}/members`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ memberId })
+      });
+
+      if (res.ok) {
+        await fetchMembers();
+        await fetchFolderData(); // Refresh folder data to update member count
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to remove member');
+      }
+    } catch (error) {
+      console.error('Error removing member:', error);
+      alert('Failed to remove member. Please try again.');
+    }
+  };
+
+  const handleRoleClick = (member: any) => {
+    // Get current user to check if trying to change own role
+    const user = localStorage.getItem('user');
+    const currentUserId = user ? JSON.parse(user).id : null;
+    
+    // Don't allow changing own role
+    if (currentUserId && member.user_id === currentUserId) {
+      alert('You cannot change your own role');
+      return;
+    }
+
+    setSelectedMember(member);
+    setNewRole(member.role);
+    setShowRoleModal(true);
+  };
+
+  const handleRoleChange = async () => {
+    if (!id || !selectedMember) return;
+
+    // Don't allow changing to the same role
+    if (newRole === selectedMember.role) {
+      return;
+    }
+
+    // If transferring ownership, show confirmation
+    if (newRole === 'owner' && selectedMember.role !== 'owner') {
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    // For regular role changes, proceed directly
+    await updateMemberRole();
+  };
+
+  const updateMemberRole = async () => {
+    if (!id || !selectedMember) return;
+
+    setUpdatingRole(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/folders/${id}/members/${selectedMember.id}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: newRole })
+      });
+
+      if (res.ok) {
+        setShowRoleModal(false);
+        setShowConfirmDialog(false);
+        setSelectedMember(null);
+        await fetchMembers();
+        await fetchFolderData(); // Refresh folder data
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to update role');
+      }
+    } catch (error) {
+      console.error('Error updating role:', error);
+      alert('Failed to update role. Please try again.');
+    } finally {
+      setUpdatingRole(false);
     }
   };
 
@@ -501,7 +701,7 @@ export default function FolderDetailPage() {
                             backgroundColor: DS.colors.background.card,
                             borderColor: DS.colors.border.default,
                           }}
-                          onClick={() => router.push(`/project/${project.id}`)}
+                          onClick={() => router.push(`/project/${project.id}?from=folder`)}
                           onContextMenu={(e) => {
                             // Prevent context menu on projects - they navigate on click
                             e.preventDefault();
@@ -667,6 +867,32 @@ export default function FolderDetailPage() {
                 >
                   Notes
                 </button>
+                {folder?.is_team_folder === 1 && (
+                  <button
+                    onClick={() => setActiveTab('members')}
+                    className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                      activeTab === 'members' ? 'border-b-2' : ''
+                    }`}
+                    style={{
+                      color: activeTab === 'members' ? DS.colors.primary.blue : DS.colors.text.secondary,
+                      borderBottomColor: activeTab === 'members' ? DS.colors.primary.blue : 'transparent'
+                    }}
+                  >
+                    Members
+                  </button>
+                )}
+                <button
+                  onClick={() => setActiveTab('activity')}
+                  className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                    activeTab === 'activity' ? 'border-b-2' : ''
+                  }`}
+                  style={{
+                    color: activeTab === 'activity' ? DS.colors.primary.blue : DS.colors.text.secondary,
+                    borderBottomColor: activeTab === 'activity' ? DS.colors.primary.blue : 'transparent'
+                  }}
+                >
+                  Activity
+                </button>
               </div>
 
               {activeTab === 'info' && (
@@ -793,6 +1019,218 @@ export default function FolderDetailPage() {
                   </div>
                 </div>
               )}
+
+              {activeTab === 'members' && folder?.is_team_folder === 1 && (
+                <div className="space-y-4 px-4">
+                  {/* Add Member Section */}
+                  {(folder.user_role === 'owner' || folder.user_role === 'admin') && (
+                    <Card padding="md">
+                      <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
+                        Add Member
+                      </h3>
+                      <div className="space-y-3">
+                        <div>
+                          <input
+                            type="text"
+                            value={memberSearchQuery}
+                            onChange={(e) => {
+                              const query = e.target.value;
+                              setMemberSearchQuery(query);
+                              searchUsers(query);
+                            }}
+                            placeholder="Search by username or email..."
+                            className="w-full px-3 py-2 rounded-lg text-sm"
+                            style={{
+                              backgroundColor: DS.colors.background.panel,
+                              border: `1px solid ${DS.colors.border.default}`,
+                              color: DS.colors.text.primary
+                            }}
+                          />
+                        </div>
+
+                        {searchResults.length > 0 && (
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {searchResults.map((user) => (
+                              <div
+                                key={user.id}
+                                className="flex items-center justify-between p-2 rounded-lg"
+                                style={{ backgroundColor: DS.colors.background.panel }}
+                              >
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                                    style={{
+                                      backgroundColor: user.avatar ? 'transparent' : DS.colors.primary.blue,
+                                      color: '#ffffff'
+                                    }}
+                                  >
+                                    {user.avatar ? (
+                                      <img
+                                        src={`/api/users/profile-picture/${user.avatar}`}
+                                        alt={user.username}
+                                        className="w-full h-full rounded-full object-cover"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                          const parent = e.currentTarget.parentElement;
+                                          if (parent) {
+                                            parent.style.backgroundColor = DS.colors.primary.blue;
+                                            parent.textContent = user.username.substring(0, 2).toUpperCase();
+                                          }
+                                        }}
+                                      />
+                                    ) : (
+                                      user.username.substring(0, 2).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate" style={{ color: DS.colors.text.primary }}>
+                                      {user.username}
+                                    </p>
+                                    {user.email && (
+                                      <p className="text-xs truncate" style={{ color: DS.colors.text.tertiary }}>
+                                        {user.email}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleInviteClick(user)}
+                                  disabled={inviting}
+                                  icon={<Plus size={12} />}
+                                >
+                                  Invite
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {isSearching && (
+                          <p className="text-xs text-center py-2" style={{ color: DS.colors.text.tertiary }}>
+                            Searching...
+                          </p>
+                        )}
+
+                        {memberSearchQuery.length >= 2 && !isSearching && searchResults.length === 0 && (
+                          <p className="text-xs text-center py-2" style={{ color: DS.colors.text.tertiary }}>
+                            No users found
+                          </p>
+                        )}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Members List */}
+                  <Card padding="md">
+                    <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
+                      Members ({members.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {members.length === 0 ? (
+                        <p className="text-sm text-center py-4" style={{ color: DS.colors.text.tertiary }}>
+                          No members yet
+                        </p>
+                      ) : (
+                        members.map((member) => (
+                          <div
+                            key={member.id || member.user_id}
+                            className="flex items-center justify-between p-2 rounded-lg"
+                            style={{ backgroundColor: DS.colors.background.panel }}
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                                style={{
+                                  backgroundColor: member.avatar ? 'transparent' : DS.colors.primary.blue,
+                                  color: '#ffffff'
+                                }}
+                              >
+                                {member.avatar ? (
+                                  <img
+                                    src={`/api/users/profile-picture/${member.avatar}`}
+                                    alt={member.username}
+                                    className="w-full h-full rounded-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      const parent = e.currentTarget.parentElement;
+                                      if (parent) {
+                                        parent.style.backgroundColor = DS.colors.primary.blue;
+                                        parent.textContent = member.username.substring(0, 2).toUpperCase();
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  member.username.substring(0, 2).toUpperCase()
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <Link
+                                    href={`/profile/${member.username}`}
+                                    className="text-sm font-medium truncate hover:underline"
+                                    style={{ color: DS.colors.primary.blue }}
+                                  >
+                                    {member.username}
+                                  </Link>
+                                  <Badge
+                                    variant={member.role === 'owner' ? 'success' : member.role === 'admin' ? 'warning' : 'default'}
+                                    size="sm"
+                                  >
+                                    {member.role}
+                                  </Badge>
+                                </div>
+                                {member.email && (
+                                  <p className="text-xs truncate" style={{ color: DS.colors.text.tertiary }}>
+                                    {member.email}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const user = localStorage.getItem('user');
+                                const currentUserId = user ? JSON.parse(user).id : null;
+                                const isCurrentUser = currentUserId && member.user_id === currentUserId;
+                                const canChangeRole = (folder.user_role === 'owner' || folder.user_role === 'admin') && 
+                                                     member.id && 
+                                                     !isCurrentUser;
+                                
+                                return canChangeRole ? (
+                                  <button
+                                    onClick={() => handleRoleClick(member)}
+                                    className="p-1 rounded hover:bg-gray-800 transition-colors"
+                                    title="Change role"
+                                  >
+                                    <Settings size={14} style={{ color: DS.colors.text.tertiary }} />
+                                  </button>
+                                ) : null;
+                              })()}
+                              {(folder.user_role === 'owner' || folder.user_role === 'admin') && 
+                               member.role !== 'owner' && 
+                               member.id && 
+                               !(folder.user_role === 'admin' && member.role === 'admin') && (
+                                <button
+                                  onClick={() => handleRemoveMember(member.id)}
+                                  className="p-1 rounded hover:bg-gray-800 transition-colors"
+                                  title="Remove member"
+                                >
+                                  <Trash2 size={14} style={{ color: DS.colors.text.tertiary }} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </Card>
+                </div>
+              )}
+
+              {activeTab === 'activity' && (
+                <ActivityPanel folderId={parseInt(id as string)} />
+              )}
             </PanelContent>
           </RightPanel>
         }
@@ -820,6 +1258,360 @@ export default function FolderDetailPage() {
             fetchFolderData();
           }}
         />
+      )}
+
+      {/* Invite Member Modal */}
+      {showInviteModal && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-800">
+              <h2 className="text-xl font-bold" style={{ color: DS.colors.text.primary }}>
+                Invite as
+              </h2>
+              <button
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setSelectedUser(null);
+                }}
+                className="text-gray-400 hover:text-white transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: DS.colors.background.panel }}>
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
+                  style={{
+                    backgroundColor: selectedUser.avatar ? 'transparent' : DS.colors.primary.blue,
+                    color: '#ffffff'
+                  }}
+                >
+                  {selectedUser.avatar ? (
+                    <img
+                      src={`/api/users/profile-picture/${selectedUser.avatar}`}
+                      alt={selectedUser.username}
+                      className="w-full h-full rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          parent.style.backgroundColor = DS.colors.primary.blue;
+                          parent.textContent = selectedUser.username.substring(0, 2).toUpperCase();
+                        }
+                      }}
+                    />
+                  ) : (
+                    selectedUser.username.substring(0, 2).toUpperCase()
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate" style={{ color: DS.colors.text.primary }}>
+                    {selectedUser.username}
+                  </p>
+                  {selectedUser.email && (
+                    <p className="text-sm truncate" style={{ color: DS.colors.text.tertiary }}>
+                      {selectedUser.email}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
+                  Role
+                </label>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value as 'viewer' | 'editor' | 'admin')}
+                  className="w-full px-4 py-3 rounded-lg text-sm"
+                  style={{
+                    backgroundColor: DS.colors.background.panel,
+                    border: `1px solid ${DS.colors.border.default}`,
+                    color: DS.colors.text.primary
+                  }}
+                >
+                  <option value="viewer">Viewer - Can view files only</option>
+                  <option value="editor">Editor - Can upload and edit files</option>
+                  <option value="admin">Admin - Can manage members and settings</option>
+                </select>
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <h4 className="text-sm font-semibold mb-2" style={{ color: DS.colors.primary.blue }}>
+                  Role Permissions
+                </h4>
+                <ul className="text-xs space-y-1" style={{ color: DS.colors.text.secondary }}>
+                  <li>• <strong>Viewer:</strong> View and download files</li>
+                  <li>• <strong>Editor:</strong> Upload, edit, and comment</li>
+                  <li>• <strong>Admin:</strong> Invite members and manage folder</li>
+                </ul>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowInviteModal(false);
+                    setSelectedUser(null);
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg font-medium transition"
+                  style={{
+                    backgroundColor: DS.colors.background.panelHover,
+                    color: DS.colors.text.primary
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = DS.colors.background.panel;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = DS.colors.background.panelHover;
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleInviteMember}
+                  disabled={inviting}
+                  className="flex-1 px-4 py-3 rounded-lg font-medium transition"
+                  style={{
+                    backgroundColor: DS.colors.primary.blue,
+                    color: '#ffffff',
+                    opacity: inviting ? 0.5 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!inviting) {
+                      e.currentTarget.style.backgroundColor = DS.colors.primary.blueHover || DS.colors.primary.blue;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = DS.colors.primary.blue;
+                  }}
+                >
+                  {inviting ? 'Sending...' : 'Send Invitation'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role Management Modal */}
+      {showRoleModal && selectedMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-800">
+              <h2 className="text-xl font-bold" style={{ color: DS.colors.text.primary }}>
+                Change Role
+              </h2>
+              <button
+                onClick={() => {
+                  setShowRoleModal(false);
+                  setSelectedMember(null);
+                  setShowConfirmDialog(false);
+                }}
+                className="text-gray-400 hover:text-white transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: DS.colors.background.panel }}>
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
+                  style={{
+                    backgroundColor: selectedMember.avatar ? 'transparent' : DS.colors.primary.blue,
+                    color: '#ffffff'
+                  }}
+                >
+                  {selectedMember.avatar ? (
+                    <img
+                      src={`/api/users/profile-picture/${selectedMember.avatar}`}
+                      alt={selectedMember.username}
+                      className="w-full h-full rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          parent.style.backgroundColor = DS.colors.primary.blue;
+                          parent.textContent = selectedMember.username.substring(0, 2).toUpperCase();
+                        }
+                      }}
+                    />
+                  ) : (
+                    selectedMember.username.substring(0, 2).toUpperCase()
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate" style={{ color: DS.colors.text.primary }}>
+                    {selectedMember.username}
+                  </p>
+                  <p className="text-sm truncate" style={{ color: DS.colors.text.tertiary }}>
+                    Current role: {selectedMember.role}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
+                  New Role
+                </label>
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as 'viewer' | 'editor' | 'admin' | 'owner')}
+                  className="w-full px-4 py-3 rounded-lg text-sm"
+                  style={{
+                    backgroundColor: DS.colors.background.panel,
+                    border: `1px solid ${DS.colors.border.default}`,
+                    color: DS.colors.text.primary
+                  }}
+                >
+                  <option value="viewer">Viewer - Can view files only</option>
+                  <option value="editor">Editor - Can upload and edit files</option>
+                  {folder?.user_role === 'owner' && (
+                    <>
+                      <option value="admin">Admin - Can manage members and settings</option>
+                      {selectedMember.role !== 'owner' && (
+                        <option value="owner">Owner - Full control (Transfer Ownership)</option>
+                      )}
+                    </>
+                  )}
+                  {folder?.user_role === 'admin' && (
+                    <option value="admin">Admin - Can manage members and settings</option>
+                  )}
+                </select>
+                {folder?.user_role === 'admin' && (
+                  <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
+                    Admins can only change roles to viewer or editor
+                  </p>
+                )}
+                {newRole === 'owner' && selectedMember.role !== 'owner' && (
+                  <p className="text-xs mt-1" style={{ color: DS.colors.accent.warning || '#f59e0b' }}>
+                    ⚠️ This will transfer ownership to {selectedMember.username}
+                  </p>
+                )}
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <h4 className="text-sm font-semibold mb-2" style={{ color: DS.colors.primary.blue }}>
+                  Role Permissions
+                </h4>
+                <ul className="text-xs space-y-1" style={{ color: DS.colors.text.secondary }}>
+                  <li>• <strong>Viewer:</strong> View and download files</li>
+                  <li>• <strong>Editor:</strong> Upload, edit, and comment</li>
+                  <li>• <strong>Admin:</strong> Invite members and manage folder</li>
+                  <li>• <strong>Owner:</strong> Full control, can transfer ownership</li>
+                </ul>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRoleModal(false);
+                    setSelectedMember(null);
+                    setShowConfirmDialog(false);
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg font-medium transition"
+                  style={{
+                    backgroundColor: DS.colors.background.panelHover,
+                    color: DS.colors.text.primary
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = DS.colors.background.panel;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = DS.colors.background.panelHover;
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRoleChange}
+                  disabled={updatingRole || newRole === selectedMember.role}
+                  className="flex-1 px-4 py-3 rounded-lg font-medium transition"
+                  style={{
+                    backgroundColor: DS.colors.primary.blue,
+                    color: '#ffffff',
+                    opacity: (updatingRole || newRole === selectedMember.role) ? 0.5 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!updatingRole && newRole !== selectedMember.role) {
+                      e.currentTarget.style.backgroundColor = DS.colors.primary.blueHover || DS.colors.primary.blue;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = DS.colors.primary.blue;
+                  }}
+                >
+                  {updatingRole ? 'Updating...' : 'OK'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Ownership Transfer */}
+      {showConfirmDialog && selectedMember && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4" style={{ color: DS.colors.text.primary }}>
+                Transfer Ownership?
+              </h2>
+              <p className="text-sm mb-6" style={{ color: DS.colors.text.secondary }}>
+                Are you sure you want to transfer ownership of this folder to <strong>{selectedMember.username}</strong>? 
+                You will become an admin and they will become the owner with full control.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConfirmDialog(false);
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg font-medium transition"
+                  style={{
+                    backgroundColor: DS.colors.background.panelHover,
+                    color: DS.colors.text.primary
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = DS.colors.background.panel;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = DS.colors.background.panelHover;
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={updateMemberRole}
+                  disabled={updatingRole}
+                  className="flex-1 px-4 py-3 rounded-lg font-medium transition"
+                  style={{
+                    backgroundColor: DS.colors.accent.error || '#ef4444',
+                    color: '#ffffff',
+                    opacity: updatingRole ? 0.5 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!updatingRole) {
+                      e.currentTarget.style.backgroundColor = '#dc2626';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = DS.colors.accent.error || '#ef4444';
+                  }}
+                >
+                  {updatingRole ? 'Transferring...' : 'Yes, Transfer Ownership'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Right-click Context Menu */}

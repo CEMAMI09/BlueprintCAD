@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDb } from '../../../../db/db';
 import { getUserFromRequest } from '../../../../backend/lib/auth';
+import { getFolderActivities } from '../../../../backend/lib/activity-logger';
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,19 +11,14 @@ export default async function handler(
 
   if (req.method === 'GET') {
     try {
-      const db = await getDb();
+      const { action, entityType, limit, offset } = req.query;
 
-      const activities = await db.all(
-        `SELECT 
-          fa.*,
-          u.username
-         FROM folder_activity fa
-         JOIN users u ON fa.user_id = u.id
-         WHERE fa.folder_id = ?
-         ORDER BY fa.created_at DESC
-         LIMIT 50`,
-        [id]
-      );
+      const activities = await getFolderActivities(parseInt(id as string), {
+        action: action as string | undefined,
+        entityType: entityType as string | undefined,
+        limit: limit ? parseInt(limit as string) : 50,
+        offset: offset ? parseInt(offset as string) : 0
+      });
 
       res.status(200).json(activities);
     } catch (error) {

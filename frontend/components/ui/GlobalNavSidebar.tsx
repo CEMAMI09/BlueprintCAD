@@ -141,10 +141,15 @@ export function GlobalNavSidebar() {
     if (item.id === 'profile') {
       return { ...item, href: username ? `/profile/${username}` : '/profile' };
     }
-    // Only show badge on Messages tab, not Notifications tab
+    // Show badge on Messages and Notifications tabs
     if (item.id === 'messages') {
       const badge = unreadMessages > 0 ? (unreadMessages > 9 ? '9+' : unreadMessages) : undefined;
       console.log('[GlobalNavSidebar] Messages badge:', badge, 'unreadMessages:', unreadMessages);
+      return { ...item, badge };
+    }
+    if (item.id === 'notifications') {
+      const badge = unreadNotifications > 0 ? (unreadNotifications > 9 ? '9+' : unreadNotifications) : undefined;
+      console.log('[GlobalNavSidebar] Notifications badge:', badge, 'unreadNotifications:', unreadNotifications);
       return { ...item, badge };
     }
     return item;
