@@ -38,6 +38,7 @@ import {
   Youtube,
   ShoppingBag,
 } from 'lucide-react';
+import TierBadge from '@/frontend/components/TierBadge';
 
 export default function ProfilePage() {
   const params = useParams();
@@ -146,9 +147,14 @@ export default function ProfilePage() {
       });
       if (res.ok) {
         const data = await res.json();
+        console.log('[Profile] Fetched profile data:', { username: data.username, subscription_tier: data.subscription_tier });
         setProfile(data);
-      } else if (res.status === 404) {
-        setProfile(null);
+      } else {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[Profile] Failed to fetch profile:', res.status, errorData);
+        if (res.status === 404) {
+          setProfile(null);
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -392,9 +398,14 @@ export default function ProfilePage() {
                   <div className="flex-1" style={{ paddingTop: '0px' }}>
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <h1 className="text-2xl font-bold" style={{ color: DS.colors.text.primary, marginTop: '-8px' }}>
-                          {profile.display_name || username}
-                        </h1>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h1 className="text-2xl font-bold flex items-center" style={{ color: DS.colors.text.primary, marginTop: '-8px' }}>
+                            {profile.display_name || username}
+                          </h1>
+                          <div className="flex items-center" style={{ marginTop: '-8px' }}>
+                            <TierBadge tier={profile.subscription_tier} size="md" />
+                          </div>
+                        </div>
                         <p className="text-base" style={{ color: DS.colors.text.secondary }}>
                           @{username}
                         </p>

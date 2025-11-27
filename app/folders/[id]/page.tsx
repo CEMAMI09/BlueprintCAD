@@ -44,6 +44,7 @@ import {
 import BranchManagementModal from '@/frontend/components/BranchManagementModal';
 import { Textarea } from '@/components/ui/UIComponents';
 import ActivityPanel from '@/frontend/components/ActivityPanel';
+import ShareLinkModal from '@/frontend/components/ShareLinkModal';
 
 interface FolderData {
   id: number;
@@ -122,6 +123,7 @@ export default function FolderDetailPage() {
   const [newRole, setNewRole] = useState<'viewer' | 'editor' | 'admin' | 'owner'>('viewer');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [updatingRole, setUpdatingRole] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -536,6 +538,15 @@ export default function FolderDetailPage() {
               }
               actions={
                 <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    icon={<Share2 size={16} />} 
+                    onClick={() => setShowShareModal(true)}
+                    title="Share folder"
+                  >
+                    Share
+                  </Button>
                   <Button 
                     variant="secondary" 
                     size="sm" 
@@ -1257,6 +1268,17 @@ export default function FolderDetailPage() {
             // Refresh folder data to show updated master branch
             fetchFolderData();
           }}
+        />
+      )}
+
+      {folder && (
+        <ShareLinkModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          entityType="folder"
+          entityId={folder.id}
+          entityName={folder.name}
+          isPublic={false} // Folders are always considered private for share link purposes
         />
       )}
 

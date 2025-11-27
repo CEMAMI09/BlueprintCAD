@@ -17,6 +17,7 @@ export default async function handler(req, res) {
           p.*, 
           u.username, 
           u.profile_private,
+          u.subscription_tier,
           COALESCE(fb.file_path, p.file_path) as display_file_path,
           p.file_size_bytes,
           p.bounding_box_width,
@@ -57,7 +58,47 @@ export default async function handler(req, res) {
       // Owner always has access
       const isOwner = viewerId && viewerId === project.user_id;
       
-      if (!isOwner) {
+      // Check for share link access
+      let shareLinkAccess = false;
+      let shareLinkData = null;
+      const shareToken = req.query.share;
+      console.log('[API] Share link check:', { shareToken, isOwner, viewerId, projectUserId: project.user_id });
+      
+      if (shareToken) {
+        shareLinkData = await db.get(
+          'SELECT * FROM share_links WHERE link_token = ? AND entity_type = ? AND entity_id = ?',
+          [shareToken, 'project', id]
+        );
+        
+        console.log('[API] Share link data from DB:', shareLinkData ? {
+          id: shareLinkData.id,
+          download_blocked: shareLinkData.download_blocked,
+          view_only: shareLinkData.view_only,
+          expires_at: shareLinkData.expires_at
+        } : 'null');
+        
+        if (shareLinkData) {
+          // Check if expired
+          if (shareLinkData.expires_at) {
+            const expiresAt = new Date(shareLinkData.expires_at);
+            if (expiresAt < new Date()) {
+              return res.status(410).json({ error: 'Share link has expired' });
+            }
+          }
+          
+          // Set shareLinkAccess for non-owners (owners can still see the data but won't be restricted from editing)
+          if (!isOwner) {
+            shareLinkAccess = true;
+          } else {
+            // Owner accessing via share link - still include shareLinkData so UI can show restrictions
+            // but shareLinkAccess is false so they can still edit
+            shareLinkAccess = false;
+            console.log('[API] Owner accessing via share link - including shareLinkData for UI restrictions');
+          }
+        }
+      }
+      
+      if (!isOwner && !shareLinkAccess) {
         const { visible } = await isProfileVisible(project.username, viewerUsername);
         
         if (!visible) {
@@ -109,10 +150,27 @@ export default async function handler(req, res) {
       }
 
       // Prepare response with permission flags
+      // shareLinkAccess: true only for non-owners accessing via share link (restricts editing)
+      // shareLinkData: included for both owners and non-owners when accessing via share link (for UI restrictions like download blocking)
+      const finalShareLinkAccess = shareLinkAccess || false;
+      const finalShareLinkData = shareLinkData ? {
+        download_blocked: shareLinkData.download_blocked === 1,
+        view_only: shareLinkData.view_only === 1
+      } : null;
+      
+      console.log('[API] Final share link response:', {
+        shareLinkAccess: finalShareLinkAccess,
+        shareLinkData: finalShareLinkData,
+        isOwner,
+        download_blocked: finalShareLinkData?.download_blocked
+      });
+      
       const response = {
         ...project,
         canViewCostData,
-        isOwner
+        isOwner,
+        shareLinkAccess: finalShareLinkAccess,
+        shareLinkData: finalShareLinkData
       };
 
       // Strip cost data if user doesn't have permission

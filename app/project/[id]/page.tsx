@@ -16,6 +16,8 @@ import Link from 'next/link';
 import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Copy, Check } from 'lucide-react';
 import SubscriptionGate from '@/frontend/components/SubscriptionGate';
 import UpgradeModal from '@/frontend/components/UpgradeModal';
+import TierBadge from '@/frontend/components/TierBadge';
+import ShareLinkModal from '@/frontend/components/ShareLinkModal';
 
 
 interface Project {
@@ -42,6 +44,11 @@ interface Project {
   isOwner?: boolean;
   is_public?: number | boolean;
   folder_id?: number | null;
+  shareLinkAccess?: boolean;
+  shareLinkData?: {
+    download_blocked: boolean;
+    view_only: boolean;
+  } | null;
   // Metadata fields
   file_size_bytes?: number | null;
   bounding_box_width?: number | null;
@@ -74,6 +81,7 @@ export default function ProjectDetail() {
   const [authorProfile, setAuthorProfile] = useState<any>(null);
   const [currentBranchId, setCurrentBranchId] = useState<number | null>(null);
   const [checksumCopied, setChecksumCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   
   // Check if user came from a folder page
   // Only true if explicitly set to 'folder', false otherwise (including undefined/null)
@@ -198,13 +206,26 @@ export default function ProjectDetail() {
 
   const fetchProject = async () => {
     try {
-      const res = await fetch(`/api/projects/${id}`, {
+      const shareToken = searchParams?.get('share') || sessionStorage.getItem('shareToken');
+      const url = `/api/projects/${id}${shareToken ? `?share=${shareToken}` : ''}`;
+      const res = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         }
       });
       if (res.ok) {
         const data = await res.json();
+        // Debug: log share link data
+        const shareToken = searchParams?.get('share') || sessionStorage.getItem('shareToken');
+        console.log('[Project] Share link debug:', {
+          shareToken: shareToken,
+          shareLinkAccess: data.shareLinkAccess,
+          shareLinkData: data.shareLinkData,
+          download_blocked: data.shareLinkData?.download_blocked,
+          isOwner: data.isOwner,
+          username: data.username,
+          shouldHideDownload: !!(data.shareLinkAccess && data.shareLinkData?.download_blocked)
+        });
         setProject(data);
           // Debug: log project file info for 3D viewer
           // eslint-disable-next-line no-console
@@ -305,6 +326,12 @@ export default function ProjectDetail() {
 
   const handleDownload = async () => {
     if (!project?.file_path) return;
+    
+    // Check if download is blocked via share link
+    if (project?.shareLinkData?.download_blocked) {
+      setActionError('Downloads are disabled for this share link');
+      return;
+    }
     
     // Check if design is for sale and user hasn't purchased it
     if (project.for_sale && project.username !== user?.username && !hasPurchased) {
@@ -571,7 +598,9 @@ export default function ProjectDetail() {
                     </svg>
                     {project.likes ? `${project.likes} Stars` : 'Star'}
                   </button>
-                  {!project.for_sale || project.username === user?.username || hasPurchased ? (
+                  {/* Download button - hide if downloads are blocked via share link (for both owners and non-owners) */}
+                  {(!project.for_sale || project.username === user?.username || hasPurchased) && 
+                   !(project.shareLinkData && project.shareLinkData.download_blocked) ? (
                     <button
                       onClick={handleDownload}
                       className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
@@ -623,21 +652,32 @@ export default function ProjectDetail() {
                       )}
                     </button>
                   )}
+                  {/* Share button - hide if accessed via share link */}
+                  {!project.shareLinkAccess && (
+                    <button
+                      onClick={() => setShowShareModal(true)}
+                      className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
+                      style={{ background: DS.colors.primary.blue, color: '#fff' }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                      Share
+                    </button>
+                  )}
                   {/* Owner actions */}
                   {user?.username === project.username && (
                     <>
-                      {!project.is_public && (
-                        <button
-                          onClick={() => setIsRenameModalOpen(true)}
-                          className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
-                          style={{ background: DS.colors.accent.purple, color: '#fff' }}
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          Rename File
-                        </button>
-                      )}
+                      <button
+                        onClick={() => setIsRenameModalOpen(true)}
+                        className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
+                        style={{ background: DS.colors.accent.purple, color: '#fff' }}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Rename File
+                      </button>
                       <button
                         onClick={() => setIsDeleteModalOpen(true)}
                         className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
@@ -824,9 +864,12 @@ export default function ProjectDetail() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-lg truncate" style={{ color: DS.colors.text.primary }}>
-                      {authorProfile.display_name || authorProfile.username}
-                    </h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-lg truncate" style={{ color: DS.colors.text.primary }}>
+                        {authorProfile.display_name || authorProfile.username}
+                      </h4>
+                      <TierBadge tier={authorProfile.subscription_tier} size="sm" />
+                    </div>
                     <p className="text-sm truncate" style={{ color: DS.colors.text.secondary }}>
                       @{authorProfile.username}
                     </p>
@@ -992,6 +1035,16 @@ export default function ProjectDetail() {
         confirmColor="red"
         loading={isDeleting}
       />
+      {project && (
+        <ShareLinkModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          entityType="project"
+          entityId={Number(project.id)}
+          entityName={project.title}
+          isPublic={project.is_public === 1}
+        />
+      )}
     </>
   );
 }

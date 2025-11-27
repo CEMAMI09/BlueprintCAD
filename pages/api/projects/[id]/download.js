@@ -47,8 +47,35 @@ export default async function handler(req, res) {
     
     const isOwner = userId && userId === project.user_id;
     
-    // If project is for sale, only owner or purchasers can download
-    if (project.for_sale && project.price > 0 && !isOwner) {
+    // Check for share link access
+    let shareLinkAccess = false;
+    let shareLinkData = null;
+    const shareToken = req.query.share_token || req.query.share;
+    if (shareToken && !isOwner) {
+      shareLinkData = await db.get(
+        'SELECT * FROM share_links WHERE link_token = ? AND entity_type = ? AND entity_id = ?',
+        [shareToken, 'project', id]
+      );
+      
+      if (shareLinkData) {
+        // Check if expired
+        if (shareLinkData.expires_at) {
+          const expiresAt = new Date(shareLinkData.expires_at);
+          if (expiresAt < new Date()) {
+            return res.status(410).json({ error: 'Share link has expired' });
+          }
+        }
+        shareLinkAccess = true;
+      }
+    }
+    
+    // If accessed via share link, check download restrictions
+    if (shareLinkAccess && shareLinkData && shareLinkData.download_blocked === 1) {
+      return res.status(403).json({ error: 'Downloads are disabled for this share link' });
+    }
+    
+    // If project is for sale, only owner or purchasers can download (unless via share link)
+    if (project.for_sale && project.price > 0 && !isOwner && !shareLinkAccess) {
       // Check if user has purchased this project
       if (userId) {
         const purchase = await db.get(

@@ -19,6 +19,8 @@ import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UICo
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import SubscriptionGate from '@/frontend/components/SubscriptionGate';
 import UpgradeModal from '@/frontend/components/UpgradeModal';
+import TierBadge from '@/frontend/components/TierBadge';
+import ShareLinkModal from '@/frontend/components/ShareLinkModal';
 import {
   Download,
   Star,
@@ -31,6 +33,7 @@ import {
   List,
   User,
   Users,
+  Share2,
 } from 'lucide-react';
 
 interface Design {
@@ -39,6 +42,7 @@ interface Design {
   author: string;
   authorAvatar: string;
   authorProfilePicture?: string | null;
+  authorSubscriptionTier?: string | null;
   thumbnail: string;
   thumbnailUrl?: string | null;
   stars: number;
@@ -61,6 +65,7 @@ interface UserResult {
   bio: string | null;
   created_at: string;
   profile_picture?: string | null;
+  subscription_tier?: string | null;
 }
 
 export default function ExplorePage() {
@@ -74,6 +79,8 @@ export default function ExplorePage() {
   const [searchMode, setSearchMode] = useState<'all' | 'designs' | 'users'>('all');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedDesignForShare, setSelectedDesignForShare] = useState<Design | null>(null);
 
   // Helper function to map projects to designs
   const mapProjectsToDesigns = (projects: any[]): Design[] => {
@@ -94,6 +101,7 @@ export default function ExplorePage() {
         author: p.username,
         authorAvatar: p.username?.substring(0, 2).toUpperCase() || 'UN',
         authorProfilePicture: p.profile_picture || null,
+        authorSubscriptionTier: p.subscription_tier || null,
         thumbnail: '📦', // Default thumbnail emoji
         thumbnailUrl,
         stars: p.likes || 0,
@@ -217,6 +225,7 @@ export default function ExplorePage() {
     { id: 'premium', label: 'Premium', icon: DollarSign },
   ];
   return (
+    <>
     <ThreePanelLayout
       leftPanel={<GlobalNavSidebar />}
       centerPanel={
@@ -439,9 +448,12 @@ export default function ExplorePage() {
                               {user.username.substring(0, 2).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold mb-1 truncate" style={{ color: DS.colors.text.primary }}>
-                                @{user.username}
-                              </h4>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold truncate" style={{ color: DS.colors.text.primary }}>
+                                  @{user.username}
+                                </h4>
+                                <TierBadge tier={user.subscription_tier} size="sm" />
+                              </div>
                               {user.bio && (
                                 <p className="text-sm line-clamp-2" style={{ color: DS.colors.text.secondary }}>
                                   {user.bio}
@@ -564,6 +576,7 @@ export default function ExplorePage() {
                                       <span className="text-sm truncate" style={{ color: DS.colors.text.secondary }}>
                                         {design.author}
                                       </span>
+                                      <TierBadge tier={design.authorSubscriptionTier} size="sm" />
                                     </div>
                                     <div className="flex items-center gap-4 text-sm mb-3" style={{ color: DS.colors.text.tertiary }}>
                                       <div className="flex items-center gap-1">
@@ -579,17 +592,32 @@ export default function ExplorePage() {
                                         {design.views}
                                       </div>
                                     </div>
-                                    <div className="flex flex-wrap gap-2 mt-auto">
-                                      {design.tags.slice(0, 2).map((tag) => (
-                                        <Badge key={tag} variant="default" size="sm">
-                                          {tag}
-                                        </Badge>
-                                      ))}
-                                      {design.price !== null && (
-                                        <Badge variant="primary" size="sm">
-                                          ${design.price}
-                                        </Badge>
-                                      )}
+                                    <div className="flex items-center justify-between mt-auto">
+                                      <div className="flex flex-wrap gap-2">
+                                        {design.tags.slice(0, 2).map((tag) => (
+                                          <Badge key={tag} variant="default" size="sm">
+                                            {tag}
+                                          </Badge>
+                                        ))}
+                                        {design.price !== null && (
+                                          <Badge variant="primary" size="sm">
+                                            ${design.price}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setSelectedDesignForShare(design);
+                                          setShowShareModal(true);
+                                        }}
+                                        className="p-2 rounded-lg hover:bg-gray-800 transition"
+                                        style={{ color: DS.colors.text.secondary }}
+                                        title="Share design"
+                                      >
+                                        <Share2 size={16} />
+                                      </button>
                                     </div>
                                   </div>
                                 </Card>
@@ -884,5 +912,19 @@ export default function ExplorePage() {
         </CenterPanel>
       }
     />
+    {selectedDesignForShare && (
+      <ShareLinkModal
+        isOpen={showShareModal}
+        onClose={() => {
+          setShowShareModal(false);
+          setSelectedDesignForShare(null);
+        }}
+        entityType="project"
+        entityId={Number(selectedDesignForShare.id)}
+        entityName={selectedDesignForShare.title}
+        isPublic={true} // Designs on explore page are always public
+      />
+    )}
+  </>
   );
 }

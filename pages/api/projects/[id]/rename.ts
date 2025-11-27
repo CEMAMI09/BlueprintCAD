@@ -41,10 +41,20 @@ export default async function handler(
       return res.status(403).json({ error: 'You can only rename your own projects' });
     }
 
-    // Check if project is public - only allow renaming non-public files
-    if (project.is_public === 1) {
-      return res.status(403).json({ error: 'Cannot rename public projects. Please make the project private first.' });
+    // Check if accessed via share link (share links are view-only)
+    // But allow owners to rename even if they accessed via share link
+    const shareToken = req.query.share;
+    if (shareToken && project.user_id !== authUserId) {
+      const shareLink = await db.get(
+        'SELECT * FROM share_links WHERE link_token = ? AND entity_type = ? AND entity_id = ?',
+        [shareToken, 'project', id]
+      );
+      if (shareLink) {
+        return res.status(403).json({ error: 'Cannot edit files accessed via share link. Share links are view-only.' });
+      }
     }
+
+    // Allow owners to rename public files (removed restriction)
 
     // Check for naming conflicts in the same folder
     if (project.folder_id) {

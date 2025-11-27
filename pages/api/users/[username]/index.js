@@ -23,14 +23,33 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Check if subscription_tier column exists
+    const columns = await db.all("PRAGMA table_info(users)");
+    const hasSubscriptionTier = columns.some(col => col.name === 'subscription_tier');
+    
+    const subscriptionTierSelect = hasSubscriptionTier ? ', subscription_tier' : '';
+    
     const user = await db.get(
-      'SELECT id, username, email, bio, profile_picture, banner, location, website, social_links, visibility_options, profile_private, oauth_providers, created_at FROM users WHERE username = ?',
+      `SELECT id, username, email, bio, profile_picture, banner, location, website, social_links, visibility_options, profile_private, oauth_providers, created_at${subscriptionTierSelect} FROM users WHERE username = ?`,
       [username]
     );
+    
+    // If column doesn't exist, set default value
+    if (!hasSubscriptionTier && user) {
+      user.subscription_tier = 'free';
+    }
+    
+    // Ensure subscription_tier is always set
+    if (user && !user.subscription_tier) {
+      user.subscription_tier = 'free';
+    }
 
     if (!user) {
+      console.log(`[API] User not found: ${username}`);
       return res.status(404).json({ error: 'User not found' });
     }
+    
+    console.log(`[API] Found user: ${user.username}, subscription_tier: ${user.subscription_tier}`);
 
     // Get authenticated user
     let viewerUsername = null;

@@ -16,6 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           c.*,
           u.username,
           u.avatar,
+          u.subscription_tier,
           (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = c.id) as reaction_count,
           (SELECT GROUP_CONCAT(reaction_type) FROM comment_reactions WHERE comment_id = c.id AND user_id = ?) as user_reactions
         FROM comments c

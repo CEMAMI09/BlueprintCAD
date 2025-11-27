@@ -192,9 +192,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Owner always has access
     const isOwner = userId && userId === project.user_id;
     
+    // Check for share link access (from query parameter or header)
+    let shareLinkAccess = false;
+    let shareLinkData: any = null;
+    const shareToken = req.query.share_token || req.query.share || req.headers['x-share-token'];
+    if (shareToken) {
+      shareLinkData = await db.get(
+        'SELECT * FROM share_links WHERE link_token = ? AND entity_type = ? AND entity_id = ?',
+        [shareToken, 'project', project.id]
+      );
+      
+      if (shareLinkData) {
+        // Check if expired
+        if (shareLinkData.expires_at) {
+          const expiresAt = new Date(shareLinkData.expires_at);
+          if (expiresAt < new Date()) {
+            return res.status(410).json({ error: 'Share link has expired' });
+          }
+        }
+        
+        // Password verification should happen at viewer page level
+        // If we reach here, password was already verified
+        shareLinkAccess = true;
+      }
+    }
+    
     // Check if user has purchased the design (for for_sale items)
     let hasPurchased = false;
-    if (project.for_sale && project.price > 0 && userId && !isOwner) {
+    if (project.for_sale && project.price > 0 && userId && !isOwner && !shareLinkAccess) {
       const purchase = await db.get(
         `SELECT id FROM orders 
          WHERE buyer_id = ? AND project_id = ? AND payment_status = 'succeeded'`,
@@ -213,9 +238,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       isFolderMember = !!membership;
     }
     
-    // Grant access if: public, owner, folder member, or purchased
+    // Grant access if: public, owner, folder member, purchased, or share link
     // Note: For 3D preview, we allow viewing even for for_sale items (download is restricted separately)
-    const hasAccess = project.is_public || isOwner || isFolderMember || hasPurchased;
+    const hasAccess = project.is_public || isOwner || isFolderMember || hasPurchased || shareLinkAccess;
+    
+    // If accessed via share link with download blocked, check if this is a direct download request
+    // Allow file access for 3D viewing, but block direct downloads
+    if (shareLinkAccess && shareLinkData && shareLinkData.download_blocked === 1) {
+      // Check if this is a download request (has download query param or Accept header suggests download)
+      const isDownloadRequest = req.query.download === 'true' || 
+                                req.headers['accept']?.includes('application/octet-stream') ||
+                                req.headers['accept']?.includes('application/force-download');
+      
+      if (isDownloadRequest) {
+        return res.status(403).json({ error: 'Downloads are disabled for this share link' });
+      }
+      // Otherwise, allow file access for 3D viewing
+    }
 
     // Debug access decision
     console.log('[api/files] db project:', project ? { id: project.id, user_id: project.user_id, is_public: project.is_public, folder_id: project.folder_id, for_sale: project.for_sale } : null, { userId, isOwner, isFolderMember, hasAccess });
@@ -231,7 +270,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const contentType = getContentType(ext);
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Length', fileSize);
-    res.setHeader('Content-Disposition', `inline; filename="${path.basename(sanitizedFile)}"`);
+    
+    // If downloads are blocked via share link, always use inline (for 3D viewing)
+    // Otherwise, use inline for viewing (3D preview) and attachment would be for downloads
+    const contentDisposition = (shareLinkAccess && shareLinkData && shareLinkData.download_blocked === 1)
+      ? `inline; filename="${path.basename(sanitizedFile)}"`
+      : `inline; filename="${path.basename(sanitizedFile)}"`;
+    res.setHeader('Content-Disposition', contentDisposition);
     
     // CORS headers for Three.js loaders
     res.setHeader('Access-Control-Allow-Origin', '*');

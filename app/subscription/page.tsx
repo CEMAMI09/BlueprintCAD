@@ -12,6 +12,7 @@ import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { Check, X, Crown, Zap, Building2, CreditCard, Calendar } from 'lucide-react';
+import TierBadge from '@/frontend/components/TierBadge';
 
 const TIERS = {
   free: {
@@ -36,8 +37,8 @@ const TIERS = {
       'No team features',
     ],
   },
-  pro: {
-    name: 'Pro',
+  premium: {
+    name: 'Premium',
     price: 10,
     icon: Crown,
     color: DS.colors.primary.blue,
@@ -53,13 +54,13 @@ const TIERS = {
       'Priority support',
     ],
   },
-  creator: {
-    name: 'Creator',
+  pro: {
+    name: 'Pro',
     price: 25,
     icon: Building2,
-    color: '#FFD700',
+    color: '#9333ea', // Purple
     features: [
-      'Everything in Pro',
+      'Everything in Premium',
       '50GB storage',
       'Advanced analytics',
       'Storefront customization',
@@ -68,22 +69,6 @@ const TIERS = {
       'API access',
       'Up to 5 team members',
       'Unlimited folders',
-    ],
-  },
-  enterprise: {
-    name: 'Enterprise',
-    price: 49,
-    icon: Building2,
-    color: '#9B59B6',
-    features: [
-      'Everything in Creator',
-      '200GB+ storage',
-      'White-label options',
-      'Unlimited team members',
-      'Custom platform fee (1%+)',
-      'Priority support',
-      'Advanced API access',
-      'Custom integrations',
     ],
   },
 };
@@ -125,13 +110,23 @@ export default function SubscriptionPage() {
     setUpgrading(tier);
     try {
       const token = localStorage.getItem('token');
+      
+      // Map frontend tier names to backend tier names
+      const tierMapping: Record<string, string> = {
+        'free': 'free',
+        'premium': 'pro',      // Frontend "premium" maps to backend "pro"
+        'pro': 'creator',      // Frontend "pro" maps to backend "creator"
+      };
+      
+      const backendTier = tierMapping[tier] || tier;
+      
       const res = await fetch('/api/subscriptions/upgrade', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ tier })
+        body: JSON.stringify({ tier: backendTier })
       });
 
       if (res.ok) {
@@ -198,8 +193,20 @@ export default function SubscriptionPage() {
     );
   }
 
-  const currentTier = subscription?.tier || 'free';
-  const currentTierInfo = TIERS[currentTier as keyof typeof TIERS];
+  // Map backend tier to frontend tier for display
+  const getFrontendTier = (backendTier: string): string => {
+    const tierMapping: Record<string, string> = {
+      'free': 'free',
+      'pro': 'premium',        // Backend "pro" maps to frontend "premium"
+      'creator': 'pro',        // Backend "creator" maps to frontend "pro"
+      'enterprise': 'pro',     // Backend "enterprise" also maps to frontend "pro"
+    };
+    return tierMapping[backendTier] || 'free';
+  };
+  
+  const backendTier = subscription?.tier || 'free';
+  const frontendTier = getFrontendTier(backendTier);
+  const currentTierInfo = TIERS[frontendTier as keyof typeof TIERS];
 
   return (
     <ThreePanelLayout
@@ -210,7 +217,7 @@ export default function SubscriptionPage() {
           <PanelContent>
             <div className="space-y-6">
               {/* Current Plan */}
-              {currentTier !== 'free' && subscription?.subscription && (
+              {frontendTier !== 'free' && subscription?.subscription && (
                 <Card padding="lg">
                   <div className="flex items-center justify-between mb-4">
                     <div>
@@ -268,11 +275,11 @@ export default function SubscriptionPage() {
               )}
 
               {/* Available Plans */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {Object.entries(TIERS).map(([tierKey, tierInfo]) => {
                   const Icon = tierInfo.icon;
-                  const isCurrent = tierKey === currentTier;
-                  const isUpgrade = ['pro', 'creator', 'enterprise'].indexOf(tierKey) > ['pro', 'creator', 'enterprise'].indexOf(currentTier);
+                  const isCurrent = tierKey === frontendTier;
+                  const isUpgrade = ['premium', 'pro'].indexOf(tierKey) > ['premium', 'pro'].indexOf(frontendTier);
                   
                   return (
                     <Card
@@ -299,9 +306,12 @@ export default function SubscriptionPage() {
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3" style={{ backgroundColor: `${tierInfo.color}20` }}>
                           <Icon size={24} style={{ color: tierInfo.color }} />
                         </div>
-                        <h3 className="text-xl font-bold mb-1" style={{ color: DS.colors.text.primary }}>
-                          {tierInfo.name}
-                        </h3>
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <h3 className="text-xl font-bold" style={{ color: DS.colors.text.primary }}>
+                            {tierInfo.name}
+                          </h3>
+                          {tierKey !== 'free' && <TierBadge tier={tierKey} size="sm" />}
+                        </div>
                         <div className="mb-4">
                           <span className="text-3xl font-bold" style={{ color: DS.colors.text.primary }}>
                             ${tierInfo.price}

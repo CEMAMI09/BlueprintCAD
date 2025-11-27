@@ -4,17 +4,21 @@ import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 
 // Lazy load CADViewer for performance
-const CADViewer = dynamic(() => import('./CADViewer'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block w-8 h-8 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin mb-3"></div>
-        <p className="text-gray-400 text-sm">Loading 3D Viewer...</p>
+// Using relative path to avoid chunk loading issues
+const CADViewer = dynamic(
+  () => import('./CADViewer'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-8 h-8 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin mb-3"></div>
+          <p className="text-gray-400 text-sm">Loading 3D Viewer...</p>
+        </div>
       </div>
-    </div>
-  ),
-});
+    ),
+  }
+);
 
 type ThreeDViewerProps = {
   /** URL to the CAD file (required) */

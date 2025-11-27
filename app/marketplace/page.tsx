@@ -19,6 +19,7 @@ import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UICo
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import SubscriptionGate from '@/frontend/components/SubscriptionGate';
 import UpgradeModal from '@/frontend/components/UpgradeModal';
+import TierBadge from '@/frontend/components/TierBadge';
 import {
   DollarSign,
   Star,
@@ -111,6 +112,7 @@ export default function MarketplacePage() {
               avatar: p.profile_picture || '',
               verified: !!p.seller_verified,
               rating: p.seller_rating || 0,
+              subscription_tier: p.subscription_tier || null,
             },
             category: p.category || 'Other',
             tags: p.tags ? p.tags.split(',') : [],
@@ -472,6 +474,7 @@ export default function MarketplacePage() {
                                 <span className="text-xs" style={{ color: DS.colors.text.secondary }}>
                                   @{listing.seller.username}
                                 </span>
+                                <TierBadge tier={listing.seller.subscription_tier} size="sm" />
                               </div>
                               <div className="flex items-center gap-3 text-sm" style={{ color: DS.colors.text.secondary }}>
                                 <span className="flex items-center gap-1">

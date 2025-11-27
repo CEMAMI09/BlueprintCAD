@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       }
       
       let query = `
-        SELECT p.*, u.username, u.profile_private, u.profile_picture
+        SELECT p.*, u.username, u.profile_private, u.profile_picture, u.subscription_tier
         FROM projects p 
         JOIN users u ON p.user_id = u.id 
         WHERE 1=1

@@ -7,6 +7,7 @@ interface Comment {
   user_id: number;
   username: string;
   avatar?: string;
+  subscription_tier?: string | null;
   parent_id?: number;
   created_at: string;
   updated_at: string;
@@ -339,6 +340,7 @@ export default function CommentSystem({
             {/* Header */}
             <div className="flex items-center gap-2 mb-1">
               <span className="font-medium text-sm">{comment.username}</span>
+              <TierBadge tier={comment.subscription_tier} size="sm" />
               <span className="text-xs text-gray-500">
                 {new Date(comment.created_at).toLocaleDateString()} {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
