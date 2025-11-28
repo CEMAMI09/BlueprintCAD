@@ -28,17 +28,26 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Database connection failed' });
     }
     
-    // Get project
+    // Get project with master branch file_path if it exists
     const project = await db.get(
-      `SELECT p.*, u.username 
+      `SELECT 
+        p.*, 
+        u.username,
+        COALESCE(fb.file_path, p.file_path) as display_file_path
        FROM projects p 
        JOIN users u ON p.user_id = u.id 
+       LEFT JOIN file_branches fb ON p.id = fb.project_id AND fb.is_master = 1
        WHERE p.id = ?`,
       [id]
     );
 
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Use master branch file_path if available
+    if (project.display_file_path) {
+      project.file_path = project.display_file_path;
     }
 
     // Check if project is public or user has access
@@ -103,18 +112,24 @@ export default async function handler(req, res) {
       isFolderMember = !!membership;
     }
     
-    // Grant access if: public, owner, or folder member
-    const hasAccess = project.is_public || isOwner || isFolderMember;
+    // Grant access if: public, owner, folder member, or share link
+    const hasAccess = project.is_public || isOwner || isFolderMember || shareLinkAccess;
     
     if (!hasAccess) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Get file path
-    const filePath = path.join(process.cwd(), 'storage', 'uploads', project.file_path);
+    // Get file path - check both uploads and branches directories
+    let filePath = path.join(process.cwd(), 'storage', 'uploads', project.file_path);
     
+    // If file doesn't exist in uploads, check branches directory
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found' });
+      const branchPath = path.join(process.cwd(), 'storage', 'branches', project.file_path);
+      if (fs.existsSync(branchPath)) {
+        filePath = branchPath;
+      } else {
+        return res.status(404).json({ error: 'File not found' });
+      }
     }
 
     // Increment download count in projects table

@@ -104,18 +104,38 @@ export default function ShareLinkViewer() {
     }
 
     try {
-      // Include share token in the request
-      const url = `/api/files/${encodeURIComponent(shareData.entity.file_path)}?share_token=${token}`;
+      // Use the project download endpoint which handles share tokens and sets proper download headers
+      const projectId = shareData.entity.id;
+      const url = `/api/projects/${projectId}/download?share_token=${token}`;
       const res = await fetch(url);
+      
       if (res.ok) {
+        // Get the filename from Content-Disposition header or use the project title
+        const contentDisposition = res.headers.get('Content-Disposition');
+        let filename = shareData.entity.title || 'file';
+        
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/);
+          if (filenameMatch) {
+            filename = filenameMatch[1];
+          }
+        }
+        
+        // Ensure filename has the correct extension
+        const filePath = shareData.entity.file_path || '';
+        const fileExtension = shareData.entity.file_type || (filePath.includes('.') ? filePath.split('.').pop() : '');
+        if (fileExtension && !filename.toLowerCase().endsWith(`.${fileExtension.toLowerCase()}`)) {
+          filename = `${filename}${fileExtension.startsWith('.') ? '' : '.'}${fileExtension}`;
+        }
+        
         const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
+        const blobUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = shareData.entity.title || 'file';
+        a.href = blobUrl;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
+        window.URL.revokeObjectURL(blobUrl);
         document.body.removeChild(a);
       } else {
         const errorData = await res.json();

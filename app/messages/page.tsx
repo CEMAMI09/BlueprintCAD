@@ -34,7 +34,10 @@ import {
   Paperclip,
   Smile,
   MessageCircle,
+  Hash,
+  Plus,
 } from 'lucide-react';
+import CreateChannelModal from '@/frontend/components/CreateChannelModal';
 
 interface Conversation {
   id: string;
@@ -79,72 +82,179 @@ export default function MessagesPage() {
   const [mutualFolders] = useState<any[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
+  const [activeTab, setActiveTab] = useState<'messages' | 'channels'>(
+    searchParams.get('tab') === 'channels' ? 'channels' : 'messages'
+  );
+  const [channels, setChannels] = useState<any[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
-    fetchConversations();
-    fetchFollowedUsers();
+    // Check for tab query parameter
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'channels' && activeTab !== 'channels') {
+      setActiveTab('channels');
+    } else if (tabParam !== 'channels' && activeTab !== 'messages') {
+      setActiveTab('messages');
+    }
   }, [searchParams]);
 
-  const fetchConversations = async (withUser?: string | null) => {
+  useEffect(() => {
+    if (activeTab === 'messages') {
+      fetchConversations().catch(err => {
+        console.error('Error in fetchConversations:', err);
+        setLoading(false);
+      });
+      fetchFollowedUsers().catch(err => {
+        console.error('Error in fetchFollowedUsers:', err);
+      });
+    } else {
+      fetchChannels().catch(err => {
+        console.error('Error in fetchChannels:', err);
+      });
+    }
+  }, [activeTab]);
+
+  const fetchChannels = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/messages', {
+      const res = await fetch('/api/channels', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       if (res.ok) {
         const data = await res.json();
-        const convs = data.map((c: any) => ({
-          id: c.id?.toString() || `${c.other_user_id}`,
-          user: {
-            username: c.other_username,
-            avatar: '',
-            profile_picture: c.other_profile_picture || null,
-            status: 'offline' as const,
-          },
-          lastMessage: c.content || '',
-          timestamp: c.created_at || '',
-          unread: c.unread_count || 0,
-        }));
-        setConversations(convs);
-        
-        // Check if there's a ?with=username parameter after loading conversations
-        const targetUser = searchParams.get('with');
-        if (targetUser) {
-          const existingConv = convs.find((c: Conversation) => c.user.username === targetUser);
-          if (existingConv) {
-            setSelectedConversation(existingConv);
-            fetchMessages(targetUser);
-          } else {
-            // Create a new conversation entry
-            // Fetch user profile to get profile picture
-            const userRes = await fetch(`/api/users/${targetUser}`, {
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              }
-            });
-            let profilePicture = null;
-            if (userRes.ok) {
-              const userData = await userRes.json();
-              profilePicture = userData.profile_picture || null;
+        setChannels(data);
+      }
+    } catch (error) {
+      console.error('Error fetching channels:', error);
+    }
+  };
+
+  const handleCreateChannel = async (name: string, description: string, memberIds: number[]) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/channels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          is_private: false,
+          member_ids: memberIds
+        })
+      });
+
+      if (res.ok) {
+        const channel = await res.json();
+        router.push(`/channels/${channel.id}`);
+        setShowCreateModal(false);
+        fetchChannels();
+      }
+    } catch (error) {
+      console.error('Error creating channel:', error);
+    }
+  };
+
+  const formatChannelTimestamp = (timestamp: string | null) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) {
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    } else if (days === 1) {
+      return 'Yesterday';
+    } else if (days < 7) {
+      return `${days}d ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  };
+
+  const fetchConversations = async (withUser?: string | null) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        setConversations([]);
+        return;
+      }
+      
+      const res = await fetch('/api/messages', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (res.status === 404) {
+        console.error('Messages endpoint not found (404)');
+        setConversations([]);
+        return;
+      }
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Failed to fetch conversations' }));
+        console.error('Error fetching conversations:', res.status, errorData);
+        setConversations([]);
+        return;
+      }
+      
+      const data = await res.json();
+      const convs = data.map((c: any) => ({
+        id: c.id?.toString() || `${c.other_user_id}`,
+        user: {
+          username: c.other_username,
+          avatar: '',
+          profile_picture: c.other_profile_picture || null,
+          status: 'offline' as const,
+        },
+        lastMessage: c.content || '',
+        timestamp: c.created_at || '',
+        unread: c.unread_count || 0,
+      }));
+      setConversations(convs);
+      
+      // Check if there's a ?with=username parameter after loading conversations
+      const targetUser = searchParams.get('with');
+      if (targetUser) {
+        const existingConv = convs.find((c: Conversation) => c.user.username === targetUser);
+        if (existingConv) {
+          setSelectedConversation(existingConv);
+          fetchMessages(targetUser);
+        } else {
+          // Create a new conversation entry
+          // Fetch user profile to get profile picture
+          const userRes = await fetch(`/api/users/${targetUser}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
-            
-            const newConv: Conversation = {
-              id: `new-${targetUser}`,
-              user: {
-                username: targetUser,
-                avatar: '',
-                profile_picture: profilePicture,
-                status: 'offline',
-              },
-              lastMessage: '',
-              timestamp: '',
-              unread: 0,
-            };
-            setSelectedConversation(newConv);
-            fetchMessages(targetUser);
+          });
+          let profilePicture = null;
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            profilePicture = userData.profile_picture || null;
           }
+          
+          const newConv: Conversation = {
+            id: `new-${targetUser}`,
+            user: {
+              username: targetUser,
+              avatar: '',
+              profile_picture: profilePicture,
+              status: 'offline',
+            },
+            lastMessage: '',
+            timestamp: '',
+            unread: 0,
+          };
+          setSelectedConversation(newConv);
+          fetchMessages(targetUser);
         }
       }
     } catch (error) {
@@ -157,42 +267,79 @@ export default function MessagesPage() {
   const fetchFollowedUsers = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setFollowedUsers([]);
+        return;
+      }
+      
       const res = await fetch('/api/users/following-list', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setFollowedUsers(data || []);
+      
+      if (res.status === 404) {
+        console.error('Following list endpoint not found (404)');
+        setFollowedUsers([]);
+        return;
       }
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Failed to fetch followed users' }));
+        console.error('Error fetching followed users:', res.status, errorData);
+        setFollowedUsers([]);
+        return;
+      }
+      
+      const data = await res.json();
+      setFollowedUsers(data || []);
     } catch (error) {
       console.error('Error fetching followed users:', error);
+      setFollowedUsers([]);
     }
   };
 
   const fetchMessages = async (username: string) => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        setMessages([]);
+        return;
+      }
+      
       const res = await fetch(`/api/messages/${username}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      if (res.ok) {
-        const data = await res.json();
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        const msgs = data.map((m: any) => ({
-          id: m.id.toString(),
-          sender: m.sender_username,
-          content: m.content,
-          timestamp: new Date(m.created_at).toLocaleTimeString(),
-          isOwn: m.sender_username === currentUser.username,
-        }));
-        setMessages(msgs);
+      
+      if (res.status === 404) {
+        console.error('Messages endpoint not found (404)');
+        setMessages([]);
+        return;
       }
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Failed to fetch messages' }));
+        console.error('Error fetching messages:', res.status, errorData);
+        setMessages([]);
+        return;
+      }
+      
+      const data = await res.json();
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const msgs = data.map((m: any) => ({
+        id: m.id.toString(),
+        sender: m.sender_username,
+        content: m.content,
+        timestamp: new Date(m.created_at).toLocaleTimeString(),
+        isOwn: m.sender_username === currentUser.username,
+      }));
+      setMessages(msgs);
     } catch (error) {
       console.error('Error fetching messages:', error);
+      setMessages([]);
     }
   };
 
@@ -241,11 +388,16 @@ export default function MessagesPage() {
       });
 
       if (res.ok) {
+        const result = await res.json();
         setMessageInput('');
         // Refresh messages
         fetchMessages(selectedConversation.user.username);
         // Refresh conversations
         fetchConversations();
+      } else {
+        const errorData = await res.json().catch(() => ({ error: 'Failed to send message' }));
+        console.error('Failed to send message:', errorData);
+        alert(errorData.error || 'Failed to send message');
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -263,12 +415,51 @@ export default function MessagesPage() {
     !conversations.some(conv => conv.user.username === user.username)
   );
 
+  const filteredChannels = channels.filter((channel: any) =>
+    channel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (channel.description && channel.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   return (
+    <>
     <ThreePanelLayout
       leftPanel={<GlobalNavSidebar />}
       centerPanel={
         <CenterPanel>
+          {/* Tabs */}
+          <div className="flex border-b" style={{ borderColor: DS.colors.border.default }}>
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`flex-1 px-6 py-3 font-medium transition ${
+                activeTab === 'messages'
+                  ? 'border-b-2'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                borderBottomColor: activeTab === 'messages' ? DS.colors.primary.blue : 'transparent',
+                color: DS.colors.text.primary,
+              }}
+            >
+              Messages
+            </button>
+            <button
+              onClick={() => setActiveTab('channels')}
+              className={`flex-1 px-6 py-3 font-medium transition ${
+                activeTab === 'channels'
+                  ? 'border-b-2'
+                  : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{
+                borderBottomColor: activeTab === 'channels' ? DS.colors.primary.blue : 'transparent',
+                color: DS.colors.text.primary,
+              }}
+            >
+              Channels
+            </button>
+          </div>
+
           <PanelContent>
+            {activeTab === 'messages' ? (
             <div className="flex h-full">
               {/* Thread List - LEFT SIDE INSIDE CENTER PANEL */}
               <div className="w-80 flex-shrink-0 flex flex-col border-r" style={{ borderColor: DS.colors.border.default }}>
@@ -548,6 +739,101 @@ export default function MessagesPage() {
                 )}
               </div>
             </div>
+            ) : (
+              // Channels Tab
+              <div className="flex flex-col h-full">
+                <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: DS.colors.border.default }}>
+                  <h2 className="font-semibold" style={{ color: DS.colors.text.primary }}>Channels</h2>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={<Plus size={16} />}
+                    onClick={() => setShowCreateModal(true)}
+                  >
+                    New Channel
+                  </Button>
+                </div>
+                <div className="p-4 border-b" style={{ borderColor: DS.colors.border.default }}>
+                  <div className="relative">
+                    <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: DS.colors.text.tertiary }} />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search channels..."
+                      className="w-full pl-10 pr-4 py-2 rounded-lg border"
+                      style={{
+                        backgroundColor: DS.colors.background.card,
+                        borderColor: DS.colors.border.default,
+                        color: DS.colors.text.primary,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  {filteredChannels.length > 0 ? (
+                    <div className="divide-y" style={{ borderColor: DS.colors.border.default }}>
+                      {filteredChannels.map((channel: any) => (
+                        <button
+                          key={channel.id}
+                          onClick={() => router.push(`/channels/${channel.id}`)}
+                          className="w-full p-4 hover:bg-gray-800 transition text-left"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{ backgroundColor: DS.colors.background.panelHover }}
+                            >
+                              {channel.avatar_url ? (
+                                <img
+                                  src={channel.avatar_url}
+                                  alt={channel.name}
+                                  className="w-full h-full rounded-lg object-cover"
+                                />
+                              ) : (
+                                <Hash size={24} style={{ color: DS.colors.text.secondary }} />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <h3 className="font-semibold truncate" style={{ color: DS.colors.text.primary }}>
+                                  {channel.name}
+                                </h3>
+                                {channel.unread_count > 0 && (
+                                  <Badge variant="primary" size="sm">{channel.unread_count}</Badge>
+                                )}
+                              </div>
+                              {channel.last_message && (
+                                <p className="text-sm truncate mb-1" style={{ color: DS.colors.text.secondary }}>
+                                  {channel.last_message}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-3 text-xs" style={{ color: DS.colors.text.tertiary }}>
+                                <span className="flex items-center gap-1">
+                                  <Users size={12} />
+                                  {channel.member_count}
+                                </span>
+                                {channel.last_message_at && (
+                                  <span>{formatChannelTimestamp(channel.last_message_at)}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center">
+                      <EmptyState
+                        icon={<Hash size={48} />}
+                        title={searchQuery ? "No channels found" : "No channels yet"}
+                        description={searchQuery ? "Try a different search term" : "Create a channel to get started"}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </PanelContent>
         </CenterPanel>
       }
@@ -661,5 +947,13 @@ export default function MessagesPage() {
         ) : null
       }
     />
+    {showCreateModal && (
+      <CreateChannelModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreate={handleCreateChannel}
+      />
+    )}
+    </>
   );
 }

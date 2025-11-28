@@ -26,6 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Hash,
 } from 'lucide-react';
 
 interface NavItem {
@@ -57,6 +58,7 @@ export function GlobalNavSidebar() {
   const [username, setUsername] = useState<string | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadChannels, setUnreadChannels] = useState(0);
 
   useEffect(() => {
     const checkUser = () => {
@@ -88,6 +90,7 @@ export function GlobalNavSidebar() {
     if (!username) {
       setUnreadNotifications(0);
       setUnreadMessages(0);
+      setUnreadChannels(0);
       return;
     }
 
@@ -107,7 +110,7 @@ export function GlobalNavSidebar() {
           setUnreadNotifications(count);
         }
 
-        // Fetch unread messages
+        // Fetch unread messages (direct messages)
         const messagesRes = await fetch('/api/messages/unread', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -117,6 +120,24 @@ export function GlobalNavSidebar() {
           console.log('[GlobalNavSidebar] Unread messages:', count);
           setUnreadMessages(count);
         }
+
+        // Fetch unread channel messages with cache busting
+        const channelsRes = await fetch(`/api/channels?t=${Date.now()}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+          cache: 'no-store' // Ensure we get fresh data
+        });
+        if (channelsRes.ok) {
+          const channelsData = await channelsRes.json();
+          const totalUnreadChannels = channelsData.reduce((sum: number, channel: any) => {
+            const unread = channel.unread_count || 0;
+            console.log(`[GlobalNavSidebar] Channel ${channel.id} (${channel.name}): unread_count=${unread}, last_read_at=${channel.last_read_at}`);
+            return sum + unread;
+          }, 0);
+          console.log('[GlobalNavSidebar] Unread channels:', totalUnreadChannels, 'from', channelsData.length, 'channels');
+          setUnreadChannels(totalUnreadChannels);
+        } else {
+          console.error('[GlobalNavSidebar] Failed to fetch channels:', channelsRes.status);
+        }
       } catch (error) {
         console.error('Error fetching unread counts:', error);
       }
@@ -125,7 +146,18 @@ export function GlobalNavSidebar() {
     fetchUnreadCounts();
     // Refresh every 30 seconds
     const interval = setInterval(fetchUnreadCounts, 30000);
-    return () => clearInterval(interval);
+    
+    // Listen for refresh events
+    const handleRefresh = () => {
+      console.log('[GlobalNavSidebar] Refresh event received, fetching unread counts...');
+      fetchUnreadCounts();
+    };
+    window.addEventListener('refreshUnreadCounts', handleRefresh);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('refreshUnreadCounts', handleRefresh);
+    };
   }, [username]);
 
   const handleLogout = () => {
@@ -143,8 +175,9 @@ export function GlobalNavSidebar() {
     }
     // Show badge on Messages and Notifications tabs
     if (item.id === 'messages') {
-      const badge = unreadMessages > 0 ? (unreadMessages > 9 ? '9+' : unreadMessages) : undefined;
-      console.log('[GlobalNavSidebar] Messages badge:', badge, 'unreadMessages:', unreadMessages);
+      const totalUnread = unreadMessages + unreadChannels;
+      const badge = totalUnread > 0 ? (totalUnread > 9 ? '9+' : totalUnread) : undefined;
+      console.log('[GlobalNavSidebar] Messages badge:', badge, 'unreadMessages:', unreadMessages, 'unreadChannels:', unreadChannels);
       return { ...item, badge };
     }
     if (item.id === 'notifications') {

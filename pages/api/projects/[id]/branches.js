@@ -59,6 +59,18 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
+      // Check if user has access to view branches
+      const { hasFeature } = require('../../../../backend/lib/subscription-utils');
+      const canViewBranches = await hasFeature(userId, 'canCreateBranches');
+      
+      if (!canViewBranches) {
+        return res.status(403).json({
+          error: 'Branches are not available on the Base plan. Please upgrade to Premium to use branches.',
+          reason: 'feature_not_available',
+          requiredTier: 'pro' // Premium tier
+        });
+      }
+
       const branches = await db.all(
         `SELECT 
           fb.*,
@@ -78,6 +90,17 @@ export default async function handler(req, res) {
   } else if (req.method === 'POST') {
     // Create new branch
     try {
+      // Check if user has access to create branches
+      const { hasFeature } = require('../../../../backend/lib/subscription-utils');
+      const canCreateBranches = await hasFeature(userId, 'canCreateBranches');
+      
+      if (!canCreateBranches) {
+        return res.status(403).json({
+          error: 'Branches are not available on the Base plan. Please upgrade to Premium to create branches.',
+          reason: 'feature_not_available',
+          requiredTier: 'pro' // Premium tier
+        });
+      }
       // Ensure upload directory exists
       const uploadDir = path.join(process.cwd(), 'storage', 'branches');
       if (!fs.existsSync(uploadDir)) {

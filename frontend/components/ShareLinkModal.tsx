@@ -33,6 +33,8 @@ export default function ShareLinkModal({
   const [linkType, setLinkType] = useState<'public' | 'password' | 'expiring'>('public');
   const [password, setPassword] = useState('');
   const [expiresInDays, setExpiresInDays] = useState(7);
+  const [expiresInHours, setExpiresInHours] = useState(24);
+  const [expirationUnit, setExpirationUnit] = useState<'hours' | 'days' | 'weeks' | 'months'>('days');
   const [downloadBlocked, setDownloadBlocked] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
@@ -65,7 +67,19 @@ export default function ShareLinkModal({
           entity_id: entityId,
           link_type: linkType,
           password: linkType === 'password' ? password : undefined,
-          expires_in_days: linkType === 'expiring' ? expiresInDays : undefined,
+          expires_in_days: linkType === 'expiring' ? (() => {
+            // Convert to days based on unit
+            if (expirationUnit === 'hours') {
+              return Math.ceil(expiresInHours / 24);
+            } else if (expirationUnit === 'days') {
+              return expiresInDays;
+            } else if (expirationUnit === 'weeks') {
+              return expiresInDays * 7;
+            } else if (expirationUnit === 'months') {
+              return expiresInDays * 30;
+            }
+            return expiresInDays;
+          })() : undefined,
           view_only: true, // All share links are view-only
           download_blocked: downloadBlocked
         })
@@ -103,6 +117,8 @@ export default function ShareLinkModal({
     setLinkType('public');
     setPassword('');
     setExpiresInDays(7);
+    setExpiresInHours(24);
+    setExpirationUnit('days');
     setDownloadBlocked(false);
     setError('');
     setCopied(false);
@@ -241,21 +257,41 @@ export default function ShareLinkModal({
               </div>
             )}
 
-            {/* Expiration Days */}
+            {/* Expiration Time */}
             {linkType === 'expiring' && (
-              <div>
+              <div className="space-y-3">
                 <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
-                  Expires In (days)
+                  Expires In
                 </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="365"
-                  value={expiresInDays}
-                  onChange={(e) => setExpiresInDays(parseInt(e.target.value) || 7)}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
-                  style={{ color: DS.colors.text.primary }}
-                />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min="1"
+                    max={expirationUnit === 'hours' ? 168 : expirationUnit === 'days' ? 365 : expirationUnit === 'weeks' ? 52 : 12}
+                    value={expirationUnit === 'hours' ? expiresInHours : expiresInDays}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 1;
+                      if (expirationUnit === 'hours') {
+                        setExpiresInHours(value);
+                      } else {
+                        setExpiresInDays(value);
+                      }
+                    }}
+                    className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
+                    style={{ color: DS.colors.text.primary }}
+                  />
+                  <select
+                    value={expirationUnit}
+                    onChange={(e) => setExpirationUnit(e.target.value as 'hours' | 'days' | 'weeks' | 'months')}
+                    className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-blue-500 focus:outline-none"
+                    style={{ color: DS.colors.text.primary }}
+                  >
+                    <option value="hours">Hours</option>
+                    <option value="days">Days</option>
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                  </select>
+                </div>
               </div>
             )}
 

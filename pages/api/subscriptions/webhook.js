@@ -1,7 +1,7 @@
 // Stripe webhook handler for subscription events
 import { getDb } from '../../../db/db';
 import Stripe from 'stripe';
-import { TIER_FEATURES } from '../../../backend/lib/subscription-utils';
+import { TIER_FEATURES, getStorageLimitForTier } from '../../../backend/lib/subscription-utils';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
   apiVersion: '2023-10-16',
@@ -144,9 +144,9 @@ export default async function handler(req, res) {
              SET subscription_tier = 'free',
                  subscription_status = 'inactive',
                  subscription_ends_at = CURRENT_TIMESTAMP,
-                 storage_limit_gb = 1
+                 storage_limit_gb = ?
              WHERE id = ?`,
-            [dbSubscription.user_id]
+            [getStorageLimitForTier('free'), dbSubscription.user_id]
           );
 
           await db.run(
@@ -216,11 +216,4 @@ export default async function handler(req, res) {
   }
 }
 
-function getStorageLimitForTier(tier) {
-  const tierConfig = TIER_FEATURES[tier];
-  if (tierConfig && tierConfig.features.storageGB) {
-    return tierConfig.features.storageGB;
-  }
-  return 1; // Default to 1GB
-}
 

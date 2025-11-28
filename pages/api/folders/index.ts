@@ -69,7 +69,7 @@ export default async function handler(
     const userId = (user as any).userId;
 
     try {
-      const { name, description, parent_id, is_team_folder, color } = req.body;
+      const { name, description, parent_id, is_team_folder, color, is_public } = req.body;
 
       if (!name || !name.trim()) {
         return res.status(400).json({ error: 'Folder name is required' });
@@ -78,7 +78,7 @@ export default async function handler(
       const db = await getDb();
 
       // --- Subscription Check: Max Folders ---
-      const { canPerformAction } = require('../../../backend/lib/subscription-utils');
+      const { canPerformAction, hasFeature } = require('../../../backend/lib/subscription-utils');
       const folderCheck = await canPerformAction(userId, 'maxFolders');
       if (!folderCheck.allowed) {
         return res.status(403).json({
@@ -90,11 +90,48 @@ export default async function handler(
         });
       }
 
+      // --- Subscription Check: Private Folders ---
+      if (is_public === false || (is_public === undefined && is_team_folder)) {
+        const canCreatePrivate = await hasFeature(userId, 'canCreatePrivateFolders');
+        if (!canCreatePrivate) {
+          return res.status(403).json({
+            error: 'Private folders are not available on the Base plan. Please upgrade to Premium to create private folders.',
+            reason: 'feature_not_available',
+            requiredTier: 'pro' // Premium tier
+          });
+        }
+      }
+
+      // --- Subscription Check: Team Folders ---
+      if (is_team_folder) {
+        const canCreateTeam = await hasFeature(userId, 'canCreateTeamFolders');
+        if (!canCreateTeam) {
+          return res.status(403).json({
+            error: 'Team folders are not available on the Base plan. Please upgrade to Premium to create team folders.',
+            reason: 'feature_not_available',
+            requiredTier: 'pro' // Premium tier
+          });
+        }
+      }
+
+      // --- Subscription Check: Nested Folders ---
+      if (parent_id) {
+        const canCreateNested = await hasFeature(userId, 'canCreateNestedFolders');
+        if (!canCreateNested) {
+          return res.status(403).json({
+            error: 'Nested folders are not available on the Base plan. Please upgrade to Premium to create nested folders.',
+            reason: 'feature_not_available',
+            requiredTier: 'pro' // Premium tier
+          });
+        }
+      }
+
       // Create folder
+      const folderIsPublic = is_public !== false; // Default to public if not specified
       const result = await db.run(
-        `INSERT INTO folders (name, description, owner_id, parent_id, is_team_folder, color)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [name, description || null, userId, parent_id || null, is_team_folder ? 1 : 0, color || '#3b82f6']
+        `INSERT INTO folders (name, description, owner_id, parent_id, is_team_folder, is_public, color)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [name, description || null, userId, parent_id || null, is_team_folder ? 1 : 0, folderIsPublic ? 1 : 0, color || '#3b82f6']
       );
 
       // If team folder, add owner as member

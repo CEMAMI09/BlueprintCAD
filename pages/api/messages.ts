@@ -17,44 +17,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const db = await getDb();
       
       // Get unique conversations with last message
-      const conversations = await db.all(`
-        SELECT 
-          m.*,
-          CASE 
+      // Handle case where user has no messages
+      let conversations: any[] = [];
+      try {
+        conversations = await db.all(`
+          SELECT 
+            m.*,
+            CASE 
+              WHEN m.sender_id = ? THEN m.receiver_id
+              ELSE m.sender_id
+            END as other_user_id,
+            u.username as other_username,
+            u.profile_picture as other_profile_picture
+          FROM messages m
+          INNER JOIN (
+            SELECT 
+              CASE 
+                WHEN sender_id = ? THEN receiver_id
+                ELSE sender_id
+              END as other_user,
+              MAX(created_at) as last_message_time
+            FROM messages
+            WHERE sender_id = ? OR receiver_id = ?
+            GROUP BY other_user
+          ) latest ON (
+            (m.sender_id = ? AND m.receiver_id = latest.other_user) OR
+            (m.receiver_id = ? AND m.sender_id = latest.other_user)
+          ) AND m.created_at = latest.last_message_time
+          INNER JOIN users u ON u.id = CASE 
             WHEN m.sender_id = ? THEN m.receiver_id
             ELSE m.sender_id
-          END as other_user_id,
-          u.username as other_username,
-          u.profile_picture as other_profile_picture
-        FROM messages m
-        INNER JOIN (
-          SELECT 
-            CASE 
-              WHEN sender_id = ? THEN receiver_id
-              ELSE sender_id
-            END as other_user,
-            MAX(created_at) as last_message_time
-          FROM messages
-          WHERE sender_id = ? OR receiver_id = ?
-          GROUP BY other_user
-        ) latest ON (
-          (m.sender_id = ? AND m.receiver_id = latest.other_user) OR
-          (m.receiver_id = ? AND m.sender_id = latest.other_user)
-        ) AND m.created_at = latest.last_message_time
-        INNER JOIN users u ON u.id = CASE 
-          WHEN m.sender_id = ? THEN m.receiver_id
-          ELSE m.sender_id
-        END
-        ORDER BY m.created_at DESC
-      `, [userId, userId, userId, userId, userId, userId, userId]);
+          END
+          ORDER BY m.created_at DESC
+        `, [userId, userId, userId, userId, userId, userId, userId]);
+      } catch (err) {
+        // If no messages exist, return empty array
+        console.log('No conversations found or error:', err);
+        conversations = [];
+      }
 
       // Get unread counts
-      const unreadCounts = await db.all(`
-        SELECT sender_id, COUNT(*) as count
-        FROM messages
-        WHERE receiver_id = ? AND read = 0
-        GROUP BY sender_id
-      `, [userId]);
+      let unreadCounts: any[] = [];
+      try {
+        unreadCounts = await db.all(`
+          SELECT sender_id, COUNT(*) as count
+          FROM messages
+          WHERE receiver_id = ? AND read = 0
+          GROUP BY sender_id
+        `, [userId]);
+      } catch (err) {
+        console.log('No unread messages or error:', err);
+        unreadCounts = [];
+      }
 
       const unreadMap: { [key: number]: number } = {};
       unreadCounts.forEach((row: any) => {

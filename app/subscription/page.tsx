@@ -11,30 +11,37 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import { Check, X, Crown, Zap, Building2, CreditCard, Calendar } from 'lucide-react';
+import { Check, X, Zap, Crown, Building2, CreditCard, Calendar } from 'lucide-react';
 import TierBadge from '@/frontend/components/TierBadge';
 
 const TIERS = {
   free: {
-    name: 'Free',
+    name: 'Base',
     price: 0,
     icon: Zap,
     color: DS.colors.text.secondary,
     features: [
-      '5 public projects',
-      '1GB storage',
-      'Basic profile',
-      'View forums',
-      '5 active conversations',
-      'Basic search',
+      '3GB total storage',
+      '250MB max file upload',
+      'Unlimited public uploads',
+      'Unlimited downloads',
+      'Unlimited comments & stars',
+      'Full messaging system',
+      'Unlimited paid uploads (15% commission)',
+      'Basic analytics (total sales, downloads)',
+      '5 folders max (public only)',
+      'Max 10 files per folder',
+      '5 AI quotes/day (PLA only)',
+      'Public link sharing',
     ],
     limitations: [
-      'No private projects',
-      'No selling designs',
-      'No posting in forums',
-      'No saving quotes',
-      'Limited folders (3)',
-      'No team features',
+      'No private uploads',
+      'No private folders',
+      'No team folders',
+      'No collaborators',
+      'No branching',
+      'No activity logs',
+      'No printability analysis',
     ],
   },
   premium: {
@@ -43,15 +50,26 @@ const TIERS = {
     icon: Crown,
     color: DS.colors.primary.blue,
     features: [
-      'Unlimited projects (public + private)',
-      '10GB storage',
-      'Sell designs (5% platform fee)',
-      'Post in forums',
-      'Save quote calculations',
-      'Up to 10 folders',
-      'Up to 2 team members',
-      'Basic analytics',
-      'Priority support',
+      '50GB total storage',
+      '2GB max file upload',
+      'Unlimited private & public uploads',
+      'Unlimited folders (nested trees)',
+      'Unlimited files per folder',
+      'Up to 10 collaborators per folder',
+      'Full versioning (branches, notes, metadata)',
+      'Activity logs & change logs',
+      '5% commission fee',
+      'Advanced analytics page',
+      '50 AI quotes/day',
+      'PLA, PETG, ABS, TPU materials',
+      'Printability analysis',
+      'Support material estimate',
+      'Weight/time calculation',
+      'Password-protected links',
+      'Expiring links',
+      'View-only & download-blocked links',
+      'Verified creator badge',
+      'Pin designs',
     ],
   },
   pro: {
@@ -61,14 +79,26 @@ const TIERS = {
     color: '#9333ea', // Purple
     features: [
       'Everything in Premium',
-      '50GB storage',
-      'Advanced analytics',
-      'Storefront customization',
-      'Lower platform fee (3%)',
-      'File versioning',
-      'API access',
-      'Up to 5 team members',
-      'Unlimited folders',
+      '500GB total storage',
+      '5GB max file upload',
+      'Unlimited collaborators',
+      '0% commission fee',
+      'Priority search ranking',
+      'Seller storefront customization',
+      'Featured creator slot rotation',
+      'Tax documents handled (auto 1099)',
+      'GitHub-style CAD versioning',
+      'Branch permissions & previews',
+      'Unlimited AI quotes',
+      'All materials supported',
+      'Auto-quote generation',
+      'AI suggested price',
+      'AI repair of broken STL',
+      'AI model classification',
+      'Custom CSS/theming',
+      'External integrations',
+      'Multiple payout methods',
+      'Full link analytics',
     ],
   },
 };
@@ -215,7 +245,7 @@ export default function SubscriptionPage() {
         <CenterPanel>
           <PanelHeader title="Subscription Plans" />
           <PanelContent>
-            <div className="space-y-6">
+            <div className="space-y-6 px-6 py-6">
               {/* Current Plan */}
               {frontendTier !== 'free' && subscription?.subscription && (
                 <Card padding="lg">
@@ -279,7 +309,10 @@ export default function SubscriptionPage() {
                 {Object.entries(TIERS).map(([tierKey, tierInfo]) => {
                   const Icon = tierInfo.icon;
                   const isCurrent = tierKey === frontendTier;
-                  const isUpgrade = ['premium', 'pro'].indexOf(tierKey) > ['premium', 'pro'].indexOf(frontendTier);
+                  const tierOrder = ['free', 'premium', 'pro'];
+                  const currentTierIndex = tierOrder.indexOf(frontendTier);
+                  const thisTierIndex = tierOrder.indexOf(tierKey);
+                  const isUpgrade = thisTierIndex > currentTierIndex;
                   
                   return (
                     <Card
@@ -324,7 +357,7 @@ export default function SubscriptionPage() {
                         </div>
                       </div>
 
-                      <ul className="space-y-2 mb-6">
+                      <ul className="space-y-2 mb-6 max-h-96 overflow-y-auto">
                         {tierInfo.features.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-2 text-sm">
                             <Check size={16} className="mt-0.5 flex-shrink-0" style={{ color: tierInfo.color }} />
@@ -369,4 +402,3 @@ export default function SubscriptionPage() {
     />
   );
 }
-

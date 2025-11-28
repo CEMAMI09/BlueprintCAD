@@ -66,8 +66,11 @@ export default async function handler(req, res) {
 
       // Hash password if provided
       let passwordHash = null;
-      if (link_type === 'password' && password) {
-        passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+      if (link_type === 'password') {
+        if (!password || password.trim() === '') {
+          return res.status(400).json({ error: 'Password is required for password-protected links' });
+        }
+        passwordHash = crypto.createHash('sha256').update(password.trim()).digest('hex');
       }
 
       // Calculate expiration date
@@ -105,7 +108,11 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error('Create share link error:', error);
-      res.status(500).json({ error: 'Failed to create share link' });
+      // Return more specific error messages
+      if (error.message && error.message.includes('CHECK constraint')) {
+        return res.status(400).json({ error: 'Invalid link type specified' });
+      }
+      res.status(500).json({ error: error.message || 'Failed to create share link' });
     }
   } else if (req.method === 'GET') {
     // List share links for a specific entity

@@ -280,21 +280,29 @@ export default async function handler(req, res) {
       const projectId = result.lastID;
 
       // If project is in a folder, create a default master branch with the project title as the branch name
+      // Only if user has access to branching feature
       if (folder_id) {
         try {
-          const branchName = title.trim() || 'Untitled';
-          await db.run(
-            `INSERT INTO file_branches (project_id, folder_id, branch_name, file_path, is_master, created_by)
-             VALUES (?, ?, ?, ?, 1, ?)`,
-            [projectId, folder_id, branchName, file_path, user.userId]
-          );
-          console.log(`Created master branch "${branchName}" for project ${projectId} in folder ${folder_id}`);
+          const { hasFeature } = require('../../../backend/lib/subscription-utils');
+          const canCreateBranches = await hasFeature(user.userId, 'canCreateBranches');
           
-          // Update branch count
-          await db.run(
-            'UPDATE projects SET branch_count = 1 WHERE id = ?',
-            [projectId]
-          );
+          if (canCreateBranches) {
+            const branchName = title.trim() || 'Untitled';
+            await db.run(
+              `INSERT INTO file_branches (project_id, folder_id, branch_name, file_path, is_master, created_by)
+               VALUES (?, ?, ?, ?, 1, ?)`,
+              [projectId, folder_id, branchName, file_path, user.userId]
+            );
+            console.log(`Created master branch "${branchName}" for project ${projectId} in folder ${folder_id}`);
+            
+            // Update branch count
+            await db.run(
+              'UPDATE projects SET branch_count = 1 WHERE id = ?',
+              [projectId]
+            );
+          } else {
+            console.log(`User ${user.userId} does not have access to branching, skipping branch creation`);
+          }
         } catch (branchError) {
           console.error('Error creating default branch:', branchError);
           // Don't fail project creation if branch creation fails
