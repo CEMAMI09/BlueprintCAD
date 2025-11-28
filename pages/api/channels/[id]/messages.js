@@ -1,5 +1,5 @@
 // API endpoint for channel messages
-import { getDb } from '../../../../db/db';
+import { getDb } from '../../../../db/db.js';
 import { getUserFromRequest } from '../../../../shared/utils/auth';
 import formidable from 'formidable';
 import fs from 'fs';

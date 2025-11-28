@@ -1,5 +1,5 @@
 // API endpoint for accessing shared content
-import { getDb } from '../../../../db/db';
+import { getDb } from '../../../../db/db.js';
 import crypto from 'crypto';
 
 export default async function handler(req, res) {

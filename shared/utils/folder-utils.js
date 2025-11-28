@@ -1,5 +1,5 @@
 // Folder utility functions for nested folder operations
-import { getDb } from '../../db/db';
+import { getDb } from '../../db/db.js';
 
 /**
  * Build a recursive folder tree structure

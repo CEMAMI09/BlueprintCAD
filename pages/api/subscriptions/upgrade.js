@@ -1,5 +1,5 @@
 // Handle subscription upgrades
-import { getDb } from '../../../db/db';
+import { getDb } from '../../../db/db.js';
 import { getUserFromRequest } from '../../../shared/utils/auth';
 import { getOrCreateCustomer, createCheckoutSession } from '../../../shared/utils/stripe-utils';
 import { TIER_FEATURES } from '../../../shared/utils/subscription-utils';

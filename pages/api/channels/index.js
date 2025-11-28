@@ -1,5 +1,5 @@
 // API endpoint for chat channels (list and create)
-import { getDb } from '../../../db/db';
+import { getDb } from '../../../db/db.js';
 import { getUserFromRequest } from '../../../shared/utils/auth';
 
 export default async function handler(req, res) {

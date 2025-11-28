@@ -1,5 +1,5 @@
 // Get platform statistics
-import { getDb } from '../../db/db';
+import { getDb } from '../../db/db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

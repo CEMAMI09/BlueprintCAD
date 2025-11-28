@@ -1,6 +1,6 @@
 // Email verification utilities
 import crypto from 'crypto';
-import { getDb } from '../../db/db';
+import { getDb } from '../../db/db.js';
 
 // Generate secure verification token
 export function generateVerificationToken() {

@@ -1,5 +1,5 @@
 // Get notifications for the current user
-import { getDb } from '../../../db/db';
+import { getDb } from '../../../db/db.js';
 import { getUserFromRequest } from '../../../shared/utils/auth';
 
 export default async function handler(req, res) {

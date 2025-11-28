@@ -3,7 +3,7 @@
  * POST /api/orders/checkout
  */
 
-import { getDb } from '../../../db/db';
+import { getDb } from '../../../db/db.js';
 import { getUserFromRequest } from '../../../shared/utils/auth';
 import { getPlatformFee } from '../../../shared/utils/subscription-utils';
 const { createPaymentIntent } = require('../../shared/utils/stripe-utils');

@@ -3,7 +3,7 @@
  * POST /api/orders/confirm
  */
 
-import { getDb } from '../../../db/db';
+import { getDb } from '../../../db/db.js';
 import { getUserFromRequest } from '../../../shared/utils/auth';
 const { getPaymentIntent } = require('../../shared/utils/stripe-utils');
 const { sendEmail, emailTemplates } = require('../../shared/utils/email-templates');
