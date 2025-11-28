@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
 
       // Validate file format
-      const { validateExtension, isViewable } = require('../../../shared/utils/cad-formats.js');
+      const { validateExtension, isViewable } = require('../../../../shared/utils/cad-formats.js');
       const validation = validateExtension(file[0].originalFilename || filePath);
       
       if (!validation.valid) {

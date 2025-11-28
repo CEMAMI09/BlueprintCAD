@@ -64,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Load generator
     if (!generateThumbnail) {
-      const module = await import('../../shared/utils/thumbnailGeneratorSimple.js');
+      const module = await import('../../../shared/utils/thumbnailGeneratorSimple.js');
       generateThumbnail = module.generateThumbnail;
     }
 
