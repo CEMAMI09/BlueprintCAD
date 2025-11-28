@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-const { getDb } = require('../../../../lib/db');
-const { getUserFromRequest } = require('../../../../lib/auth');
+const { getDb } = require('../../../shared/utils/db');
+const { getUserFromRequest } = require('../../../shared/utils/auth');
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;

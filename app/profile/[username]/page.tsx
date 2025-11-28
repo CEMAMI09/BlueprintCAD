@@ -38,7 +38,7 @@ import {
   Youtube,
   ShoppingBag,
 } from 'lucide-react';
-import TierBadge from '@/frontend/components/TierBadge';
+import TierBadge from '@/components/TierBadge';
 
 export default function ProfilePage() {
   const params = useParams();
@@ -660,14 +660,7 @@ export default function ProfilePage() {
                             >
                               {project.thumbnail_path ? (
                                 <img
-                                  src={(() => {
-                                    const thumbnailPath = String(project.thumbnail_path);
-                                    const filename = thumbnailPath.includes('/') 
-                                      ? thumbnailPath.split('/').pop() || thumbnailPath
-                                      : thumbnailPath;
-                                    // Add cache-busting query parameter to ensure fresh images
-                                    return `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
-                                  })()}
+                                  src={String(project.thumbnail_path)}
                                   alt={project.title || project.name}
                                   className="w-full h-full object-cover"
                                   loading="lazy"

@@ -25,7 +25,7 @@ import {
   Settings,
   MoreVertical,
 } from 'lucide-react';
-import CreateChannelModal from '@/frontend/components/CreateChannelModal';
+import CreateChannelModal from '@/components/CreateChannelModal';
 
 interface Channel {
   id: number;

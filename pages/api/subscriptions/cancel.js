@@ -1,7 +1,7 @@
 // Cancel subscription
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../backend/lib/auth';
-import { cancelSubscription } from '../../../lib/stripe-utils';
+import { getUserFromRequest } from '../../../shared/utils/auth';
+import { cancelSubscription } from '../../shared/utils/stripe-utils';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

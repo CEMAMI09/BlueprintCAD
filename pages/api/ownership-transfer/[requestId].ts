@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-const { getDb } = require('../../../lib/db');
-const { getUserFromRequest } = require('../../../lib/auth');
+const { getDb } = require('../../shared/utils/db');
+const { getUserFromRequest } = require('../../shared/utils/auth');
 
 // Helper to collect all nested folders recursively
 async function collectNestedFolders(db: any, folderId: number): Promise<number[]> {

@@ -1,6 +1,6 @@
 // API endpoint for managing individual share links (GET, DELETE)
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth';
 import crypto from 'crypto';
 
 export default async function handler(req, res) {

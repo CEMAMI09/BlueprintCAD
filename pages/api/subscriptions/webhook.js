@@ -1,7 +1,7 @@
 // Stripe webhook handler for subscription events
 import { getDb } from '../../../db/db';
 import Stripe from 'stripe';
-import { TIER_FEATURES, getStorageLimitForTier } from '../../../backend/lib/subscription-utils';
+import { TIER_FEATURES, getStorageLimitForTier } from '../../../shared/utils/subscription-utils';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
   apiVersion: '2023-10-16',

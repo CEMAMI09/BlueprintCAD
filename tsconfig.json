@@ -27,12 +27,10 @@
         "./*"
       ],
       "@/components/*": [
-        "./frontend/components/*",
-        "./components/*"
+        "./app/components/*"
       ],
       "@/lib/*": [
-        "./backend/lib/*",
-        "./lib/*"
+        "./shared/utils/*"
       ],
       "@/db/*": [
         "./db/*"
@@ -41,8 +39,10 @@
         "./storage/*"
       ],
       "@/types/*": [
-        "./frontend/types/*",
-        "./types/*"
+        "./shared/types/*"
+      ],
+      "@/backend/*": [
+        "./backend/*"
       ]
     }
   },

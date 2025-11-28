@@ -1,6 +1,6 @@
 // Per-user like toggle and like state
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../backend/lib/auth.js';
+import { getUserFromRequest } from '../../../../shared/utils/auth.js';
 
 async function ensureLikeTable(db) {
   await db.exec(`CREATE TABLE IF NOT EXISTS project_likes (

@@ -1,6 +1,6 @@
 // Download project file and increment download count
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth';
 import fs from 'fs';
 import path from 'path';
 

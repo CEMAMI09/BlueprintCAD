@@ -9,8 +9,8 @@ import { ThreePanelLayout, LeftPanel, CenterPanel, RightPanel, PanelHeader, Pane
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Upload as UploadIcon, Globe, Lock, DollarSign, ChevronRight, ChevronDown, Folder as FolderIcon } from 'lucide-react';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import SubscriptionGate from '@/frontend/components/SubscriptionGate';
-import UpgradeModal from '@/frontend/components/UpgradeModal';
+import SubscriptionGate from '@/components/SubscriptionGate';
+import UpgradeModal from '@/components/UpgradeModal';
 
 interface FormData {
   title: string;

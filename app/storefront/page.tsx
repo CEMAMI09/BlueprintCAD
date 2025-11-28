@@ -10,8 +10,8 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Card, Button } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import SubscriptionGate from '@/frontend/components/SubscriptionGate';
-import UpgradeModal from '@/frontend/components/UpgradeModal';
+import SubscriptionGate from '@/components/SubscriptionGate';
+import UpgradeModal from '@/components/UpgradeModal';
 import {
   Store,
   Palette,

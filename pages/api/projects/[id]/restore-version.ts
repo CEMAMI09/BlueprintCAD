@@ -1,7 +1,7 @@
 // API endpoint to restore a file version
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

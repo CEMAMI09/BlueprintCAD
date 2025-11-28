@@ -4,9 +4,9 @@
  */
 
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../backend/lib/auth';
-const { createRefund } = require('../../../lib/stripe-utils');
-const { sendEmail, emailTemplates } = require('../../../lib/email-templates');
+import { getUserFromRequest } from '../../../shared/utils/auth';
+const { createRefund } = require('../../shared/utils/stripe-utils');
+const { sendEmail, emailTemplates } = require('../../shared/utils/email-templates');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

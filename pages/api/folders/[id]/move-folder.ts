@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../backend/lib/auth';
-import { wouldCreateCircularReference } from '../../../../backend/lib/folder-utils';
+import { getUserFromRequest } from '../../../../shared/utils/auth';
+import { wouldCreateCircularReference } from '../../../../shared/utils/folder-utils';
 
 export default async function handler(
   req: NextApiRequest,

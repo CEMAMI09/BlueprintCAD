@@ -1,8 +1,8 @@
 // Handle subscription upgrades
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../backend/lib/auth';
-import { getOrCreateCustomer, createCheckoutSession } from '../../../lib/stripe-utils';
-import { TIER_FEATURES } from '../../../backend/lib/subscription-utils';
+import { getUserFromRequest } from '../../../shared/utils/auth';
+import { getOrCreateCustomer, createCheckoutSession } from '../../../shared/utils/stripe-utils';
+import { TIER_FEATURES } from '../../../shared/utils/subscription-utils';
 
 // Stripe Price IDs - REPLACE WITH ACTUAL PRICE IDs FROM STRIPE DASHBOARD
 const STRIPE_PRICE_IDS = {

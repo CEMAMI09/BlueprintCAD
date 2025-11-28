@@ -73,7 +73,7 @@ export default async function handler(
 
                  // Log activity
                  const currentUser = await db.get('SELECT username FROM users WHERE id = ?', [userId]);
-                 const { logActivity } = require('../../../../backend/lib/activity-logger');
+                 const { logActivity } = require('../../../../shared/utils/activity-logger');
                  await logActivity({
                    userId: userId,
                    action: 'collaborator_added',

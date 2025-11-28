@@ -4,7 +4,7 @@
  */
 
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

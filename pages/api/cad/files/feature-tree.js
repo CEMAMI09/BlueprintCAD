@@ -1,11 +1,10 @@
 // Feature tree API endpoint
-import { NextApiRequest, NextApiResponse } from 'next';
-import Database from 'better-sqlite3';
-import path from 'path';
+const Database = require('better-sqlite3');
+const path = require('path');
 
 const dbPath = path.join(process.cwd(), 'db', 'forge.db');
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const { fileId, treeData, version, branchId } = req.body;

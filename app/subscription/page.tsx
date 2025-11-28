@@ -12,7 +12,7 @@ import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { Check, X, Zap, Crown, Building2, CreditCard, Calendar } from 'lucide-react';
-import TierBadge from '@/frontend/components/TierBadge';
+import TierBadge from '@/components/TierBadge';
 
 const TIERS = {
   free: {

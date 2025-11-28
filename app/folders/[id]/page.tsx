@@ -41,10 +41,10 @@ import {
   X,
   Settings,
 } from 'lucide-react';
-import BranchManagementModal from '@/frontend/components/BranchManagementModal';
+import BranchManagementModal from '@/components/BranchManagementModal';
 import { Textarea } from '@/components/ui/UIComponents';
-import ActivityPanel from '@/frontend/components/ActivityPanel';
-import ShareLinkModal from '@/frontend/components/ShareLinkModal';
+import ActivityPanel from '@/components/ActivityPanel';
+import ShareLinkModal from '@/components/ShareLinkModal';
 
 interface FolderData {
   id: number;

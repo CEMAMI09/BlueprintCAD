@@ -1,7 +1,7 @@
 // Analytics API endpoint
 import { getDb } from '../../db/db';
-import { getUserFromRequest } from '../../backend/lib/auth';
-import { getUserTier } from '../../backend/lib/subscription-utils';
+import { getUserFromRequest } from '../../shared/utils/auth';
+import { getUserTier } from '../../shared/utils/subscription-utils';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

@@ -2,9 +2,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
-import { getUserFromRequest } from '../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth';
 import { getDb } from '../../../db/db';
-import { getAllExtensions, getContentType } from '../../../backend/lib/cad-formats';
+import { getAllExtensions, getContentType } from '../../../shared/utils/cad-formats';
 
 // Get all allowed file extensions from CAD formats module
 const ALLOWED_EXTENSIONS = getAllExtensions();

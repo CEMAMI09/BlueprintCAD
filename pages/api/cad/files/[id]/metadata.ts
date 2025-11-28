@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import pool from '../../../../db/db';
+import { getDb } from '@/db/db';
 
 /**
  * API endpoint to save display-only metadata to CAD files
@@ -25,16 +25,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Get existing metadata
-      const fileQuery = 'SELECT metadata FROM cad_files WHERE id = $1';
-      const fileResult = await pool.query(fileQuery, [id]);
+      const db = await getDb();
+      const fileQuery = 'SELECT metadata FROM cad_files WHERE id = ?';
+      const fileResult = await db.get(fileQuery, [id]);
       
-      if (fileResult.rows.length === 0) {
+      if (!fileResult) {
         return res.status(404).json({ error: 'File not found' });
       }
 
       let existingMetadata = {};
       try {
-        existingMetadata = JSON.parse(fileResult.rows[0].metadata || '{}');
+        existingMetadata = JSON.parse((fileResult as any).metadata || '{}');
       } catch {
         existingMetadata = {};
       }
@@ -53,19 +54,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Update file metadata
       const updateQuery = `
         UPDATE cad_files 
-        SET metadata = $1, updated_at = NOW() 
-        WHERE id = $2
-        RETURNING id, filename, metadata
+        SET metadata = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
       `;
       
-      const result = await pool.query(updateQuery, [
+      await db.run(updateQuery, [
         JSON.stringify(updatedMetadata),
         id
       ]);
-
+      
       res.status(200).json({
         success: true,
-        file: result.rows[0]
+        file: { id, metadata: updatedMetadata }
       });
 
     } catch (error) {
@@ -77,16 +77,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Get metadata for a file
       const { type } = req.query;
       
-      const query = 'SELECT metadata FROM cad_files WHERE id = $1';
-      const result = await pool.query(query, [id]);
+      const db = await getDb();
+      const query = 'SELECT metadata FROM cad_files WHERE id = ?';
+      const result = await db.get(query, [id]);
       
-      if (result.rows.length === 0) {
+      if (!result) {
         return res.status(404).json({ error: 'File not found' });
       }
 
       let metadata = {};
       try {
-        metadata = JSON.parse(result.rows[0].metadata || '{}');
+        metadata = JSON.parse((result as any).metadata || '{}');
       } catch {
         metadata = {};
       }

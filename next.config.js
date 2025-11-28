@@ -26,10 +26,12 @@ const nextConfig = {
     
     // Add alias for reorganized directories - ensure all paths are absolute
     const aliases = {
-      '@/components': path.resolve(projectRoot, 'frontend/components'),
-      '@/lib': path.resolve(projectRoot, 'backend/lib'),
+      '@/components': path.resolve(projectRoot, 'app/components'),
+      '@/lib': path.resolve(projectRoot, 'shared/utils'),
       '@/db': path.resolve(projectRoot, 'db'),
       '@/storage': path.resolve(projectRoot, 'storage'),
+      '@/types': path.resolve(projectRoot, 'shared/types'),
+      '@/backend': path.resolve(projectRoot, 'backend'),
     };
     
     // Verify all alias paths exist
@@ -89,6 +91,14 @@ const nextConfig = {
         }
         callback();
       });
+      
+      // Don't bundle pg (PostgreSQL) - it's only used in backend
+      config.externals.push(({ request }, callback) => {
+        if (request === 'pg' || request === 'pg-pool') {
+          return callback(null, `commonjs ${request}`);
+        }
+        callback();
+      });
     }
     
     return config;
@@ -97,7 +107,21 @@ const nextConfig = {
   experimental: {
     // This can help with file watcher issues
     optimizePackageImports: ['lucide-react'],
-  }
+  },
+  // Proxy API routes to external backend (Railway in production, localhost in dev)
+  async rewrites() {
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_URL ||
+      'http://localhost:3001';
+
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${apiBase}/api/:path*`,
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig

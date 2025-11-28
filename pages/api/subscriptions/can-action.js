@@ -1,7 +1,7 @@
 // Check if user can perform a specific action
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../backend/lib/auth';
-import { canPerformAction } from '../../../backend/lib/subscription-utils';
+import { getUserFromRequest } from '../../../shared/utils/auth';
+import { canPerformAction } from '../../../shared/utils/subscription-utils';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

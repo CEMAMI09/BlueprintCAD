@@ -18,10 +18,10 @@ import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import ThreePreview from '@/components/ThreePreview';
-import ThreeDViewer from '@/frontend/components/ThreeDViewer';
+import ThreeDViewer from '@/components/ThreeDViewer';
 import SaveProjectModal from '@/components/SaveProjectModal';
-import SubscriptionGate from '@/frontend/components/SubscriptionGate';
-import UpgradeModal from '@/frontend/components/UpgradeModal';
+import SubscriptionGate from '@/components/SubscriptionGate';
+import UpgradeModal from '@/components/UpgradeModal';
 import {
   Upload,
   FileUp,

@@ -1,7 +1,7 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
-import { verifyToken } from '../../../../backend/lib/auth';
+import { verifyToken } from '../../../../shared/utils/auth';
 import { getDb } from '../../../../db/db';
 
 export const config = {

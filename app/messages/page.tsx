@@ -17,8 +17,8 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import SubscriptionGate from '@/frontend/components/SubscriptionGate';
-import UpgradeModal from '@/frontend/components/UpgradeModal';
+import SubscriptionGate from '@/components/SubscriptionGate';
+import UpgradeModal from '@/components/UpgradeModal';
 import {
   Send,
   Search,
@@ -37,7 +37,7 @@ import {
   Hash,
   Plus,
 } from 'lucide-react';
-import CreateChannelModal from '@/frontend/components/CreateChannelModal';
+import CreateChannelModal from '@/components/CreateChannelModal';
 
 interface Conversation {
   id: string;

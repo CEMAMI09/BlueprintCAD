@@ -2,7 +2,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
-import { getUserFromRequest } from '../../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth';
 import { getDb } from '../../../../db/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!user || typeof user === 'string') {
           const token = req.query.token as string;
           if (token) {
-            const { verifyToken } = require('../../../../backend/lib/auth');
+            const { verifyToken } = require('../../../../shared/utils/auth');
             user = verifyToken(token);
           }
         }

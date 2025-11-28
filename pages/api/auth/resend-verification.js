@@ -1,7 +1,7 @@
 // API route to resend verification email
-import { createVerificationToken, checkVerificationRateLimit, recordVerificationAttempt } from '../../../backend/lib/email-verification';
-import { getVerificationEmailHTML, getVerificationEmailText } from '../../../backend/lib/email-templates';
-import { verifyAuth } from '../../../backend/lib/auth';
+import { createVerificationToken, checkVerificationRateLimit, recordVerificationAttempt } from '../../../shared/utils/email-verification';
+import { getVerificationEmailHTML, getVerificationEmailText } from '../../../shared/utils/email-templates';
+import { verifyAuth } from '../../../shared/utils/auth';
 import { getDb } from '../../../db/db';
 import nodemailer from 'nodemailer';
 

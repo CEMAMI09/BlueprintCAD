@@ -2,9 +2,10 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
-import { getUserFromRequest } from '../../backend/lib/auth';
-import { validateExtension, isViewable, isExtractable } from '../../backend/lib/cad-formats';
-import { requireEmailVerification } from '../../backend/lib/verification-middleware';
+import { getUserFromRequest } from '../../shared/utils/auth';
+import { validateExtension, isViewable, isExtractable } from '../../shared/utils/cad-formats';
+import { requireEmailVerification } from '../../shared/utils/verification-middleware';
+import { uploadToR2 } from '../../backend/lib/r2';
 
 export const config = {
   api: {
@@ -79,7 +80,7 @@ export default async function handler(req, res) {
           
           // For STL files, use the STL-specific parser
           if (ext === 'stl') {
-            const { getSTLDimensions } = require('../../backend/lib/stl-utils');
+            const { getSTLDimensions } = require('../../shared/utils/stl-utils');
             console.log('Extracting STL dimensions from:', fullFilePath);
             const dimData = getSTLDimensions(fullFilePath);
             console.log('Extracted dimension data:', dimData);
@@ -107,12 +108,24 @@ export default async function handler(req, res) {
       
       // Thumbnail will be generated after project creation with the project ID
       // This is handled in the projects POST route
-      
+
+      // Also upload file to Cloudflare R2 (non-fatal if it fails)
+      let r2Url = null;
+      try {
+        const key = `uploads/${filePath}`;
+        const fileBuffer = fs.readFileSync(fullFilePath);
+        const contentType = file[0].mimetype || 'application/octet-stream';
+        r2Url = await uploadToR2(key, fileBuffer, contentType);
+      } catch (r2Error) {
+        console.error('R2 upload failed (non-fatal):', r2Error);
+      }
+
       res.status(200).json({ 
         filePath,
         thumbnailPath,
         dimensions,
-        volume
+        volume,
+        r2Url
       });
     });
   } catch (error) {

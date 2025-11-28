@@ -4,9 +4,9 @@
  */
 
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../backend/lib/auth';
-const { getPaymentIntent } = require('../../../lib/stripe-utils');
-const { sendEmail, emailTemplates } = require('../../../lib/email-templates');
+import { getUserFromRequest } from '../../../shared/utils/auth';
+const { getPaymentIntent } = require('../../shared/utils/stripe-utils');
+const { sendEmail, emailTemplates } = require('../../shared/utils/email-templates');
 const crypto = require('crypto');
 
 export default async function handler(req, res) {

@@ -10,7 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { Button, Card, EmptyState } from '@/components/ui/UIComponents';
 import { Lock, Download, Eye, FileText, Folder, ArrowLeft, X, Copy } from 'lucide-react';
-import ThreeDViewer from '@/frontend/components/ThreeDViewer';
+import ThreeDViewer from '@/components/ThreeDViewer';
 import Link from 'next/link';
 
 export default function ShareLinkViewer() {

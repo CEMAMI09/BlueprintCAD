@@ -17,9 +17,9 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import SubscriptionGate from '@/frontend/components/SubscriptionGate';
-import UpgradeModal from '@/frontend/components/UpgradeModal';
-import TierBadge from '@/frontend/components/TierBadge';
+import SubscriptionGate from '@/components/SubscriptionGate';
+import UpgradeModal from '@/components/UpgradeModal';
+import TierBadge from '@/components/TierBadge';
 import {
   DollarSign,
   Star,

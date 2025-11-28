@@ -6,7 +6,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import path from 'path';
 import fs from 'fs';
-import { getUserFromRequest } from '../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth';
 
 // Dynamic import to avoid bundling issues
 let generateThumbnail: any;
@@ -64,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Load generator
     if (!generateThumbnail) {
-      const module = await import('../../../lib/thumbnailGeneratorSimple.js');
+      const module = await import('../../shared/utils/thumbnailGeneratorSimple.js');
       generateThumbnail = module.generateThumbnail;
     }
 

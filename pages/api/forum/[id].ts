@@ -1,6 +1,6 @@
 // API endpoint for individual forum thread
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getUserFromRequest } from '../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth';
 import { getDb } from '../../../db/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Check subscription for posting forum messages
-      const { canPerformAction } = require('../../../backend/lib/subscription-utils');
+      const { canPerformAction } = require('../../../shared/utils/subscription-utils');
       const postCheck = await canPerformAction((user as any).userId, 'canPostForums');
       if (!postCheck.allowed) {
         return res.status(403).json({ 

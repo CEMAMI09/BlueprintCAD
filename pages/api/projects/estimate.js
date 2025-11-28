@@ -1,6 +1,6 @@
 import formidable from 'formidable';
 import fs from 'fs';
-const PrintCostEstimator = require('../../../lib/print-cost-estimator');
+const PrintCostEstimator = require('../../shared/utils/print-cost-estimator');
 
 export const config = {
   api: {

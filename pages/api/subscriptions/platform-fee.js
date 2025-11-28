@@ -1,7 +1,7 @@
 // Get platform fee for a user based on their subscription tier
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../backend/lib/auth';
-import { getPlatformFee } from '../../../backend/lib/subscription-utils';
+import { getUserFromRequest } from '../../../shared/utils/auth';
+import { getPlatformFee } from '../../../shared/utils/subscription-utils';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ 
       platformFee: platformFee || 0.05, // Default to 5% if null
-      tier: await (await import('../../../backend/lib/subscription-utils')).getUserTier(user.userId)
+      tier: await (await import('../../../shared/utils/subscription-utils')).getUserTier(user.userId)
     });
   } catch (error) {
     console.error('Platform fee check error:', error);

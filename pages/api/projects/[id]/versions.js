@@ -1,7 +1,7 @@
 // File versioning API
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../backend/lib/auth';
-import { getUserTier } from '../../../../backend/lib/subscription-utils';
+import { getUserFromRequest } from '../../../../shared/utils/auth';
+import { getUserTier } from '../../../../shared/utils/subscription-utils';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth';
 
 export default async function handler(
   req: NextApiRequest,
@@ -78,7 +78,7 @@ export default async function handler(
       const db = await getDb();
 
       // --- Subscription Check: Max Folders ---
-      const { canPerformAction, hasFeature } = require('../../../backend/lib/subscription-utils');
+      const { canPerformAction, hasFeature } = require('../../../shared/utils/subscription-utils');
       const folderCheck = await canPerformAction(userId, 'maxFolders');
       if (!folderCheck.allowed) {
         return res.status(403).json({

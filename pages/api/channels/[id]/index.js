@@ -1,6 +1,6 @@
 // API endpoint for a specific channel (get, update, delete)
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth';
 
 export default async function handler(req, res) {
   const user = getUserFromRequest(req);

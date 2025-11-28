@@ -33,6 +33,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
+import TierBadge from '@/components/TierBadge';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -43,6 +44,7 @@ export default function DashboardPage() {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [storage, setStorage] = useState<{ used: number; max: number; percentage: number } | null>(null);
+  const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
 
   useEffect(() => {
     fetchDashboardData();
@@ -96,11 +98,23 @@ export default function DashboardPage() {
         setTrending(trendingData);
       }
 
-      // Fetch storage usage
-      const storageRes = await fetch('/api/dashboard/storage', { headers });
-      if (storageRes.ok) {
-        const storageData = await storageRes.json();
-        setStorage(storageData);
+      // Fetch storage usage from subscription API (uses real tier-based limits)
+      const subscriptionRes = await fetch('/api/subscriptions/check', { headers });
+      if (subscriptionRes.ok) {
+        const subscriptionData = await subscriptionRes.json();
+        if (subscriptionData.storage) {
+          // Convert GB to bytes for formatStorage function
+          const usedBytes = subscriptionData.storage.used * 1024 * 1024 * 1024;
+          const maxBytes = subscriptionData.storage.limit * 1024 * 1024 * 1024;
+          setStorage({
+            used: usedBytes,
+            max: maxBytes,
+            percentage: subscriptionData.storage.percentUsed || 0
+          });
+        }
+        if (subscriptionData.tier) {
+          setSubscriptionTier(subscriptionData.tier);
+        }
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -125,7 +139,7 @@ export default function DashboardPage() {
   };
 
   const formatStorage = (bytes: number) => {
-    if (bytes === -1) return 'Unlimited';
+    if (bytes === Infinity || bytes === -1) return 'Unlimited';
     if (bytes >= 1024 * 1024 * 1024) {
       return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
     } else if (bytes >= 1024 * 1024) {
@@ -134,6 +148,17 @@ export default function DashboardPage() {
       return (bytes / 1024).toFixed(2) + ' KB';
     }
     return bytes + ' B';
+  };
+  
+  // Map backend tier to frontend tier for display
+  const getFrontendTier = (backendTier: string): string => {
+    const tierMapping: Record<string, string> = {
+      'free': 'free',
+      'pro': 'premium',        // Backend "pro" maps to frontend "premium"
+      'creator': 'pro',        // Backend "creator" maps to frontend "pro"
+      'enterprise': 'pro',     // Backend "enterprise" also maps to frontend "pro"
+    };
+    return tierMapping[backendTier] || 'free';
   };
 
   const getInitials = (username: string) => {
@@ -299,16 +324,7 @@ export default function DashboardPage() {
                         <div className="aspect-video rounded-t-lg overflow-hidden relative" style={{ backgroundColor: DS.colors.background.panel, minHeight: '180px' }}>
                           {design.thumbnail ? (
                             <img 
-                              src={(() => {
-                                const thumbnailPath = String(design.thumbnail);
-                                const filename = thumbnailPath.includes('/') 
-                                  ? thumbnailPath.split('/').pop() || thumbnailPath
-                                  : thumbnailPath;
-                                // Add cache-busting query parameter to ensure fresh images
-                                const url = `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
-                                console.log(`[Dashboard] Loading thumbnail for ${design.id}: ${url}`);
-                                return url;
-                              })()}
+                              src={String(design.thumbnail)}
                               alt={design.title}
                               className="design-thumbnail"
                               loading="lazy"
@@ -333,9 +349,6 @@ export default function DashboardPage() {
                                   }
                                   fallback.style.display = 'flex';
                                 }
-                              }}
-                              onLoad={() => {
-                                console.log(`[Dashboard] Successfully loaded thumbnail for ${design.id}`);
                               }}
                             />
                           ) : (
@@ -410,8 +423,7 @@ export default function DashboardPage() {
               </p>
               {stats && (
                 <div className="flex items-center justify-center gap-2 mt-2">
-                  <Crown size={16} style={{ color: DS.colors.accent.warning }} />
-                  <Badge variant="warning" size="sm">Member</Badge>
+                  <TierBadge tier={getFrontendTier(subscriptionTier)} size="sm" />
                 </div>
               )}
             </div>

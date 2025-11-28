@@ -278,13 +278,7 @@ export default function BuyPage() {
                     {project.thumbnail_path && !project.file_path && (
                       <div className="aspect-video relative" style={{ background: DS.colors.background.panel }}>
                         <img
-                          src={(() => {
-                            const thumbnailPath = String(project.thumbnail_path);
-                            const filename = thumbnailPath.includes('/') 
-                              ? thumbnailPath.split('/').pop() || thumbnailPath
-                              : thumbnailPath;
-                            return `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
-                          })()}
+                          src={String(project.thumbnail_path)}
                           alt={project.title}
                           className="w-full h-full object-cover"
                         />

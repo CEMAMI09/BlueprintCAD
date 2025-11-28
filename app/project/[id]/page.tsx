@@ -3,21 +3,21 @@
 
 import { ThreePanelLayout, CenterPanel, RightPanel, PanelHeader, PanelContent } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
-import FolderContextSidebar from '@/frontend/components/FolderContextSidebar';
+import FolderContextSidebar from '@/components/FolderContextSidebar';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import ThreeDViewer from '@/frontend/components/ThreeDViewer';
-import RenameModal from '@/frontend/components/RenameModal';
+import ThreeDViewer from '@/components/ThreeDViewer';
+import RenameModal from '@/components/RenameModal';
 import HistoryModal from '@/components/HistoryModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import Link from 'next/link';
 import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Copy, Check } from 'lucide-react';
-import SubscriptionGate from '@/frontend/components/SubscriptionGate';
-import UpgradeModal from '@/frontend/components/UpgradeModal';
-import TierBadge from '@/frontend/components/TierBadge';
-import ShareLinkModal from '@/frontend/components/ShareLinkModal';
+import SubscriptionGate from '@/components/SubscriptionGate';
+import UpgradeModal from '@/components/UpgradeModal';
+import TierBadge from '@/components/TierBadge';
+import ShareLinkModal from '@/components/ShareLinkModal';
 
 
 interface Project {

@@ -1,6 +1,6 @@
 // API endpoint for managing file branches (only for files in folders)
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../backend/lib/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       // Check if user has access to view branches
-      const { hasFeature } = require('../../../../backend/lib/subscription-utils');
+      const { hasFeature } = require('../../../../shared/utils/subscription-utils');
       const canViewBranches = await hasFeature(userId, 'canCreateBranches');
       
       if (!canViewBranches) {
@@ -91,7 +91,7 @@ export default async function handler(req, res) {
     // Create new branch
     try {
       // Check if user has access to create branches
-      const { hasFeature } = require('../../../../backend/lib/subscription-utils');
+      const { hasFeature } = require('../../../../shared/utils/subscription-utils');
       const canCreateBranches = await hasFeature(userId, 'canCreateBranches');
       
       if (!canCreateBranches) {
@@ -212,7 +212,7 @@ export default async function handler(req, res) {
           );
 
           // Log activity
-          const { logActivity } = require('../../../../backend/lib/activity-logger');
+          const { logActivity } = require('../../../../shared/utils/activity-logger');
           await logActivity({
             userId: userId,
             action: 'branch_created',
@@ -394,7 +394,7 @@ export default async function handler(req, res) {
             }
 
             // Log activity
-            const { logActivity } = require('../../../../backend/lib/activity-logger');
+            const { logActivity } = require('../../../../shared/utils/activity-logger');
             const project = await db.get('SELECT folder_id FROM projects WHERE id = ?', [id]);
             const actionType = branch_name && branch_name !== branch.branch_name ? 'branch_renamed' : 
                              is_master === true ? 'branch_master_changed' : 'branch_updated';
@@ -455,7 +455,7 @@ export default async function handler(req, res) {
       }
 
       // Log activity before deletion
-      const { logActivity } = require('../../../../backend/lib/activity-logger');
+      const { logActivity } = require('../../../../shared/utils/activity-logger');
       const project = await db.get('SELECT folder_id FROM projects WHERE id = ?', [id]);
       await logActivity({
         userId: userId,
