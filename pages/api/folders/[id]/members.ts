@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth.js';
 
 export default async function handler(
   req: NextApiRequest,
@@ -138,7 +138,7 @@ export default async function handler(
         WHERE fm.folder_id = ? AND fm.user_id != ?
       `, [id, folder.owner_id]); // Count members excluding the owner
 
-      const { canPerformAction } = require('../../../../shared/utils/subscription-utils');
+      const { canPerformAction } = require('../../../../shared/utils/subscription-utils.js');
       const teamMemberCheck = await canPerformAction(userId, 'maxTeamMembers', teamMembersCount.count);
       if (!teamMemberCheck.allowed) {
         return res.status(403).json({
@@ -173,7 +173,7 @@ export default async function handler(
       );
 
       // Log activity
-      const { logActivity } = require('../../../../shared/utils/activity-logger');
+      const { logActivity } = require('../../../../shared/utils/activity-logger.js');
       await logActivity({
         userId: userId,
         action: 'collaborator_added',
@@ -251,7 +251,7 @@ export default async function handler(
       );
 
       // Log activity
-      const { logActivity } = require('../../../../shared/utils/activity-logger');
+      const { logActivity } = require('../../../../shared/utils/activity-logger.js');
       await logActivity({
         userId: userId,
         action: 'collaborator_removed',

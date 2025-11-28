@@ -1,6 +1,6 @@
 // API endpoint for creating and listing share links
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth.js';
 import crypto from 'crypto';
 
 export default async function handler(req, res) {

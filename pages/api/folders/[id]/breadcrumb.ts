@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getFolderPath } from '../../../../shared/utils/folder-utils';
+import { getFolderPath } from '../../../../shared/utils/folder-utils.js';
 
 export default async function handler(
   req: NextApiRequest,

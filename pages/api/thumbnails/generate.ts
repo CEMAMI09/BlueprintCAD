@@ -6,7 +6,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import path from 'path';
 import fs from 'fs';
-import { getUserFromRequest } from '../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth.js';
 
 // Dynamic import to avoid bundling issues
 let generateThumbnail: any;

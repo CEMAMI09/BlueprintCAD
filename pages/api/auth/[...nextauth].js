@@ -3,7 +3,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { getDb } from '../../../db/db';
-import { verifyPassword, generateToken } from '../../../shared/utils/auth';
+import { verifyPassword, generateToken } from '../../../shared/utils/auth.js';
 
 export const authOptions = {
   providers: [

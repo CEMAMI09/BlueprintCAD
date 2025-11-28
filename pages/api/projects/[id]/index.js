@@ -1,7 +1,7 @@
 // GET, PUT, DELETE specific project (moved to avoid route conflicts)
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest, verifyAuth } from '../../../../shared/utils/auth';
-import { isProfileVisible } from '../../../../shared/utils/privacy-utils';
+import { getUserFromRequest, verifyAuth } from '../../../../shared/utils/auth.js';
+import { isProfileVisible } from '../../../../shared/utils/privacy-utils.js';
 
 export default async function handler(req, res) {
   const { id } = req.query;
@@ -284,7 +284,7 @@ export default async function handler(req, res) {
       }
 
       // Log activity before deletion
-      const { logActivity } = require('../../../../shared/utils/activity-logger');
+      const { logActivity } = require('../../../../shared/utils/activity-logger.js');
       await logActivity({
         userId: user.userId,
         action: 'delete',

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getUserFromRequest } from '../../../shared/utils/auth';
-import { moveFolder } from '../../../shared/utils/folder-utils';
+import { getUserFromRequest } from '../../../shared/utils/auth.js';
+import { moveFolder } from '../../../shared/utils/folder-utils.js';
 
 export default async function handler(
   req: NextApiRequest,

@@ -1,5 +1,5 @@
 // API route to verify email with token
-import { verifyEmailToken, recordVerificationAttempt } from '../../../shared/utils/email-verification';
+import { verifyEmailToken, recordVerificationAttempt } from '../../../shared/utils/email-verification.js';
 import { getDb } from '../../../db/db';
 
 export default async function handler(req, res) {

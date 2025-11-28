@@ -4,9 +4,9 @@
  */
 
 import { getDb } from '../../../db/db.js';
-import { getUserFromRequest } from '../../../shared/utils/auth';
-import { getPlatformFee } from '../../../shared/utils/subscription-utils';
-const { createPaymentIntent } = require('../../shared/utils/stripe-utils');
+import { getUserFromRequest } from '../../../shared/utils/auth.js';
+import { getPlatformFee } from '../../../shared/utils/subscription-utils.js';
+const { createPaymentIntent } = require('../../shared/utils/stripe-utils.js');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

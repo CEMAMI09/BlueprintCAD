@@ -2,8 +2,8 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
-import { getUserFromRequest } from '../../../shared/utils/auth';
-import { isExtractable } from '../../../shared/utils/cad-formats';
+import { getUserFromRequest } from '../../../shared/utils/auth.js';
+import { isExtractable } from '../../../shared/utils/cad-formats.js';
 
 export const config = {
   api: {
@@ -63,8 +63,8 @@ export default async function handler(req, res) {
       if (ext === '.stl') {
         // STL files - extract actual dimensions
         try {
-          const { getSTLDimensions } = require('../../shared/utils/stl-utils');
-          const { analyzePrintability } = require('../../shared/utils/stl-printability');
+          const { getSTLDimensions } = require('../../shared/utils/stl-utils.js');
+          const { analyzePrintability } = require('../../shared/utils/stl-printability.js');
           
           console.log('Analyzing STL file:', fullFilePath);
           const dimData = getSTLDimensions(fullFilePath);

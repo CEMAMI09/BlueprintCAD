@@ -1,6 +1,6 @@
 // Follow/unfollow a user
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

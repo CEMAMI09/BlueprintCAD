@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getUserFromRequest } from '../../../../shared/utils/auth';
-import { getFolderActivities } from '../../../../shared/utils/activity-logger';
+import { getUserFromRequest } from '../../../../shared/utils/auth.js';
+import { getFolderActivities } from '../../../../shared/utils/activity-logger.js';
 
 export default async function handler(
   req: NextApiRequest,

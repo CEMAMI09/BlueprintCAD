@@ -1,6 +1,6 @@
 // Handle password reset with token
 import { getDb } from '../../../db/db';
-import { hashPassword } from '../../../shared/utils/auth';
+import { hashPassword } from '../../../shared/utils/auth.js';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

@@ -1,6 +1,6 @@
 // Get storage usage for the current user
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth.js';
 import fs from 'fs';
 import path from 'path';
 

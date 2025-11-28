@@ -1,6 +1,6 @@
 // API endpoint for tags - fetch all tags or create new ones
 const { getDb } = require('../../../db/db');
-const { getUserFromRequest } = require('../../../shared/utils/auth');
+const { getUserFromRequest } = require('../../../shared/utils/auth.js');
 
 export default async function handler(req, res) {
   const db = await getDb();

@@ -1,6 +1,6 @@
 // API endpoint for messages with a specific user
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getUserFromRequest } from '../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth.js';
 import { getDb } from '../../../db/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

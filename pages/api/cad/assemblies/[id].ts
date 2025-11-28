@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getDb } from '@/db/db';
-import { AssemblyDocument, PartInstance, AssemblyConstraint } from '../../../shared/utils/cad/assembly-system';
+import { AssemblyDocument, PartInstance, AssemblyConstraint } from '../../../shared/utils/cad/assembly-system.js';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;

@@ -29,6 +29,9 @@
       "@/components/*": [
         "./app/components/*"
       ],
+      "@/components/ThreePreview": [
+        "./app/components/ThreePreview"
+      ],
       "@/lib/*": [
         "./shared/utils/*"
       ],

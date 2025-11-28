@@ -1,7 +1,7 @@
 // Storefront customization API
 import { getDb } from '../../db/db';
-import { getUserFromRequest } from '../../shared/utils/auth';
-import { getUserTier } from '../../shared/utils/subscription-utils';
+import { getUserFromRequest } from '../../shared/utils/auth.js';
+import { getUserTier } from '../../shared/utils/subscription-utils.js';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';

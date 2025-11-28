@@ -2,9 +2,9 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
-import { getUserFromRequest } from '../../shared/utils/auth';
-import { validateExtension, isViewable, isExtractable } from '../../shared/utils/cad-formats';
-import { requireEmailVerification } from '../../shared/utils/verification-middleware';
+import { getUserFromRequest } from '../../shared/utils/auth.js';
+import { validateExtension, isViewable, isExtractable } from '../../shared/utils/cad-formats.js';
+import { requireEmailVerification } from '../../shared/utils/verification-middleware.js';
 import { uploadToR2 } from '../../backend/lib/r2.js';
 
 export const config = {
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
           
           // For STL files, use the STL-specific parser
           if (ext === 'stl') {
-            const { getSTLDimensions } = require('../../shared/utils/stl-utils');
+            const { getSTLDimensions } = require('../../shared/utils/stl-utils.js');
             console.log('Extracting STL dimensions from:', fullFilePath);
             const dimData = getSTLDimensions(fullFilePath);
             console.log('Extracted dimension data:', dimData);

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth.js';
 
 export default async function handler(
   req: NextApiRequest,
@@ -91,7 +91,7 @@ export default async function handler(
     );
 
     // Log activity
-    const { logActivity } = require('../../../../shared/utils/activity-logger');
+    const { logActivity } = require('../../../../shared/utils/activity-logger.js');
     await logActivity({
       userId: authUserId,
       action: 'rename',

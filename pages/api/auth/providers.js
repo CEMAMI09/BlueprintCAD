@@ -1,6 +1,6 @@
 // API route to get user's connected OAuth providers
 import { getDb } from '../../../db/db';
-import { verifyAuth } from '../../../shared/utils/auth';
+import { verifyAuth } from '../../../shared/utils/auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

@@ -1,6 +1,6 @@
 // API endpoint to mark a message as read
 import { getDb } from '../../../../../../db/db.js';
-import { getUserFromRequest } from '../../../../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../../../../shared/utils/auth.js';
 
 export default async function handler(req, res) {
   const user = getUserFromRequest(req);

@@ -1,6 +1,6 @@
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../shared/utils/auth';
-import { isProfileVisible } from '../../../../shared/utils/privacy-utils';
+import { getUserFromRequest } from '../../../../shared/utils/auth.js';
+import { isProfileVisible } from '../../../../shared/utils/privacy-utils.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

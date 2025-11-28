@@ -1,7 +1,7 @@
 // API endpoint to upload a new version of a project file
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../../shared/utils/auth.js';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
 
       // Validate file format
-      const { validateExtension, isViewable } = require('../../../shared/utils/cad-formats');
+      const { validateExtension, isViewable } = require('../../../shared/utils/cad-formats.js');
       const validation = validateExtension(file[0].originalFilename || filePath);
       
       if (!validation.valid) {
@@ -107,7 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (is3DFile) {
         try {
-          const { generateThumbnailForDesign } = require('../../../../shared/utils/generateThumbnail');
+          const { generateThumbnailForDesign } = require('../../../../shared/utils/generateThumbnail.js');
           const fullFilePath = path.join(process.cwd(), 'storage', 'uploads', filePath);
           
           if (fs.existsSync(fullFilePath)) {
@@ -121,7 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           console.warn('Thumbnail generation failed (non-fatal):', thumbError?.message);
           // Fallback to placeholder
           try {
-            const { generatePlaceholderThumbnail } = require('../../../../shared/utils/generateThumbnail');
+            const { generatePlaceholderThumbnail } = require('../../../../shared/utils/generateThumbnail.js');
             const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
             if (!fs.existsSync(thumbsDir)) {
               fs.mkdirSync(thumbsDir, { recursive: true });

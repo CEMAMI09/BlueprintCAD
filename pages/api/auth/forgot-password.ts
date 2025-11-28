@@ -1,7 +1,7 @@
 // Handle forgot password requests
 import { getDb } from '../../../db/db';
-import { sendPasswordResetEmail } from '../../../shared/utils/email';
-import { checkRateLimit } from '../../../shared/utils/rate-limit';
+import { sendPasswordResetEmail } from '../../../shared/utils/email.js';
+import { checkRateLimit } from '../../../shared/utils/rate-limit.js';
 import crypto from 'crypto';
 import type { NextApiRequest, NextApiResponse } from 'next';
 

@@ -1,7 +1,7 @@
 // Get platform fee for a user based on their subscription tier
 import { getDb } from '../../../db/db';
-import { getUserFromRequest } from '../../../shared/utils/auth';
-import { getPlatformFee } from '../../../shared/utils/subscription-utils';
+import { getUserFromRequest } from '../../../shared/utils/auth.js';
+import { getPlatformFee } from '../../../shared/utils/subscription-utils.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

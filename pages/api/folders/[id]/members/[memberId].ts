@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDb } from '../../../../shared/utils/db';
-import { getUserFromRequest } from '../../../../shared/utils/auth';
+import { getDb } from '@/db/db';
+import { getUserFromRequest } from '@/lib/auth';
 
 export default async function handler(
   req: NextApiRequest,

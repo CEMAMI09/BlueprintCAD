@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-const { getDb } = require('../../shared/utils/db');
-const { getUserFromRequest } = require('../../shared/utils/auth');
+import { getDb } from '@/db/db';
+import { getUserFromRequest } from '@/lib/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
@@ -137,7 +137,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     // Log activity
-    const { logActivity } = require('../../../../shared/utils/activity-logger');
+    const { logActivity } = require('../../../../shared/utils/activity-logger.js');
     await logActivity({
       userId: authUser.userId,
       action: role === 'owner' ? 'ownership_transferred' : 'role_changed',

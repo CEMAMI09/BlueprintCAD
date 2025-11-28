@@ -1,6 +1,6 @@
 // API endpoint for updating user profile
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getUserFromRequest } from '../../../shared/utils/auth';
+import { getUserFromRequest } from '../../../shared/utils/auth.js';
 import { getDb } from '../../../db/db';
 import formidable from 'formidable';
 import fs from 'fs';

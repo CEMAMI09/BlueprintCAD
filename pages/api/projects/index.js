@@ -1,8 +1,8 @@
 // GET all projects, POST new project
 import { getDb } from '../../../db/db';
-import { getUserFromRequest, verifyAuth } from '../../../shared/utils/auth';
-import { filterProjectsByPrivacy } from '../../../shared/utils/privacy-utils';
-import { requireEmailVerification } from '../../../shared/utils/verification-middleware';
+import { getUserFromRequest, verifyAuth } from '../../../shared/utils/auth.js';
+import { filterProjectsByPrivacy } from '../../../shared/utils/privacy-utils.js';
+import { requireEmailVerification } from '../../../shared/utils/verification-middleware.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -160,7 +160,7 @@ export default async function handler(req, res) {
       }
 
       // Check subscription limits
-      const { canPerformAction } = require('../../../shared/utils/subscription-utils');
+      const { canPerformAction } = require('../../../shared/utils/subscription-utils.js');
       
       // Check project limit
       const projectCheck = await canPerformAction(user.userId, 'maxProjects');
@@ -211,7 +211,7 @@ export default async function handler(req, res) {
       };
 
       try {
-        const { extractFileMetadata } = require('../../../shared/utils/file-metadata-utils');
+        const { extractFileMetadata } = require('../../../shared/utils/file-metadata-utils.js');
         // Handle different file path formats
         let fullFilePath;
         if (file_path.startsWith('/storage/')) {
@@ -283,7 +283,7 @@ export default async function handler(req, res) {
       // Only if user has access to branching feature
       if (folder_id) {
         try {
-          const { hasFeature } = require('../../../shared/utils/subscription-utils');
+          const { hasFeature } = require('../../../shared/utils/subscription-utils.js');
           const canCreateBranches = await hasFeature(user.userId, 'canCreateBranches');
           
           if (canCreateBranches) {
@@ -310,7 +310,7 @@ export default async function handler(req, res) {
       }
 
       // Log activity
-      const { logActivity } = require('../../../shared/utils/activity-logger');
+      const { logActivity } = require('../../../shared/utils/activity-logger.js');
       await logActivity({
         userId: user.userId,
         action: 'upload',
@@ -428,7 +428,7 @@ export default async function handler(req, res) {
             
             try {
               // Try direct 3D generation first
-              const { generateThumbnail } = require('../../../shared/utils/generateThumbnail');
+              const { generateThumbnail } = require('../../../shared/utils/generateThumbnail.js');
               console.log(`[Thumbnail] Attempting direct 3D generation for project ${projectId}...`);
               console.log(`[Thumbnail] Input file: ${fullFilePath}`);
               console.log(`[Thumbnail] Output path: ${thumbnailPath}`);
@@ -480,7 +480,7 @@ export default async function handler(req, res) {
               if (!generationSucceeded) {
                 console.log(`[Thumbnail] Falling back to generateThumbnailForDesign wrapper...`);
                 try {
-                  const { generateThumbnailForDesign } = require('../../../shared/utils/generateThumbnail');
+                  const { generateThumbnailForDesign } = require('../../../shared/utils/generateThumbnail.js');
                   const generatedThumbnail = await generateThumbnailForDesign(fullFilePath, projectId, {
                     width: 800,
                     height: 600,
@@ -529,7 +529,7 @@ export default async function handler(req, res) {
               
               // Only generate placeholder if 3D generation actually failed
               try {
-                const { generatePlaceholderThumbnail } = require('../../../shared/utils/generateThumbnail');
+                const { generatePlaceholderThumbnail } = require('../../../shared/utils/generateThumbnail.js');
                 const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
                 if (!fs.existsSync(thumbsDir)) {
                   fs.mkdirSync(thumbsDir, { recursive: true });
@@ -579,7 +579,7 @@ export default async function handler(req, res) {
             console.warn(`[Thumbnail] Storage/uploads exists: ${fs.existsSync(path.join(process.cwd(), 'storage', 'uploads'))}`);
             // Still try to generate placeholder
             try {
-              const { generatePlaceholderThumbnail } = require('../../../shared/utils/generateThumbnail');
+              const { generatePlaceholderThumbnail } = require('../../../shared/utils/generateThumbnail.js');
               const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
               if (!fs.existsSync(thumbsDir)) {
                 fs.mkdirSync(thumbsDir, { recursive: true });
@@ -659,7 +659,7 @@ export default async function handler(req, res) {
           console.error(`[Thumbnail] Stack:`, thumbError.stack);
           // Still try to generate placeholder on error
           try {
-            const { generatePlaceholderThumbnail } = require('../../../shared/utils/generateThumbnail');
+            const { generatePlaceholderThumbnail } = require('../../../shared/utils/generateThumbnail.js');
             const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
             if (!fs.existsSync(thumbsDir)) {
               fs.mkdirSync(thumbsDir, { recursive: true });
