@@ -27,6 +27,7 @@ const nextConfig = {
     // Add alias for reorganized directories - ensure all paths are absolute
     const aliases = {
       '@/components': path.resolve(projectRoot, 'app/components'),
+      '@/components/ThreePreview': path.resolve(projectRoot, 'app/components/ThreePreview.tsx'),
       '@/lib': path.resolve(projectRoot, 'shared/utils'),
       '@/db': path.resolve(projectRoot, 'db'),
       '@/storage': path.resolve(projectRoot, 'storage'),

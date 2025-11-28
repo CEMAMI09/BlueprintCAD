@@ -63,8 +63,8 @@ export default async function handler(req, res) {
       if (ext === '.stl') {
         // STL files - extract actual dimensions
         try {
-          const { getSTLDimensions } = require('../../shared/utils/stl-utils.js');
-          const { analyzePrintability } = require('../../shared/utils/stl-printability.js');
+          const { getSTLDimensions } = require('../../../shared/utils/stl-utils.js');
+          const { analyzePrintability } = require('../../../shared/utils/stl-printability.js');
           
           console.log('Analyzing STL file:', fullFilePath);
           const dimData = getSTLDimensions(fullFilePath);
