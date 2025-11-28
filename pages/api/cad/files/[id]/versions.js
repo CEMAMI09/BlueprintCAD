@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import db from '../../../../shared/utils/db';
+import db from '../../../../shared/utils/db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 

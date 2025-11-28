@@ -5,7 +5,7 @@ import path from 'path';
 import { getUserFromRequest } from '../../shared/utils/auth';
 import { validateExtension, isViewable, isExtractable } from '../../shared/utils/cad-formats';
 import { requireEmailVerification } from '../../shared/utils/verification-middleware';
-import { uploadToR2 } from '../../backend/lib/r2';
+import { uploadToR2 } from '../../backend/lib/r2.js';
 
 export const config = {
   api: {
