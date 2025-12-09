@@ -6,9 +6,8 @@ import { TIER_FEATURES } from '../../../backend/lib/subscription-utils';
 
 // Stripe Price IDs - REPLACE WITH ACTUAL PRICE IDs FROM STRIPE DASHBOARD
 const STRIPE_PRICE_IDS = {
-  pro: process.env.STRIPE_PRICE_PRO || 'price_pro_monthly',
   creator: process.env.STRIPE_PRICE_CREATOR || 'price_creator_monthly',
-  enterprise: process.env.STRIPE_PRICE_ENTERPRISE || 'price_enterprise_monthly',
+  studio: process.env.STRIPE_PRICE_STUDIO || 'price_studio_monthly',
 };
 
 export default async function handler(req, res) {
@@ -24,7 +23,7 @@ export default async function handler(req, res) {
 
     const { tier } = req.body;
 
-    if (!tier || !['pro', 'creator', 'enterprise'].includes(tier)) {
+    if (!tier || !['creator', 'studio'].includes(tier)) {
       return res.status(400).json({ error: 'Invalid tier' });
     }
 

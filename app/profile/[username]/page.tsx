@@ -37,6 +37,7 @@ import {
   Instagram,
   Youtube,
   ShoppingBag,
+  Store,
 } from 'lucide-react';
 import TierBadge from '@/frontend/components/TierBadge';
 
@@ -54,6 +55,7 @@ export default function ProfilePage() {
   const [following, setFollowing] = useState(false);
   const [pending, setPending] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
+  const [storage, setStorage] = useState<{ used: number; limit: number; remaining: number; percentUsed: number } | null>(null);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'projects');
 
   useEffect(() => {
@@ -64,6 +66,18 @@ export default function ProfilePage() {
   }, []);
 
   const isOwnProfile = currentUser?.username === username;
+
+  const formatStorage = (bytes: number) => {
+    if (bytes === -1) return 'Unlimited';
+    if (bytes >= 1024 * 1024 * 1024) {
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    } else if (bytes >= 1024 * 1024) {
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    } else if (bytes >= 1024) {
+      return (bytes / 1024).toFixed(2) + ' KB';
+    }
+    return bytes + ' B';
+  };
 
   // Helper function to format social media URLs
   const formatSocialUrl = (platform: string, value: string) => {
@@ -149,6 +163,10 @@ export default function ProfilePage() {
         const data = await res.json();
         console.log('[Profile] Fetched profile data:', { username: data.username, subscription_tier: data.subscription_tier });
         setProfile(data);
+        // Set storage if available (only for own profile)
+        if (data.storage) {
+          setStorage(data.storage);
+        }
       } else {
         const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
         console.error('[Profile] Failed to fetch profile:', res.status, errorData);
@@ -402,7 +420,7 @@ export default function ProfilePage() {
                           <h1 className="text-2xl font-bold flex items-center" style={{ color: DS.colors.text.primary, marginTop: '-8px' }}>
                             {profile.display_name || username}
                           </h1>
-                          <div className="flex items-center" style={{ marginTop: '-8px' }}>
+                          <div className="flex items-center gap-2" style={{ marginTop: '-8px' }}>
                             <TierBadge tier={profile.subscription_tier} size="md" />
                           </div>
                         </div>
@@ -413,9 +431,18 @@ export default function ProfilePage() {
 
                       <div className="flex items-center gap-2">
                         {isOwnProfile ? (
-                          <Button variant="secondary" icon={<Settings size={18} />} onClick={() => router.push('/settings')}>
-                            Edit Profile
-                          </Button>
+                          <>
+                            <Button variant="secondary" icon={<Settings size={18} />} onClick={() => router.push('/settings')}>
+                              Edit Profile
+                            </Button>
+                            <Button 
+                              variant="secondary" 
+                              icon={<Store size={18} />} 
+                              onClick={() => router.push(`/${username}/store`)}
+                            >
+                              View Store
+                            </Button>
+                          </>
                         ) : (
                           <>
                             <Button 
@@ -435,6 +462,13 @@ export default function ProfilePage() {
                                 Message
                               </Button>
                             )}
+                            <Button 
+                              variant="secondary"
+                              icon={<Store size={18} />}
+                              onClick={() => router.push(`/${username}/store`)}
+                            >
+                              View Store
+                            </Button>
                           </>
                         )}
                       </div>
@@ -591,7 +625,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-4 gap-4 mt-5 pt-5 border-t" style={{ borderColor: DS.colors.border.default }}>
+                <div className={`grid gap-4 mt-5 pt-5 border-t ${isOwnProfile && storage ? 'grid-cols-5' : 'grid-cols-4'}`} style={{ borderColor: DS.colors.border.default }}>
                   <div className="text-center">
                     <div className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
                       {projects.length}
@@ -616,6 +650,19 @@ export default function ProfilePage() {
                     </div>
                     <div className="text-sm" style={{ color: DS.colors.text.secondary }}>Views</div>
                   </div>
+                  {isOwnProfile && storage && (
+                    <div className="text-center">
+                      <div className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
+                        {formatStorage(storage.used)}
+                      </div>
+                      <div className="text-sm" style={{ color: DS.colors.text.secondary }}>
+                        / {formatStorage(storage.limit)}
+                      </div>
+                      <div className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
+                        {storage.percentUsed ? storage.percentUsed.toFixed(1) : '0'}% used
+                      </div>
+                    </div>
+                  )}
                 </div>
                 </div>
               </Card>

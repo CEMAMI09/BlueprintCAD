@@ -5,61 +5,45 @@ const { getDb } = require('../../db/db');
 const TIER_FEATURES = {
   free: {
     name: 'Free',
+    subtitle: 'Build & Browse',
     price: 0,
     features: {
-      maxProjects: 5,
-      maxPublicProjects: 5,
-      maxPrivateProjects: 0,
+      maxProjects: -1, // Unlimited public projects
+      maxPublicProjects: -1,
+      maxPrivateProjects: 2, // 1-2 private projects only
       maxFolders: 3,
       maxTeamMembers: 0,
-      maxConversations: 5,
-      maxForumThreads: 0,
-      maxForumMessages: 0,
-      storageGB: 1,
-      canSell: false,
-      canPostForums: false,
-      canSaveQuotes: false,
-      platformFee: null,
+      maxConversations: -1,
+      maxForumThreads: -1,
+      maxForumMessages: -1,
+      storageGB: 0.5, // 500MB
+      canSell: true, // Can sell but with 15% commission
+      canPostForums: true,
+      canSaveQuotes: true,
+      maxQuoteRequests: 3, // Limited to 3/month
+      platformFee: 0.15, // 15% commission
       analytics: 'none',
       apiAccess: false,
       fileVersioning: false,
       storefrontCustomization: false,
-      whiteLabel: false
-    }
-  },
-  pro: {
-    name: 'Pro',
-    price: 10,
-    features: {
-      maxProjects: -1, // unlimited
-      maxPublicProjects: -1,
-      maxPrivateProjects: -1,
-      maxFolders: 10,
-      maxTeamMembers: 2,
-      maxConversations: -1,
-      maxForumThreads: -1,
-      maxForumMessages: -1,
-      storageGB: 10,
-      canSell: true,
-      canPostForums: true,
-      canSaveQuotes: true,
-      platformFee: 0.05, // 5%
-      analytics: 'basic',
-      apiAccess: false,
-      fileVersioning: false,
-      storefrontCustomization: false,
-      whiteLabel: false
+      manufacturingOrders: false,
+      teamCollaboration: false,
+      whiteLabel: false,
+      featuredListing: false,
+      licensingControls: false,
+      salesAnalytics: false
     }
   },
   creator: {
     name: 'Creator',
-    price: 25,
+    subtitle: 'Sell & Earn',
+    price: 15, // Adjust price as needed
     features: {
       maxProjects: -1,
       maxPublicProjects: -1,
       maxPrivateProjects: -1,
       maxFolders: -1,
-      maxTeamMembers: 5,
+      maxTeamMembers: 0, // No team members in storefront
       maxConversations: -1,
       maxForumThreads: -1,
       maxForumMessages: -1,
@@ -67,23 +51,32 @@ const TIER_FEATURES = {
       canSell: true,
       canPostForums: true,
       canSaveQuotes: true,
-      platformFee: 0.03, // 3%
-      analytics: 'advanced',
-      apiAccess: true,
+      maxQuoteRequests: -1, // Unlimited
+      platformFee: 0.05, // 5% commission
+      analytics: 'sales', // Sales analytics
+      apiAccess: false,
       fileVersioning: true,
       storefrontCustomization: true,
-      whiteLabel: false
+      manufacturingOrders: true,
+      teamCollaboration: false,
+      whiteLabel: false,
+      featuredListing: true,
+      licensingControls: true,
+      salesAnalytics: true,
+      stripePayouts: true
     }
   },
-  enterprise: {
-    name: 'Enterprise',
-    price: 49,
+  studio: {
+    name: 'Studio',
+    subtitle: 'Teams & Scaling',
+    price: 49, // Adjust price as needed
     features: {
       maxProjects: -1,
       maxPublicProjects: -1,
       maxPrivateProjects: -1,
       maxFolders: -1,
-      maxTeamMembers: -1,
+      maxTeamMembers: 10, // 10 team members in storefront
+      maxTeamFolderMembers: -1, // Unlimited in team folders
       maxConversations: -1,
       maxForumThreads: -1,
       maxForumMessages: -1,
@@ -91,12 +84,22 @@ const TIER_FEATURES = {
       canSell: true,
       canPostForums: true,
       canSaveQuotes: true,
-      platformFee: 0.01, // 1% (negotiable)
-      analytics: 'advanced',
+      maxQuoteRequests: -1,
+      platformFee: 0.05, // 5% (could be lower)
+      analytics: 'advanced', // Shared analytics
       apiAccess: true,
       fileVersioning: true,
       storefrontCustomization: true,
-      whiteLabel: true
+      manufacturingOrders: true,
+      teamCollaboration: true,
+      roleBasedPermissions: true,
+      sharedStorefront: true,
+      priorityQuoting: true,
+      whiteLabel: false,
+      featuredListing: true,
+      licensingControls: true,
+      salesAnalytics: true,
+      stripePayouts: true
     }
   }
 };
@@ -111,14 +114,24 @@ async function getUserTier(userId) {
     [userId]
   );
   
-  if (!user) return null;
+  if (!user) return 'free';
   
-  // If subscription is inactive or expired, default to free
-  if (user.subscription_status !== 'active') {
-    return 'free';
-  }
+  const tier = user.subscription_tier || 'free';
   
-  return user.subscription_tier || 'free';
+  // Map legacy tiers to new tier structure (do this before status check)
+  const tierMapping = {
+    'enterprise': 'studio',
+    'pro': 'creator',
+    'premium': 'creator',
+    'team': 'studio',
+  };
+  
+  const mappedTier = tierMapping[tier] || tier;
+  
+  // If subscription is inactive or expired, still return the tier for display
+  // but features will be restricted based on status
+  // Note: For storage limits, we use the tier regardless of status
+  return mappedTier;
 }
 
 /**
@@ -272,7 +285,7 @@ function getRequiredTier(featureName) {
       return tier;
     }
   }
-  return 'pro'; // Default to pro if not found
+  return 'creator'; // Default to creator if not found
 }
 
 /**
@@ -284,24 +297,90 @@ async function getPlatformFee(userId) {
 }
 
 /**
+ * Get storage limit for a tier (in GB)
+ */
+function getStorageLimitForTier(tier) {
+  const tierConfig = TIER_FEATURES[tier] || TIER_FEATURES.free;
+  return tierConfig.features.storageGB || 0.5;
+}
+
+/**
  * Get storage info for user
  */
 async function getStorageInfo(userId) {
   const db = await getDb();
-  const user = await db.get(
-    'SELECT storage_limit_gb, storage_used_gb FROM users WHERE id = ?',
+  
+  // Get tier first to determine storage limit dynamically
+  const tier = await getUserTier(userId);
+  const limit = getStorageLimitForTier(tier);
+  
+  // Calculate actual storage used from files (same logic as storage API)
+  const fileVersions = await db.all(
+    `SELECT fv.file_path, fv.file_size
+     FROM file_versions fv
+     JOIN projects p ON fv.project_id = p.id
+     WHERE p.user_id = ? AND fv.is_current = 1`,
     [userId]
   );
-  
-  if (!user) {
-    return { limit: 1, used: 0, remaining: 1 };
+
+  const projects = await db.all(
+    `SELECT file_path FROM projects WHERE user_id = ? AND file_path IS NOT NULL`,
+    [userId]
+  );
+
+  const fs = require('fs');
+  const path = require('path');
+  let totalSize = 0;
+  const processedPaths = new Set();
+
+  // Calculate from file_versions
+  for (const version of fileVersions) {
+    if (version.file_path && !processedPaths.has(version.file_path)) {
+      processedPaths.add(version.file_path);
+      
+      if (version.file_size) {
+        totalSize += version.file_size;
+      } else {
+        try {
+          let fullPath = path.join(process.cwd(), 'storage', 'uploads', version.file_path);
+          if (!fs.existsSync(fullPath)) {
+            fullPath = path.join(process.cwd(), 'uploads', version.file_path);
+          }
+          if (fs.existsSync(fullPath)) {
+            const stats = fs.statSync(fullPath);
+            totalSize += stats.size;
+          }
+        } catch (e) {
+          // Ignore errors
+        }
+      }
+    }
+  }
+
+  // Calculate from projects that don't have file_versions
+  for (const project of projects) {
+    if (project.file_path && !processedPaths.has(project.file_path)) {
+      processedPaths.add(project.file_path);
+      try {
+        let fullPath = path.join(process.cwd(), 'storage', 'uploads', project.file_path);
+        if (!fs.existsSync(fullPath)) {
+          fullPath = path.join(process.cwd(), 'uploads', project.file_path);
+        }
+        if (fs.existsSync(fullPath)) {
+          const stats = fs.statSync(fullPath);
+          totalSize += stats.size;
+        }
+      } catch (e) {
+        // Ignore errors
+      }
+    }
   }
   
-  const limit = user.storage_limit_gb || 1;
-  const used = user.storage_used_gb || 0;
+  // Convert bytes to GB
+  const used = totalSize / (1024 * 1024 * 1024);
   const remaining = Math.max(0, limit - used);
   
-  return { limit, used, remaining, percentUsed: (used / limit) * 100 };
+  return { limit, used, remaining, percentUsed: limit > 0 ? (used / limit) * 100 : 0 };
 }
 
 module.exports = {
@@ -314,6 +393,7 @@ module.exports = {
   canPerformAction,
   getRequiredTier,
   getPlatformFee,
+  getStorageLimitForTier,
   getStorageInfo
 };
 

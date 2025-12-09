@@ -15,6 +15,7 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, Tabs } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import TierBadge from '@/frontend/components/TierBadge';
 import Link from 'next/link';
 import {
   User,
@@ -99,6 +100,18 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('Error fetching subscription status:', error);
     }
+  };
+
+  const formatStorage = (bytes: number) => {
+    if (bytes === -1) return 'Unlimited';
+    if (bytes >= 1024 * 1024 * 1024) {
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    } else if (bytes >= 1024 * 1024) {
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    } else if (bytes >= 1024) {
+      return (bytes / 1024).toFixed(2) + ' KB';
+    }
+    return bytes + ' B';
   };
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -707,9 +720,12 @@ export default function SettingsPage() {
                           <div className="flex items-center justify-between mb-4">
                             <div>
                               <h4 className="font-semibold" style={{ color: DS.colors.text.primary }}>Current Plan</h4>
-                              <p className="text-sm capitalize" style={{ color: DS.colors.text.secondary }}>
-                                {userSubscription?.tier ? `${userSubscription.tier.charAt(0).toUpperCase() + userSubscription.tier.slice(1)} Plan` : 'Free Plan'}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <TierBadge tier={userSubscription?.tier} size="sm" />
+                                <p className="text-sm capitalize" style={{ color: DS.colors.text.secondary }}>
+                                  {userSubscription?.tier ? `${userSubscription.tier.charAt(0).toUpperCase() + userSubscription.tier.slice(1)} Plan` : 'Free Plan'}
+                                </p>
+                              </div>
                               {userSubscription?.subscription && (
                                 <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
                                   {userSubscription.subscription.cancelAtPeriodEnd 
@@ -739,7 +755,7 @@ export default function SettingsPage() {
                               <div className="flex justify-between text-sm">
                                 <span style={{ color: DS.colors.text.secondary }}>Used</span>
                                 <span style={{ color: DS.colors.text.primary }}>
-                                  {userSubscription.storage.used.toFixed(2)} GB / {userSubscription.storage.limit} GB
+                                  {formatStorage(userSubscription.storage.used * 1024 * 1024 * 1024)} / {formatStorage(userSubscription.storage.limit * 1024 * 1024 * 1024)}
                                 </span>
                               </div>
                               <div className="w-full bg-gray-800 rounded-full h-2">

@@ -1,14 +1,15 @@
 /**
  * TierBadge Component
  * Displays subscription tier badges for users
- * Free → no badge
- * Premium → blue badge
- * Pro → purple badge
+ * Free → grey badge with "Free" (no crown)
+ * Creator → blue badge with crown
+ * Studio → purple badge with crown
  */
 
 'use client';
 
 import React from 'react';
+import { Crown } from 'lucide-react';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 
 interface TierBadgeProps {
@@ -18,46 +19,65 @@ interface TierBadgeProps {
 }
 
 export default function TierBadge({ tier, size = 'sm', className = '' }: TierBadgeProps) {
-  // Debug logging
-  console.log('[TierBadge] Rendering with tier:', tier, 'type:', typeof tier);
-  
   // Normalize tier name
   const normalizedTier = tier?.toLowerCase() || 'free';
   
-  console.log('[TierBadge] Normalized tier:', normalizedTier);
-  
-  // Free tier shows nothing
-  if (normalizedTier === 'free' || !tier) {
-    console.log('[TierBadge] Not showing badge - tier is free or null');
-    return null;
-  }
-
   // Determine badge style and label
-  // Map backend tiers to frontend badges:
-  // - Backend "pro" → Frontend "Premium" (blue badge)
-  // - Backend "creator" or "enterprise" → Frontend "Pro" (purple badge)
-  // - Frontend "premium" → Frontend "Premium" (blue badge)
-  // - Frontend "pro" → Frontend "Pro" (purple badge)
   let badgeStyle: React.CSSProperties;
   let label: string;
+  let showCrown: boolean = false;
   
-  if (normalizedTier === 'premium' || normalizedTier === 'pro') {
-    // Premium/Pro (backend "pro" tier) → blue badge
+  if (normalizedTier === 'free') {
+    // Free tier → grey badge, no crown
+    badgeStyle = {
+      backgroundColor: DS.colors.background.elevated,
+      color: DS.colors.text.secondary,
+      border: `1px solid ${DS.colors.border.default}`,
+    };
+    label = 'Free';
+    showCrown = false;
+  } else if (normalizedTier === 'creator') {
+    // Creator → blue badge with crown
     badgeStyle = {
       backgroundColor: DS.colors.primary.blue,
       color: '#ffffff',
     };
-    label = 'Premium';
-  } else if (normalizedTier === 'creator' || normalizedTier === 'enterprise') {
-    // Creator/Enterprise → purple badge
+    label = 'Creator';
+    showCrown = true;
+  } else if (normalizedTier === 'studio') {
+    // Studio → purple badge with crown
     badgeStyle = {
       backgroundColor: '#9333ea', // Purple
       color: '#ffffff',
     };
-    label = 'Pro';
+    label = 'Studio';
+    showCrown = true;
   } else {
-    // Unknown tier → no badge
-    return null;
+    // Legacy tiers or unknown → map to closest
+    if (normalizedTier === 'premium' || normalizedTier === 'pro') {
+      badgeStyle = {
+        backgroundColor: DS.colors.primary.blue,
+        color: '#ffffff',
+      };
+      label = 'Creator';
+      showCrown = true;
+    } else if (normalizedTier === 'enterprise') {
+      badgeStyle = {
+        backgroundColor: '#9333ea',
+        color: '#ffffff',
+      };
+      label = 'Studio';
+      showCrown = true;
+    } else {
+      // Unknown tier → show as free
+      badgeStyle = {
+        backgroundColor: DS.colors.background.elevated,
+        color: DS.colors.text.secondary,
+        border: `1px solid ${DS.colors.border.default}`,
+      };
+      label = 'Free';
+      showCrown = false;
+    }
   }
 
   // Size classes
@@ -67,12 +87,29 @@ export default function TierBadge({ tier, size = 'sm', className = '' }: TierBad
     lg: 'text-base px-3 py-1.5',
   };
 
+  const iconSizes = {
+    sm: 12,
+    md: 14,
+    lg: 16,
+  };
+
   return (
     <span
-      className={`inline-flex items-center font-semibold rounded-full ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center gap-1 font-semibold rounded-full ${sizeClasses[size]} ${className}`}
       style={badgeStyle}
-      title={`${tier.charAt(0).toUpperCase() + tier.slice(1)} tier`}
+      title={`${label} tier`}
     >
+      {showCrown && (
+        <Crown 
+          size={iconSizes[size]} 
+          style={{ 
+            color: badgeStyle.color, 
+            fill: 'none', 
+            stroke: badgeStyle.color,
+            strokeWidth: 2 
+          }}
+        />
+      )}
       {label}
     </span>
   );

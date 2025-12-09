@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   try {
     const user = await db.get(
-      'SELECT id, username, email, bio, profile_picture, banner, location, website, social_links, visibility_options, profile_private, oauth_providers, created_at FROM users WHERE username = ?',
+      'SELECT id, username, email, bio, profile_picture, banner, location, website, social_links, visibility_options, profile_private, oauth_providers, subscription_tier, created_at FROM users WHERE username = ?',
       [username]
     );
 
@@ -95,6 +95,21 @@ export default async function handler(req, res) {
       if (!visibilityOptions.social_links) delete user.social_links;
     }
 
+    // Get storage info if owner (convert GB to bytes for consistency with storage API)
+    let storage = null;
+    if (isOwner) {
+      const { getUserTier, getStorageLimitForTier, getStorageInfo } = require('../../../../backend/lib/subscription-utils');
+      const tier = await getUserTier(user.id);
+      const storageInfo = await getStorageInfo(user.id);
+      // Convert GB to bytes for display consistency
+      storage = {
+        used: storageInfo.used * 1024 * 1024 * 1024, // Convert GB to bytes
+        limit: storageInfo.limit * 1024 * 1024 * 1024, // Convert GB to bytes
+        remaining: storageInfo.remaining * 1024 * 1024 * 1024,
+        percentUsed: storageInfo.percentUsed
+      };
+    }
+
     res.status(200).json({
       ...user,
       social_links: socialLinks,
@@ -102,7 +117,8 @@ export default async function handler(req, res) {
       followers: followerCount.count,
       following: followingCount.count,
       isFollowing,
-      isOwner
+      isOwner,
+      storage: storage
     });
   } catch (error) {
     console.error('Fetch user error:', error);

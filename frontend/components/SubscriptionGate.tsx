@@ -6,7 +6,7 @@ import UpgradeModal from './UpgradeModal';
 
 interface SubscriptionGateProps {
   feature: string;
-  requiredTier?: 'pro' | 'creator' | 'enterprise';
+  requiredTier?: 'creator' | 'studio';
   children: React.ReactNode;
   fallback?: React.ReactNode;
   showUpgradeModal?: boolean;
@@ -80,20 +80,27 @@ export default function SubscriptionGate({
   const getRequiredTier = (featureName: string): string => {
     // Map features to required tiers
     const featureTierMap: { [key: string]: string } = {
-      maxPrivateProjects: 'pro',
-      canSell: 'pro',
-      canPostForums: 'pro',
-      canSaveQuotes: 'pro',
-      maxFolders: 'pro', // After limit
-      maxTeamMembers: 'pro',
-      maxConversations: 'pro', // After limit
-      analytics: 'pro',
+      maxPrivateProjects: 'creator', // Free has 1-2, Creator+ has unlimited
+      canSell: 'free', // Free can sell with 15% fee
+      canPostForums: 'free',
+      canSaveQuotes: 'free',
+      maxFolders: 'creator', // After free limit
+      maxTeamMembers: 'studio',
+      maxConversations: 'free', // Free has unlimited
+      analytics: 'creator', // Sales analytics
       storefrontCustomization: 'creator',
       fileVersioning: 'creator',
-      apiAccess: 'creator',
-      whiteLabel: 'enterprise',
+      apiAccess: 'studio',
+      manufacturingOrders: 'creator',
+      teamCollaboration: 'studio',
+      featuredListing: 'creator',
+      licensingControls: 'creator',
+      salesAnalytics: 'creator',
+      sharedStorefront: 'studio',
+      roleBasedPermissions: 'studio',
+      priorityQuoting: 'studio',
     };
-    return featureTierMap[featureName] || 'pro';
+    return featureTierMap[featureName] || 'creator';
   };
 
   const handleUpgrade = () => {
@@ -120,7 +127,7 @@ export default function SubscriptionGate({
           <UpgradeModal
             isOpen={showModal}
             onClose={() => setShowModal(false)}
-            requiredTier={checkResult?.requiredTier || requiredTier || 'pro'}
+            requiredTier={checkResult?.requiredTier || requiredTier || 'creator'}
             feature={feature}
             reason={checkResult?.reason}
           />

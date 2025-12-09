@@ -33,6 +33,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
+import TierBadge from '@/frontend/components/TierBadge';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -43,6 +44,7 @@ export default function DashboardPage() {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [storage, setStorage] = useState<{ used: number; max: number; percentage: number } | null>(null);
+  const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
 
   useEffect(() => {
     fetchDashboardData();
@@ -408,12 +410,9 @@ export default function DashboardPage() {
               <p className="text-sm" style={{ color: DS.colors.text.secondary }}>
                 @{userInfo?.username || 'user'}
               </p>
-              {stats && (
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  <Crown size={16} style={{ color: DS.colors.accent.warning }} />
-                  <Badge variant="warning" size="sm">Member</Badge>
-                </div>
-              )}
+              <div className="flex items-center justify-center mt-2">
+                <TierBadge tier={subscriptionTier} size="sm" />
+              </div>
             </div>
 
             {/* Storage Usage */}

@@ -8,53 +8,46 @@ import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  requiredTier: 'pro' | 'creator' | 'enterprise';
+  requiredTier: 'creator' | 'studio';
   feature?: string;
   reason?: string;
 }
 
 const TIER_INFO = {
-  pro: {
-    name: 'Pro',
-    price: 10,
-    features: [
-      'Unlimited projects (public + private)',
-      'Sell designs (5% platform fee)',
-      '10GB storage',
-      'Basic analytics',
-      'Post in forums',
-      'Save quote calculations',
-      'Up to 10 folders',
-      'Up to 2 team members',
-    ],
-  },
   creator: {
     name: 'Creator',
-    price: 25,
+    subtitle: 'Sell & Earn',
+    price: 19,
     features: [
-      'Everything in Pro',
+      'Everything in Free +',
+      'Sell designs in marketplace',
+      'Personal storefront',
+      'Stripe payouts',
+      'AI manufacturing quotes',
+      'Licensing controls',
+      'Reviews & ratings',
+      'Sales analytics',
+      'More private projects',
       '50GB storage',
-      'Advanced analytics',
-      'Storefront customization',
-      'Lower platform fee (3%)',
-      'File versioning',
-      'API access',
-      'Up to 5 team members',
-      'Unlimited folders',
+      'Featured listing eligibility',
+      'Lower platform fees (5%)',
     ],
   },
-  enterprise: {
-    name: 'Enterprise',
+  studio: {
+    name: 'Studio',
+    subtitle: 'Teams & Scaling',
     price: 49,
     features: [
-      'Everything in Creator',
-      '200GB+ storage',
-      'White-label options',
-      'Unlimited team members',
-      'Custom platform fee (1%+)',
-      'Priority support',
-      'Advanced API access',
-      'Custom integrations',
+      'Everything in Creator +',
+      '10 team members in storefront',
+      'Team folders (unlimited members)',
+      'Role-based permissions',
+      'Shared analytics',
+      'Internal collaboration',
+      'Priority quoting',
+      'Shared storefront brand',
+      '200GB storage',
+      'API access',
     ],
   },
 };
@@ -145,6 +138,14 @@ export default function UpgradeModal({
           >
             Upgrade to {tierInfo.name}
           </h2>
+          {tierInfo.subtitle && (
+            <p
+              className="text-sm mb-2"
+              style={{ color: DS.colors.text.tertiary }}
+            >
+              {tierInfo.subtitle}
+            </p>
+          )}
           <p
             className="text-lg mb-4"
             style={{ color: DS.colors.text.secondary }}

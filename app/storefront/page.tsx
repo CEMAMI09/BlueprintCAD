@@ -196,8 +196,8 @@ export default function StorefrontPage() {
                   </div>
                 }
               />
-              <PanelContent>
-                <div className="max-w-4xl mx-auto space-y-6">
+              <PanelContent className="!pt-12 !pb-12">
+                <div className="max-w-4xl mx-auto space-y-6 px-6" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
                   {preview ? (
                     <Card padding="lg">
                       <div className="space-y-4">

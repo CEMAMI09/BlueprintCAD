@@ -1,7 +1,7 @@
 // Stripe webhook handler for subscription events
 import { getDb } from '../../../db/db';
 import Stripe from 'stripe';
-import { TIER_FEATURES } from '../../../backend/lib/subscription-utils';
+import { TIER_FEATURES, getStorageLimitForTier } from '../../../backend/lib/subscription-utils';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
   apiVersion: '2023-10-16',
@@ -90,20 +90,26 @@ export default async function handler(req, res) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object;
         const dbSubscription = await db.get(
-          'SELECT user_id FROM subscriptions WHERE stripe_subscription_id = ?',
+          'SELECT user_id, tier FROM subscriptions WHERE stripe_subscription_id = ?',
           [subscription.id]
         );
 
         if (dbSubscription) {
+          // Get tier from subscription metadata or use existing tier
+          const tier = subscription.metadata?.tier || dbSubscription.tier || 'free';
+          const storageLimit = getStorageLimitForTier(tier);
+          
           await db.run(
             `UPDATE subscriptions 
-             SET status = ?,
+             SET tier = ?,
+                 status = ?,
                  current_period_start = ?,
                  current_period_end = ?,
                  cancel_at_period_end = ?,
                  updated_at = CURRENT_TIMESTAMP
              WHERE stripe_subscription_id = ?`,
             [
+              tier,
               subscription.status,
               new Date(subscription.current_period_start * 1000).toISOString(),
               new Date(subscription.current_period_end * 1000).toISOString(),
@@ -112,16 +118,27 @@ export default async function handler(req, res) {
             ]
           );
 
-          // Update user status if cancelled
-          if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+          // Update user tier and storage limit
+          if (subscription.status === 'active') {
+            await db.run(
+              `UPDATE users 
+               SET subscription_tier = ?,
+                   subscription_status = 'active',
+                   storage_limit_gb = ?
+               WHERE id = ?`,
+              [tier, storageLimit, dbSubscription.user_id]
+            );
+          } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
             await db.run(
               `UPDATE users 
                SET subscription_status = ?,
-                   subscription_ends_at = ?
+                   subscription_ends_at = ?,
+                   storage_limit_gb = ?
                WHERE id = ?`,
               [
                 subscription.status,
                 new Date(subscription.current_period_end * 1000).toISOString(),
+                getStorageLimitForTier('free'), // Downgrade to free storage
                 dbSubscription.user_id,
               ]
             );
@@ -144,9 +161,9 @@ export default async function handler(req, res) {
              SET subscription_tier = 'free',
                  subscription_status = 'inactive',
                  subscription_ends_at = CURRENT_TIMESTAMP,
-                 storage_limit_gb = 1
+                 storage_limit_gb = ?
              WHERE id = ?`,
-            [dbSubscription.user_id]
+            [getStorageLimitForTier('free'), dbSubscription.user_id]
           );
 
           await db.run(
@@ -216,11 +233,4 @@ export default async function handler(req, res) {
   }
 }
 
-function getStorageLimitForTier(tier) {
-  const tierConfig = TIER_FEATURES[tier];
-  if (tierConfig && tierConfig.features.storageGB) {
-    return tierConfig.features.storageGB;
-  }
-  return 1; // Default to 1GB
-}
 

@@ -11,64 +11,73 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import { Check, X, Crown, Zap, Building2, CreditCard, Calendar } from 'lucide-react';
+import { Check, X, Crown, Zap, Building2, Store, Users, TrendingUp } from 'lucide-react';
 import TierBadge from '@/frontend/components/TierBadge';
 
 const TIERS = {
   free: {
     name: 'Free',
+    subtitle: 'Build & Browse',
     price: 0,
     icon: Zap,
     color: DS.colors.text.secondary,
     features: [
-      '5 public projects',
-      '1GB storage',
-      'Basic profile',
-      'View forums',
-      '5 active conversations',
+      'Unlimited public projects',
+      '500MB storage',
+      'Public profile',
+      'Explore & Trending',
+      'Download free designs',
       'Basic search',
+      'Comments & stars',
+      '1-2 private projects',
+      'AI quote estimates (3/month)',
+      'Sell designs (15% commission)',
     ],
     limitations: [
-      'No private projects',
-      'No selling designs',
-      'No posting in forums',
-      'No saving quotes',
-      'Limited folders (3)',
-      'No team features',
+      'No storefront',
+      'No manufacturing orders',
+      'No advanced analytics',
+      'No team collaboration',
     ],
   },
-  premium: {
-    name: 'Premium',
-    price: 10,
-    icon: Crown,
+  creator: {
+    name: 'Creator',
+    subtitle: 'Sell & Earn',
+    price: 15,
+    icon: Store,
     color: DS.colors.primary.blue,
     features: [
-      'Unlimited projects (public + private)',
-      '10GB storage',
-      'Sell designs (5% platform fee)',
-      'Post in forums',
-      'Save quote calculations',
-      'Up to 10 folders',
-      'Up to 2 team members',
-      'Basic analytics',
-      'Priority support',
+      'Everything in Free +',
+      'Sell designs in marketplace',
+      'Personal storefront',
+      'Stripe payouts',
+      'AI manufacturing quotes',
+      'Licensing controls',
+      'Reviews & ratings',
+      'Sales analytics',
+      'More private projects',
+      '50GB storage',
+      'Featured listing eligibility',
+      'Lower platform fees (5%)',
     ],
   },
-  pro: {
-    name: 'Pro',
-    price: 25,
+  studio: {
+    name: 'Studio',
+    subtitle: 'Teams & Scaling',
+    price: 49,
     icon: Building2,
     color: '#9333ea', // Purple
     features: [
-      'Everything in Premium',
-      '50GB storage',
-      'Advanced analytics',
-      'Storefront customization',
-      'Lower platform fee (3%)',
-      'File versioning',
+      'Everything in Creator +',
+      '10 team members in storefront',
+      'Team folders (unlimited members)',
+      'Role-based permissions',
+      'Shared analytics',
+      'Internal collaboration',
+      'Priority quoting',
+      'Shared storefront brand',
+      '200GB storage',
       'API access',
-      'Up to 5 team members',
-      'Unlimited folders',
     ],
   },
 };
@@ -114,8 +123,8 @@ export default function SubscriptionPage() {
       // Map frontend tier names to backend tier names
       const tierMapping: Record<string, string> = {
         'free': 'free',
-        'premium': 'pro',      // Frontend "premium" maps to backend "pro"
-        'pro': 'creator',      // Frontend "pro" maps to backend "creator"
+        'creator': 'creator',
+        'studio': 'studio',
       };
       
       const backendTier = tierMapping[tier] || tier;
@@ -197,9 +206,11 @@ export default function SubscriptionPage() {
   const getFrontendTier = (backendTier: string): string => {
     const tierMapping: Record<string, string> = {
       'free': 'free',
-      'pro': 'premium',        // Backend "pro" maps to frontend "premium"
-      'creator': 'pro',        // Backend "creator" maps to frontend "pro"
-      'enterprise': 'pro',     // Backend "enterprise" also maps to frontend "pro"
+      'creator': 'creator',
+      'studio': 'studio',
+      // Legacy tiers map to closest new tier
+      'pro': 'creator',
+      'enterprise': 'studio',
     };
     return tierMapping[backendTier] || 'free';
   };
@@ -208,14 +219,26 @@ export default function SubscriptionPage() {
   const frontendTier = getFrontendTier(backendTier);
   const currentTierInfo = TIERS[frontendTier as keyof typeof TIERS];
 
+  const formatStorage = (bytes: number) => {
+    if (bytes === -1) return 'Unlimited';
+    if (bytes >= 1024 * 1024 * 1024) {
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    } else if (bytes >= 1024 * 1024) {
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    } else if (bytes >= 1024) {
+      return (bytes / 1024).toFixed(2) + ' KB';
+    }
+    return bytes + ' B';
+  };
+
   return (
     <ThreePanelLayout
       leftPanel={<GlobalNavSidebar />}
       centerPanel={
         <CenterPanel>
           <PanelHeader title="Subscription Plans" />
-          <PanelContent>
-            <div className="space-y-6">
+          <PanelContent className="p-8 md:p-12">
+            <div className="space-y-8">
               {/* Current Plan */}
               {frontendTier !== 'free' && subscription?.subscription && (
                 <Card padding="lg">
@@ -248,7 +271,7 @@ export default function SubscriptionPage() {
 
               {/* Storage Info */}
               {subscription?.storage && (
-                <Card padding="lg">
+                <Card padding="lg" className="mb-8">
                   <h3 className="text-lg font-semibold mb-3" style={{ color: DS.colors.text.primary }}>
                     Storage Usage
                   </h3>
@@ -256,15 +279,15 @@ export default function SubscriptionPage() {
                     <div className="flex justify-between text-sm">
                       <span style={{ color: DS.colors.text.secondary }}>Used</span>
                       <span style={{ color: DS.colors.text.primary }}>
-                        {subscription.storage.used.toFixed(2)} GB / {subscription.storage.limit} GB
+                        {formatStorage(subscription.storage.used * 1024 * 1024 * 1024)} / {formatStorage(subscription.storage.limit * 1024 * 1024 * 1024)}
                       </span>
                     </div>
                     <div className="w-full bg-gray-800 rounded-full h-2">
                       <div
                         className="h-2 rounded-full transition-all"
                         style={{
-                          width: `${Math.min(subscription.storage.percentUsed, 100)}%`,
-                          backgroundColor: subscription.storage.percentUsed > 90 
+                          width: `${Math.min(subscription.storage.percentUsed || 0, 100)}%`,
+                          backgroundColor: (subscription.storage.percentUsed || 0) > 90 
                             ? DS.colors.accent.error 
                             : DS.colors.primary.blue
                         }}
@@ -275,20 +298,25 @@ export default function SubscriptionPage() {
               )}
 
               {/* Available Plans */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {Object.entries(TIERS).map(([tierKey, tierInfo]) => {
                   const Icon = tierInfo.icon;
                   const isCurrent = tierKey === frontendTier;
-                  const isUpgrade = ['premium', 'pro'].indexOf(tierKey) > ['premium', 'pro'].indexOf(frontendTier);
+                  const tierOrder = ['free', 'creator', 'studio'];
+                  const isUpgrade = tierOrder.indexOf(tierKey) > tierOrder.indexOf(frontendTier);
                   
                   return (
                     <Card
                       key={tierKey}
                       padding="lg"
-                      className={`relative ${isCurrent ? 'ring-2' : ''}`}
+                      className="relative flex flex-col"
                       style={{
                         borderColor: isCurrent ? tierInfo.color : DS.colors.border.default,
                         backgroundColor: isCurrent ? `${tierInfo.color}10` : DS.colors.background.card,
+                        minHeight: '100%',
+                        ...(isCurrent ? { 
+                          boxShadow: `0 0 0 2px ${tierInfo.color}40`
+                        } : {})
                       }}
                     >
                       {isCurrent && (
@@ -306,11 +334,15 @@ export default function SubscriptionPage() {
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3" style={{ backgroundColor: `${tierInfo.color}20` }}>
                           <Icon size={24} style={{ color: tierInfo.color }} />
                         </div>
-                        <div className="flex items-center justify-center gap-2 mb-1">
+                        <div className="flex flex-col items-center gap-1 mb-1">
                           <h3 className="text-xl font-bold" style={{ color: DS.colors.text.primary }}>
                             {tierInfo.name}
                           </h3>
-                          {tierKey !== 'free' && <TierBadge tier={tierKey} size="sm" />}
+                          {tierInfo.subtitle && (
+                            <p className="text-sm" style={{ color: DS.colors.text.secondary }}>
+                              {tierInfo.subtitle}
+                            </p>
+                          )}
                         </div>
                         <div className="mb-4">
                           <span className="text-3xl font-bold" style={{ color: DS.colors.text.primary }}>
@@ -324,7 +356,7 @@ export default function SubscriptionPage() {
                         </div>
                       </div>
 
-                      <ul className="space-y-2 mb-6">
+                      <ul className="space-y-2 mb-6 flex-grow">
                         {tierInfo.features.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-2 text-sm">
                             <Check size={16} className="mt-0.5 flex-shrink-0" style={{ color: tierInfo.color }} />
@@ -339,25 +371,35 @@ export default function SubscriptionPage() {
                         ))}
                       </ul>
 
-                      {isCurrent ? (
-                        <Button
-                          variant="secondary"
-                          fullWidth
-                          disabled
-                        >
-                          Current Plan
-                        </Button>
-                      ) : (
-                        <Button
-                          variant={isUpgrade ? "primary" : "secondary"}
-                          fullWidth
-                          onClick={() => handleUpgrade(tierKey)}
-                          disabled={upgrading === tierKey}
-                          style={isUpgrade ? { backgroundColor: tierInfo.color } : {}}
-                        >
-                          {upgrading === tierKey ? 'Processing...' : isUpgrade ? 'Upgrade' : 'Downgrade'}
-                        </Button>
-                      )}
+                      <div className="mt-auto">
+                        {isCurrent ? (
+                          <Button
+                            variant="secondary"
+                            fullWidth
+                            disabled
+                          >
+                            Current Plan
+                          </Button>
+                        ) : tierKey === 'free' ? (
+                          <Button
+                            variant="secondary"
+                            fullWidth
+                            disabled
+                          >
+                            Free Plan
+                          </Button>
+                        ) : (
+                          <Button
+                            variant={isUpgrade ? "primary" : "secondary"}
+                            fullWidth
+                            onClick={() => handleUpgrade(tierKey)}
+                            disabled={upgrading === tierKey}
+                            style={isUpgrade ? { backgroundColor: tierInfo.color } : {}}
+                          >
+                            {upgrading === tierKey ? 'Processing...' : isUpgrade ? 'Upgrade' : 'Downgrade'}
+                          </Button>
+                        )}
+                      </div>
                     </Card>
                   );
                 })}

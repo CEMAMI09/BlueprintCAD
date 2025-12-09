@@ -18,19 +18,13 @@ export default async function handler(req, res) {
     const userId = user.userId;
     const db = await getDb();
 
-    // Get user's tier (default to 'free' if not set)
-    const userRecord = await db.get('SELECT tier FROM users WHERE id = ?', [userId]);
-    const tier = userRecord?.tier || 'free';
-
-    // Define storage limits by tier (in bytes)
-    const tierLimits = {
-      free: 10 * 1024 * 1024 * 1024, // 10 GB
-      pro: 50 * 1024 * 1024 * 1024, // 50 GB
-      team: 100 * 1024 * 1024 * 1024, // 100 GB
-      enterprise: -1 // Unlimited
-    };
-
-    const maxStorage = tierLimits[tier] || tierLimits.free;
+    // Get user's tier using subscription utils
+    const { getUserTier, getStorageLimitForTier } = require('../../../backend/lib/subscription-utils');
+    const tier = await getUserTier(userId);
+    
+    // Get storage limit for tier (returns GB, convert to bytes)
+    const storageLimitGB = getStorageLimitForTier(tier);
+    const maxStorage = storageLimitGB === -1 ? -1 : storageLimitGB * 1024 * 1024 * 1024;
 
     // Get all file paths for this user's projects
     // First, try to get from file_versions (current versions)

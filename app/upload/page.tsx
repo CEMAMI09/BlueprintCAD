@@ -11,6 +11,8 @@ import { Upload as UploadIcon, Globe, Lock, DollarSign, ChevronRight, ChevronDow
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import SubscriptionGate from '@/frontend/components/SubscriptionGate';
 import UpgradeModal from '@/frontend/components/UpgradeModal';
+import LicenseSelectionModal from '@/components/LicenseSelectionModal';
+import { Button, Badge } from '@/components/ui/UIComponents';
 
 interface FormData {
   title: string;
@@ -18,6 +20,12 @@ interface FormData {
   tags: string;
   is_public: boolean;
   for_sale: boolean;
+  price: string;
+}
+
+interface LicenseSelection {
+  licenseType: string;
+  enabled: boolean;
   price: string;
 }
 
@@ -78,6 +86,8 @@ export default function Upload() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
+  const [showLicenseModal, setShowLicenseModal] = useState(false);
+  const [licenseSelections, setLicenseSelections] = useState<LicenseSelection[]>([]);
 
   // Check subscription feature access
   const checkSubscription = async (feature: string, onAllowed: () => void) => {
@@ -293,6 +303,13 @@ const fetchFolders = async () => {
       return;
     }
 
+    if (formData.for_sale && licenseSelections.filter(l => l.enabled).length === 0) {
+      setError('Please select at least one license type for products for sale');
+      setShowLicenseModal(true);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -344,7 +361,8 @@ const fetchFolders = async () => {
         file_type: file.name.split('.').pop(),
         dimensions: dimensions || null,
         price: formData.for_sale ? parseFloat(formData.price) || null : null,
-        folder_id: selectedFolderId || null
+        folder_id: selectedFolderId || null,
+        licenses: formData.for_sale ? licenseSelections.filter(l => l.enabled) : []
       };
 
       const projectRes = await fetch('/api/projects', {
@@ -866,22 +884,48 @@ const fetchFolders = async () => {
                 </SubscriptionGate>
 
                 {formData.for_sale && (
-                  <div className="p-4 bg-gray-800/50 rounded-lg">
-                    <label className="block text-sm font-medium mb-2">Price (USD) *</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        required={formData.for_sale}
-                        value={formData.price}
-                        onChange={(e) => setFormData({...formData, price: e.target.value})}
-                        className="w-full pl-8 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                        placeholder="9.99"
-                      />
+                  <div className="p-4 bg-gray-800/50 rounded-lg space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Base Price (USD) *</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          required={formData.for_sale}
+                          value={formData.price}
+                          onChange={(e) => setFormData({...formData, price: e.target.value})}
+                          className="w-full pl-8 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                          placeholder="9.99"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">This will be the minimum price. You can set different prices for each license type.</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Set a fair price for your design files</p>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">License Types *</label>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setShowLicenseModal(true)}
+                        className="w-full"
+                      >
+                        {licenseSelections.filter(l => l.enabled).length > 0
+                          ? `${licenseSelections.filter(l => l.enabled).length} License Type(s) Selected`
+                          : 'Select License Types'}
+                      </Button>
+                      {licenseSelections.filter(l => l.enabled).length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {licenseSelections.filter(l => l.enabled).map((sel, idx) => (
+                            <Badge key={idx} variant="secondary">
+                              {sel.licenseType}: ${parseFloat(sel.price).toFixed(2)}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">Choose which license types to offer and set prices for each</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -948,6 +992,17 @@ const fetchFolders = async () => {
         onClose={() => setShowUpgradeModal(false)}
         requiredTier={upgradeTier}
         feature="maxPrivateProjects"
+      />
+    )}
+    
+    {showLicenseModal && (
+      <LicenseSelectionModal
+        isOpen={showLicenseModal}
+        onClose={() => setShowLicenseModal(false)}
+        onSave={(selections) => {
+          setLicenseSelections(selections);
+        }}
+        initialSelections={licenseSelections}
       />
     )}
     </>
