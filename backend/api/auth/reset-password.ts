@@ -1,5 +1,5 @@
 // Handle password reset with token
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../lib/db';
 import { hashPassword } from '../../../backend/lib/auth';
 import type { NextApiRequest, NextApiResponse } from 'next';
 

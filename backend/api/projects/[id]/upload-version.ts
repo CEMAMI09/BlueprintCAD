@@ -1,6 +1,6 @@
 // API endpoint to upload a new version of a project file
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getDb } from '../../../../backend/lib/db';
+import { getDb } from '../../../../db/db';
 import { getUserFromRequest } from '../../../../backend/lib/auth';
 import formidable from 'formidable';
 import fs from 'fs';

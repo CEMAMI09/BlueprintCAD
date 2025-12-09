@@ -106,9 +106,9 @@ export default function AnalyticsPage() {
     <>
       <SubscriptionGate
         feature="analytics"
-        requiredTier="pro"
+        requiredTier="creator"
         showUpgradeModal={true}
-        message="Analytics dashboard requires Pro subscription or higher"
+        message="Analytics dashboard requires Creator subscription or higher"
       >
         <ThreePanelLayout
           leftPanel={<GlobalNavSidebar />}

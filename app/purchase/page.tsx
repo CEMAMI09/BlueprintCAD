@@ -58,8 +58,8 @@ type PurchaseType = 'design' | 'manufacturing' | 'subscription';
 export default function PurchasePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const purchaseType = searchParams.get('type') as PurchaseType || 'design';
-  const projectId = searchParams.get('id');
+  const purchaseType = (searchParams?.get('type') as PurchaseType) || 'design';
+  const projectId = searchParams?.get('id') || null;
 
   const [user, setUser] = useState<any>(null);
   const [project, setProject] = useState<Project | null>(null);

@@ -3,7 +3,7 @@
  * POST /api/orders/checkout
  */
 
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import { getUserFromRequest } from '../../../backend/lib/auth';
 const { createPaymentIntent } = require('../../../lib/stripe-utils');
 

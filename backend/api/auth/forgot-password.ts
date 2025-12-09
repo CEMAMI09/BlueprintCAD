@@ -1,5 +1,5 @@
 // Handle forgot password requests
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../lib/db';
 import { sendPasswordResetEmail } from '../../../backend/lib/email';
 import { checkRateLimit } from '../../../backend/lib/rate-limit';
 import crypto from 'crypto';

@@ -1,5 +1,5 @@
 // GET all projects, POST new project
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import { getUserFromRequest, verifyAuth } from '../../../backend/lib/auth';
 import { filterProjectsByPrivacy } from '../../../backend/lib/privacy-utils';
 import { requireEmailVerification } from '../../../backend/lib/verification-middleware';

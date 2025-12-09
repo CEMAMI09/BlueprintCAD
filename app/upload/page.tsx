@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import ThreePreview from '@/components/ThreePreview';
-import { Folder } from '@/types';
+import { Folder } from '@/frontend/types';
 import { ThreePanelLayout, LeftPanel, CenterPanel, RightPanel, PanelHeader, PanelContent } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Upload as UploadIcon, Globe, Lock, DollarSign, ChevronRight, ChevronDown, Folder as FolderIcon } from 'lucide-react';
@@ -193,7 +193,7 @@ const fetchFolders = async () => {
           setSelectedFolderId(folderIdNum);
           // Expand parent folders to show the selected folder
           const expandParents = (folderId: number) => {
-            const folder = allFolders.find(f => f.id === folderId);
+            const folder = allFolders.find((f: Folder) => f.id === folderId);
             if (folder && folder.parent_id) {
               setExpandedFolders(prev => new Set([...prev, folder.parent_id!]));
               expandParents(folder.parent_id);
@@ -431,7 +431,7 @@ const fetchFolders = async () => {
       if (folder.parent_id === null || folder.parent_id === 0) {
         rootFolders.push(folderNode);
       } else {
-        const parent = folderMap.get(folder.parent_id);
+        const parent = folder.parent_id !== undefined ? folderMap.get(folder.parent_id) : undefined;
         if (parent) {
           if (!parent.children) parent.children = [];
           parent.children.push(folderNode);
@@ -704,7 +704,7 @@ const fetchFolders = async () => {
                         // Fetch tags from API with search term (API handles sorting - tags starting with search term first)
                         const fetchedTags = await fetchTags(searchTerm);
                         // Filter out already selected tags
-                        const filtered = fetchedTags.filter(tag => !selectedTags.includes(tag));
+                        const filtered = fetchedTags.filter((tag: string) => !selectedTags.includes(tag));
                         setTagSuggestions(filtered.slice(0, 15)); // Show more suggestions
                         setShowTagSuggestions(filtered.length > 0);
                       } else {
@@ -730,7 +730,7 @@ const fetchFolders = async () => {
                         const searchTerm = tagInput.trim();
                         // Fetch tags from API with search term
                         const fetchedTags = await fetchTags(searchTerm);
-                        const filtered = fetchedTags.filter(tag => !selectedTags.includes(tag));
+                        const filtered = fetchedTags.filter((tag: string) => !selectedTags.includes(tag));
                         setTagSuggestions(filtered.slice(0, 15));
                         setShowTagSuggestions(filtered.length > 0);
                       } else {
@@ -859,7 +859,7 @@ const fetchFolders = async () => {
 
                 <SubscriptionGate
                   feature="canSell"
-                  requiredTier="pro"
+                  requiredTier="creator"
                   showUpgradeModal={false}
                 >
                   <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
@@ -990,7 +990,13 @@ const fetchFolders = async () => {
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        requiredTier={upgradeTier}
+        requiredTier={
+          upgradeTier === 'creator'
+            ? 'creator'
+            : upgradeTier === 'enterprise'
+            ? 'studio'
+            : undefined
+        }
         feature="maxPrivateProjects"
       />
     )}

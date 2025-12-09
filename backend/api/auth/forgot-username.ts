@@ -1,5 +1,5 @@
 // Handle forgot username requests
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../lib/db';
 import { sendUsernameReminderEmail } from '../../../backend/lib/email';
 import { checkRateLimit, getClientIP } from '../../../backend/lib/rate-limit';
 import type { NextApiRequest, NextApiResponse } from 'next';

@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
 import { getUserFromRequest } from '../../../backend/lib/auth';
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import { getAllExtensions, getContentType } from '../../../backend/lib/cad-formats';
 
 // Get all allowed file extensions from CAD formats module

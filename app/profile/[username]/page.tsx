@@ -56,7 +56,7 @@ export default function ProfilePage() {
   const [pending, setPending] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [storage, setStorage] = useState<{ used: number; limit: number; remaining: number; percentUsed: number } | null>(null);
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'projects');
+  const [activeTab, setActiveTab] = useState(searchParams?.get('tab') || 'projects');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -135,7 +135,7 @@ export default function ProfilePage() {
   }, [currentUser, username]);
 
   useEffect(() => {
-    const tab = searchParams.get('tab');
+    const tab = searchParams?.get('tab') || null;
     if (tab && (tab === 'projects' || tab === 'starred' || tab === 'orders')) {
       setActiveTab(tab);
     }

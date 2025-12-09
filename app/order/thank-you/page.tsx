@@ -16,7 +16,7 @@ import { CheckCircle, ArrowLeft } from 'lucide-react';
 export default function OrderThankYouPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const orderNumber = searchParams.get('orderNumber');
+  const orderNumber = searchParams?.get('orderNumber') || null;
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {

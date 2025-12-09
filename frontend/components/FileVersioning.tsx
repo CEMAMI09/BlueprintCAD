@@ -184,7 +184,6 @@ export default function FileVersioning({ projectId, currentVersion, onVersionCha
                 size="sm"
                 icon={<Upload size={16} />}
                 disabled={uploading}
-                as="span"
               >
                 {uploading ? 'Uploading...' : 'Upload New Version'}
               </Button>

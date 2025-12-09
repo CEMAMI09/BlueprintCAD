@@ -1,5 +1,5 @@
 // Get storage usage for the current user
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import { getUserFromRequest } from '../../../backend/lib/auth';
 import fs from 'fs';
 import path from 'path';

@@ -8,9 +8,12 @@ import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  requiredTier: 'creator' | 'studio';
+  requiredTier?: 'creator' | 'studio';
   feature?: string;
   reason?: string;
+  currentTier?: string;
+  featureName?: string;
+  message?: string;
 }
 
 const TIER_INFO = {
@@ -58,12 +61,16 @@ export default function UpgradeModal({
   requiredTier,
   feature,
   reason,
+  currentTier,
+  featureName,
+  message,
 }: UpgradeModalProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const tierInfo = TIER_INFO[requiredTier];
+  const tierInfo = requiredTier ? TIER_INFO[requiredTier] : null;
 
   if (!isOpen) return null;
+  if (!tierInfo) return null;
 
   const handleUpgrade = async () => {
     setLoading(true);

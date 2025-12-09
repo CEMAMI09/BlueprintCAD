@@ -1,5 +1,5 @@
 // Handle user login
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import { verifyPassword, generateToken } from '../../../backend/lib/auth';
 
 export default async function handler(req, res) {

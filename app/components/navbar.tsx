@@ -112,10 +112,7 @@ export default function Navbar() {
                 </svg>
               </button>
               <div className="absolute left-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <Link href="/cad-editor" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-t-lg text-sm">
-                  🔧 CAD Editor
-                </Link>
-                <Link href="/assembly-editor" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-sm">
+                <Link href="/assembly-editor" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-t-lg text-sm">
                   📦 Assembly Editor
                 </Link>
                 <Link href="/drawing-editor" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-sm">
@@ -229,9 +226,6 @@ export default function Navbar() {
               </Link>
               
               <div className="text-gray-400 text-xs font-semibold uppercase pt-2">Tools</div>
-              <Link href="/cad-editor" className="text-gray-300 hover:text-white transition py-2 pl-4">
-                🔧 CAD Editor
-              </Link>
               <Link href="/assembly-editor" className="text-gray-300 hover:text-white transition py-2 pl-4">
                 📦 Assembly Editor
               </Link>

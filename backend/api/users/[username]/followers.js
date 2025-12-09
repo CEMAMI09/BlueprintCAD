@@ -1,4 +1,4 @@
-import { getDb } from '../../../../backend/lib/db';
+import { getDb } from '../../../../db/db';
 import { getUserFromRequest } from '../../../../backend/lib/auth';
 import { isProfileVisible } from '../../../../backend/lib/privacy-utils';
 

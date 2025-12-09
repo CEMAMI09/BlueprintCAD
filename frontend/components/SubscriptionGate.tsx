@@ -10,6 +10,7 @@ interface SubscriptionGateProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
   showUpgradeModal?: boolean;
+  message?: string;
 }
 
 export default function SubscriptionGate({
@@ -18,6 +19,7 @@ export default function SubscriptionGate({
   children,
   fallback,
   showUpgradeModal = true,
+  message,
 }: SubscriptionGateProps) {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [checkResult, setCheckResult] = useState<any>(null);

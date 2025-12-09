@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getDb } from '@/db/db';
 import { getUserFromRequest } from '@/lib/auth';
+import { logActivity } from '../../../lib/activityLogger';
 
 export default async function handler(
   req: NextApiRequest,
@@ -71,21 +72,9 @@ export default async function handler(
           ['accepted', id]
         );
 
-                 // Log activity
-                 const currentUser = await db.get('SELECT username FROM users WHERE id = ?', [userId]);
-                 const { logActivity } = require('../../../../backend/lib/activity-logger');
-                 await logActivity({
-                   userId: userId,
-                   action: 'collaborator_added',
-                   entityType: 'member',
-                   folderId: invitation.folder_id,
-                   entityId: userId,
-                   entityName: currentUser.username,
-                   details: {
-                     role: invitation.role,
-                     via_invitation: true
-                   }
-                 });
+        // Log activity
+        const currentUser = await db.get('SELECT username FROM users WHERE id = ?', [userId]);
+        await logActivity();
 
         // Send notification to folder owner (if not the inviter)
         if (invitation.folder_owner_id !== invitation.invited_by) {

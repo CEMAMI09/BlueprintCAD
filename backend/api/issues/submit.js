@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import db from '../../../backend/lib/db';
+import db from '../../../db/db';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';

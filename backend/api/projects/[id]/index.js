@@ -1,5 +1,5 @@
 // GET, PUT, DELETE specific project (moved to avoid route conflicts)
-import { getDb } from '../../../../backend/lib/db';
+import { getDb } from '../../../../db/db';
 import { getUserFromRequest, verifyAuth } from '../../../../backend/lib/auth';
 import { isProfileVisible } from '../../../../backend/lib/privacy-utils';
 

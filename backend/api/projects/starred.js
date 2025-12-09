@@ -1,5 +1,5 @@
 // Get starred projects for the current user
-import { getDb } from '../../../backend/lib/db.js';
+import { getDb } from '../../../db/db';
 import { getUserFromRequest } from '../../../backend/lib/auth.js';
 
 async function ensureLikeTable(db) {

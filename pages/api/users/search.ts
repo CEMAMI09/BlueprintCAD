@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     searchQuery, 
     followingOnly, 
     hasAuthUser: !!authUser,
-    authUserId: authUser?.userId,
+    authUserId: typeof authUser === 'object' && authUser !== null && 'userId' in authUser ? (authUser as any).userId : undefined,
     queryParam: req.query.query,
     qParam: req.query.q
   });
@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
              JOIN users u ON f.following_id = u.id
              WHERE f.follower_id = ? AND (f.status = 1 OR f.status IS NULL)
              ORDER BY u.username ASC`,
-            [authUser.userId]
+            [typeof authUser === 'object' && authUser !== null && 'userId' in authUser ? (authUser as any).userId : undefined]
           );
         } catch (err: any) {
           if (err.message && err.message.includes('no such column: status')) {
@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                JOIN users u ON f.following_id = u.id
                WHERE f.follower_id = ?
                ORDER BY u.username ASC`,
-              [authUser.userId]
+              [typeof authUser === 'object' && authUser !== null && 'userId' in authUser ? (authUser as any).userId : undefined]
             );
           } else {
             throw err;
@@ -106,7 +106,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               AND u.username LIKE ? COLLATE NOCASE
             ORDER BY u.username ASC
             LIMIT 10
-          `, [authUser.userId, searchTerm]);
+          `, [
+            typeof authUser === 'object' && authUser !== null && 'userId' in authUser
+              ? (authUser as any).userId
+              : undefined,
+            searchTerm
+          ]);
         } catch (err: any) {
           if (err.message && err.message.includes('no such column: status')) {
             users = await db.all(`
@@ -120,7 +125,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 AND u.username LIKE ? COLLATE NOCASE
               ORDER BY u.username ASC
               LIMIT 10
-            `, [authUser.userId, searchTerm]);
+            `, [
+              typeof authUser === 'object' && authUser !== null && 'userId' in authUser
+                ? (authUser as any).userId
+                : undefined,
+              searchTerm
+            ]);
           } else {
             throw err;
           }

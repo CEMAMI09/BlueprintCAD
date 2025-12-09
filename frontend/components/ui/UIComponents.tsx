@@ -114,10 +114,11 @@ interface BadgeProps {
   children: ReactNode;
   variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error';
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
   style?: React.CSSProperties;
 }
 
-export function Badge({ children, variant = 'default', size = 'md', style }: BadgeProps) {
+export function Badge({ children, variant = 'default', size = 'md', className = '', style }: BadgeProps) {
   const variantStyles = {
     default: { bg: DS.colors.background.elevated, color: DS.colors.text.secondary },
     primary: { bg: DS.colors.primary.blue, color: '#ffffff' },
@@ -137,7 +138,7 @@ export function Badge({ children, variant = 'default', size = 'md', style }: Bad
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full ${sizeStyles[size]}`}
+      className={`inline-flex items-center font-medium rounded-full ${sizeStyles[size]} ${className}`}
       style={{
         backgroundColor: selectedVariant.bg,
         color: selectedVariant.color,
@@ -250,22 +251,34 @@ export function Textarea({ label, error, fullWidth = false, className = '', ...p
 interface SearchBarProps {
   placeholder?: string;
   onSearch?: (query: string) => void;
+  onChange?: (e: any) => void;
+  value?: string;
   fullWidth?: boolean;
 }
 
-export function SearchBar({ placeholder = 'Search...', onSearch, fullWidth = true }: SearchBarProps) {
+export function SearchBar({ placeholder = 'Search...', onSearch, onChange, value, fullWidth = true }: SearchBarProps) {
+  const handleChange = (e: any) => {
+    if (onChange) {
+      onChange(e);
+    }
+    if (onSearch) {
+      onSearch(e.target.value);
+    }
+  };
+
   return (
     <div className={`relative ${fullWidth ? 'w-full' : ''}`}>
       <input
         type="search"
         placeholder={placeholder}
+        value={value}
         className="w-full px-4 py-2.5 pl-10 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2"
         style={{
           backgroundColor: DS.colors.background.panelLight,
           borderColor: DS.colors.border.default,
           color: DS.colors.text.primary,
         }}
-        onChange={(e) => onSearch?.(e.target.value)}
+        onChange={handleChange}
         onFocus={(e) => {
           e.currentTarget.style.borderColor = DS.colors.primary.blue;
           e.currentTarget.style.boxShadow = `0 0 0 3px ${DS.colors.primary.blue}33`;

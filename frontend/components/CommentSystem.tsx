@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import TierBadge from '@/frontend/components/TierBadge';
 
 interface Comment {
   id: number;

@@ -55,7 +55,7 @@ interface Project {
 export default function BuyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const projectId = searchParams.get('id');
+  const projectId = searchParams?.get('id') || null;
 
   const [user, setUser] = useState<any>(null);
   const [project, setProject] = useState<Project | null>(null);

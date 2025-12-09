@@ -1,5 +1,5 @@
 // Get forum statistics (topic counts by category)
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

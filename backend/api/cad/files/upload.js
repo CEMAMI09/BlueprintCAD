@@ -2,7 +2,7 @@ import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
 import { verifyToken } from '../../../../backend/lib/auth';
-import { getDb } from '../../../../backend/lib/db';
+import { getDb } from '../../../../db/db';
 
 export const config = {
   api: {

@@ -1,6 +1,6 @@
 // API route to verify email with token
 import { verifyEmailToken, recordVerificationAttempt } from '../../../backend/lib/email-verification';
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST' && req.method !== 'GET') {

@@ -134,7 +134,7 @@ export function RightPanel({ children, className = '' }: PanelProps) {
 
 // Panel header components
 interface PanelHeaderProps {
-  title?: string;
+  title?: ReactNode;
   actions?: ReactNode;
   children?: ReactNode;
 }

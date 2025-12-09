@@ -129,7 +129,7 @@ export default function ShareLinkViewer() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: DS.colors.background.default }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: DS.colors.background.app }}>
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p style={{ color: DS.colors.text.secondary }}>Loading shared content...</p>
@@ -140,7 +140,7 @@ export default function ShareLinkViewer() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: DS.colors.background.default }}>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: DS.colors.background.app }}>
         <Card padding="lg" className="max-w-md w-full text-center">
           <X size={48} className="mx-auto mb-4" style={{ color: DS.colors.accent.error }} />
           <h1 className="text-2xl font-bold mb-2" style={{ color: DS.colors.text.primary }}>Error</h1>
@@ -155,7 +155,7 @@ export default function ShareLinkViewer() {
 
   if (passwordRequired) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: DS.colors.background.default }}>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: DS.colors.background.app }}>
         <Card padding="lg" className="max-w-md w-full">
           <div className="text-center mb-6">
             <Lock size={48} className="mx-auto mb-4" style={{ color: DS.colors.primary.blue }} />
@@ -197,7 +197,7 @@ export default function ShareLinkViewer() {
   const { entity, entity_type, share_link } = shareData;
 
   return (
-    <div className="min-h-screen" style={{ background: DS.colors.background.default }}>
+    <div className="min-h-screen" style={{ background: DS.colors.background.app }}>
       <div className="flex flex-col h-screen">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: DS.colors.border.default }}>

@@ -1,4 +1,4 @@
-import { getDb } from '../../../../backend/lib/db.js';
+import { getDb } from '../../../../db/db';
 import { getUserFromRequest } from '../../../../backend/lib/auth.js';
 
 export default async function handler(req, res) {

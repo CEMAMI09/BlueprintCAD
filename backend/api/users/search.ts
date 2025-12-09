@@ -1,6 +1,6 @@
 // API endpoint for searching users
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {

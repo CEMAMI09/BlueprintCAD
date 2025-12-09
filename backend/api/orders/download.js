@@ -3,7 +3,7 @@
  * GET /api/orders/download?token=xxx
  */
 
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import fs from 'fs';
 import path from 'path';
 

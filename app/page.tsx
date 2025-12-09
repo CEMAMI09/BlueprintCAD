@@ -69,11 +69,6 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: Box,
-      title: 'Professional CAD Editor',
-      description: 'Full-featured parametric modeling with constraints, assemblies, and version control built-in.',
-    },
-    {
       icon: Users,
       title: 'Real-Time Collaboration',
       description: 'Work together on designs with live cursors, comments, and instant sync across your team.',

@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import { getUserFromRequest } from '../../../backend/lib/auth';
 
 export default async function handler(

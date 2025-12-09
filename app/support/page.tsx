@@ -40,14 +40,6 @@ export default function SupportPage() {
       ],
     },
     {
-      title: 'CAD Editor',
-      items: [
-        { question: 'How to use parametric modeling?', link: '/docs/parametric' },
-        { question: 'Exporting to STEP/STL files', link: '/docs/export' },
-        { question: 'Using constraints and dimensions', link: '/docs/constraints' },
-      ],
-    },
-    {
       title: 'Marketplace',
       items: [
         { question: 'How to sell my designs?', link: '/docs/selling' },

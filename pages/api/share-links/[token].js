@@ -1,6 +1,7 @@
 // API endpoint for managing individual share links (GET, DELETE)
-import { getDb } from '../../../../db/db';
-import { getUserFromRequest } from '../../../../backend/lib/auth';
+import { getDb } from '../../../db/db.js';
+import { getServerSession } from 'next-auth/next';
+import authOptions from '../auth/[...nextauth]';
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
@@ -63,13 +64,13 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'DELETE') {
     // Delete share link (requires ownership)
-    const user = getUserFromRequest(req);
+    const session = await getServerSession(req, res, authOptions);
     
-    if (!user || typeof user === 'string') {
+    if (!session || !session.user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const userId = user.userId;
+    const userId = parseInt(session.user.id) || session.user.id;
 
     try {
       const shareLink = await db.get('SELECT * FROM share_links WHERE link_token = ?', [token]);

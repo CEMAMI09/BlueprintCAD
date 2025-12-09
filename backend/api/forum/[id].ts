@@ -1,7 +1,7 @@
 // API endpoint for individual forum thread
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getUserFromRequest } from '../../../backend/lib/auth';
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;

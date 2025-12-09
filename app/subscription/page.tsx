@@ -363,7 +363,7 @@ export default function SubscriptionPage() {
                             <span style={{ color: DS.colors.text.secondary }}>{feature}</span>
                           </li>
                         ))}
-                        {tierKey === 'free' && tierInfo.limitations && tierInfo.limitations.map((limitation, idx) => (
+                        {tierKey === 'free' && 'limitations' in tierInfo && tierInfo.limitations.map((limitation, idx) => (
                           <li key={idx} className="flex items-start gap-2 text-sm">
                             <X size={16} className="mt-0.5 flex-shrink-0" style={{ color: DS.colors.text.tertiary }} />
                             <span style={{ color: DS.colors.text.tertiary }}>{limitation}</span>

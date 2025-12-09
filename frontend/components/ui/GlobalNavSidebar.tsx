@@ -31,7 +31,7 @@ import {
 interface NavItem {
   id: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ElementType;
   href: string;
   badge?: number | string;
 }
@@ -43,7 +43,6 @@ const baseNavItems: NavItem[] = [
   { id: 'forums', label: 'Forums', icon: MessageSquare, href: '/forum' },
   { id: 'quote', label: 'Quote Tool', icon: Calculator, href: '/quote' },
   { id: 'folders', label: 'Folders', icon: Folder, href: '/folders' },
-  { id: 'cad', label: 'CAD Editor', icon: Box, href: '/cad-editor' },
   { id: 'messages', label: 'Messages', icon: Mail, href: '/messages' },
   { id: 'notifications', label: 'Notifications', icon: Bell, href: '/notifications' },
   { id: 'profile', label: 'Profile', icon: User, href: '/profile' },

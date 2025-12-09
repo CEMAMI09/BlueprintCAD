@@ -1,5 +1,5 @@
 // Handle user registration
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import { hashPassword, generateToken } from '../../../backend/lib/auth';
 import { createVerificationToken } from '../../../backend/lib/email-verification';
 import { getVerificationEmailHTML, getVerificationEmailText } from '../../../backend/lib/email-templates';

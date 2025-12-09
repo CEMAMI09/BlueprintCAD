@@ -1,7 +1,7 @@
 // API endpoint for updating user profile
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getUserFromRequest } from '../../../backend/lib/auth';
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';

@@ -1,5 +1,5 @@
 // API route to disconnect OAuth provider
-import { getDb } from '../../../backend/lib/db';
+import { getDb } from '../../../db/db';
 import { verifyAuth } from '../../../backend/lib/auth';
 
 export default async function handler(req, res) {

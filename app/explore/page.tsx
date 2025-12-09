@@ -236,7 +236,7 @@ export default function ExplorePage() {
               <div className="flex items-center gap-2">
                 <SubscriptionGate
                   feature="maxProjects"
-                  requiredTier="pro"
+                  requiredTier="creator"
                   showUpgradeModal={false}
                 >
                   <Button

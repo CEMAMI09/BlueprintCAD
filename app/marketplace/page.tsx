@@ -51,6 +51,7 @@ interface Listing {
     avatar: string;
     verified: boolean;
     rating: number;
+    subscription_tier?: string;
   };
   category: string;
   tags: string[];
@@ -105,7 +106,7 @@ export default function MarketplacePage() {
                 ? thumbnailPath.split('/').pop() 
                 : thumbnailPath;
               // Add cache-busting query parameter to ensure fresh images
-              return `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
+              return `/api/thumbnails/${encodeURIComponent(filename || "fallback")}?t=${Date.now()}`;
             })() : null,
             seller: {
               username: p.username,

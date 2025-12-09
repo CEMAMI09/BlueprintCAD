@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-const { getDb } = require('../../../lib/db');
-const { getUserFromRequest } = require('../../../lib/auth');
+import { getDb } from '../../../../../../db/db.js';
+import { getServerSession } from 'next-auth/next';
+import authOptions from '../../../../auth/[...nextauth]';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
@@ -8,11 +9,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const db = await getDb();
-  const authUser = getUserFromRequest(req);
+  const session = await getServerSession(req, res, authOptions) as { user?: { id?: string } };
 
-  if (!authUser) {
+  if (!session || !session.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
+
+  const authUser = {
+    userId: typeof session.user.id === 'string' ? parseInt(session.user.id) : session.user.id
+  };
 
   const { id: folderId, memberId } = req.query;
   const { role } = req.body;
@@ -137,7 +142,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     // Log activity
-    const { logActivity } = require('../../../../backend/lib/activity-logger');
+    const { logActivity } = require('../../../../../../lib/activityLogger.js');
     await logActivity({
       userId: authUser.userId,
       action: role === 'owner' ? 'ownership_transferred' : 'role_changed',

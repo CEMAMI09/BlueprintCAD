@@ -54,15 +54,15 @@ function CheckoutForm() {
     setUser(JSON.parse(userData));
 
     // Parse checkout data from URL params or sessionStorage
-    const type = searchParams.get('type') as 'digital' | 'manufacturing' | 'subscription';
+    const type = (searchParams?.get('type') as 'digital' | 'manufacturing' | 'subscription') || 'digital';
     const storedData = sessionStorage.getItem('checkoutData');
 
     if (storedData) {
       setCheckoutData(JSON.parse(storedData));
     } else if (type === 'digital') {
-      const projectId = searchParams.get('projectId');
-      const projectTitle = searchParams.get('projectTitle');
-      const price = searchParams.get('price');
+      const projectId = searchParams?.get('projectId') || null;
+      const projectTitle = searchParams?.get('projectTitle') || null;
+      const price = searchParams?.get('price') || null;
       
       if (projectId && projectTitle && price) {
         setCheckoutData({

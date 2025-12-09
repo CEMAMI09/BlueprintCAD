@@ -106,7 +106,7 @@ export default function QuotePage() {
     }
 
     // Check if projectId is provided in URL
-    const projectId = searchParams.get('projectId');
+    const projectId = searchParams?.get('projectId') || null;
     if (projectId) {
       loadProjectFile(projectId);
     }

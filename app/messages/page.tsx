@@ -110,7 +110,7 @@ export default function MessagesPage() {
         setConversations(convs);
         
         // Check if there's a ?with=username parameter after loading conversations
-        const targetUser = searchParams.get('with');
+        const targetUser = searchParams?.get('with') || null;
         if (targetUser) {
           const existingConv = convs.find((c: Conversation) => c.user.username === targetUser);
           if (existingConv) {
