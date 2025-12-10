@@ -8,7 +8,7 @@
     "start": "next start",
     "start:backend": "node backend/server.js",
     "lint": "next lint",
-    "postinstall": "patch-package || true"
+    "postinstall": "patch-package || true",
   },
   "dependencies": {
     "@google/generative-ai": "^0.1.3",
