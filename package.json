@@ -6,6 +6,7 @@
     "dev:ignore-warnings": "cross-env NODE_OPTIONS=--unhandled-rejections=warn WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next dev",
     "build": "next build",
     "start": "next start",
+    "start:backend": "node backend/server.js",
     "lint": "next lint",
     "postinstall": "patch-package || true"
   },
