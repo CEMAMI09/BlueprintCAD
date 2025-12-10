@@ -10,8 +10,6 @@ export const config = {
   },
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -79,7 +77,7 @@ export default async function handler(req, res) {
     const token = req.cookies?.token;
     if (token) {
       try {
-        const decoded = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
         userId = decoded.userId;
         username = decoded.username;
         email = decoded.email;

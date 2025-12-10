@@ -3,8 +3,6 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import path from 'path';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -19,7 +17,7 @@ export default async function handler(req, res) {
 
     let userId;
     try {
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
       userId = decoded.userId;
     } catch (err) {
       return res.status(401).json({ message: 'Invalid token' });

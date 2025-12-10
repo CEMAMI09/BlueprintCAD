@@ -1,8 +1,6 @@
 import jwt from 'jsonwebtoken';
 import db from '../../../db/db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -17,7 +15,7 @@ export default async function handler(req, res) {
 
     let decoded;
     try {
-      decoded = jwt.verify(token, JWT_SECRET);
+      decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
     } catch (err) {
       return res.status(401).json({ error: 'Invalid token' });
     }

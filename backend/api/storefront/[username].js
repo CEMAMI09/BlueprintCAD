@@ -86,7 +86,7 @@ export default async function handler(req, res) {
       try {
         const token = authHeader.replace('Bearer ', '');
         const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET);
         const currentUserId = decoded.userId;
 
         const follow = await db.get(
