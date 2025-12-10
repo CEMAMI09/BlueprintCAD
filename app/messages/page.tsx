@@ -157,7 +157,7 @@ function MessagesPageContent() {
     setStorefrontLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/storefront', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -177,7 +177,7 @@ function MessagesPageContent() {
   const fetchConversations = async (withUser?: string | null) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/messages', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -208,7 +208,7 @@ function MessagesPageContent() {
           } else {
             // Create a new conversation entry
             // Fetch user profile to get profile picture
-            const userRes = await fetch(`/api/users/${targetUser}`, {
+            const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${targetUser}`, {
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
               }
@@ -246,7 +246,7 @@ function MessagesPageContent() {
   const fetchFollowedUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/users/following-list', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/following-list`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -265,7 +265,7 @@ function MessagesPageContent() {
       const token = localStorage.getItem('token');
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       if (!currentUser?.username) return;
-      const res = await fetch(`/api/users/${currentUser.username}/followers`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${currentUser.username}/followers`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -289,7 +289,7 @@ function MessagesPageContent() {
   const fetchMessages = async (username: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/messages/${username}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages/${username}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -343,7 +343,7 @@ function MessagesPageContent() {
     setSending(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/messages', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -381,7 +381,7 @@ function MessagesPageContent() {
   const fetchChannels = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/channels', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/channels`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -400,7 +400,7 @@ function MessagesPageContent() {
     
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/channels', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/channels`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -436,7 +436,7 @@ function MessagesPageContent() {
   const fetchChannelMessages = async (channelId: number) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/channels/${channelId}/messages`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/channels/${channelId}/messages`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -456,7 +456,7 @@ function MessagesPageContent() {
     setSending(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/channels/${selectedChannel.id}/messages`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/channels/${selectedChannel.id}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

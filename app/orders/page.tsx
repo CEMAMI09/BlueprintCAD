@@ -59,7 +59,7 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/orders/my-orders?type=all', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -80,7 +80,7 @@ export default function OrdersPage() {
 
   const handleDownload = async (token: string, projectTitle: string) => {
     try {
-      const res = await fetch(`/api/orders/download?token=${token}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/download?token=${token}`);
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
@@ -107,7 +107,7 @@ export default function OrdersPage() {
     const reason = prompt('Reason for refund (optional):');
     
     try {
-      const res = await fetch('/api/orders/refund', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderNumber, reason: reason || 'Buyer requested refund' }),

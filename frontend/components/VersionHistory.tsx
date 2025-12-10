@@ -38,7 +38,7 @@ export default function VersionHistory({ projectId, projectTitle, isOwner, onVer
   const fetchVersions = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/projects/${projectId}/versions`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/versions`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -62,7 +62,7 @@ export default function VersionHistory({ projectId, projectTitle, isOwner, onVer
 
     try {
       setRestoring(versionId);
-      const res = await fetch(`/api/projects/${projectId}/restore-version`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/restore-version`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ export default function VersionHistory({ projectId, projectTitle, isOwner, onVer
       formData.append('file', uploadFile);
       formData.append('change_notes', changeNotes || 'Updated file');
 
-      const res = await fetch(`/api/projects/${projectId}/upload-version`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/upload-version`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

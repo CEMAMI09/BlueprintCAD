@@ -90,7 +90,7 @@ function CheckoutForm() {
     try {
       if (checkoutData.type === 'digital') {
         // Handle digital file purchase with Stripe
-        const checkoutRes = await fetch('/api/orders/checkout', {
+        const checkoutRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/checkout`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -125,7 +125,7 @@ function CheckoutForm() {
           throw new Error('Payment was not successful');
         }
 
-        const confirmRes = await fetch('/api/orders/confirm', {
+        const confirmRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/confirm`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderNumber }),
@@ -154,7 +154,7 @@ function CheckoutForm() {
           breakdown: checkoutData.breakdown
         };
 
-        const res = await fetch('/api/manufacturing-orders/create', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/checkout`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -240,11 +240,11 @@ function CheckoutForm() {
   useEffect(() => {
     // Fetch platform fee based on seller's subscription
     if (checkoutData?.type === 'digital' && checkoutData?.projectId) {
-      fetch(`/api/projects/${checkoutData.projectId}`)
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${checkoutData.projectId}`)
         .then(res => res.json())
         .then(project => {
           if (project.user_id) {
-            fetch(`/api/subscriptions/platform-fee`, {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/platform-fee`, {
               headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             })
               .then(res => res.json())

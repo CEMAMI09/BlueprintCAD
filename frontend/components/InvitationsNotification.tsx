@@ -14,7 +14,7 @@ export default function InvitationsNotification() {
 
   const fetchInvitations = async () => {
     try {
-      const res = await fetch('/api/invitations', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invitations`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -31,7 +31,7 @@ export default function InvitationsNotification() {
 
   const handleResponse = async (invitationId: number, action: 'accept' | 'decline') => {
     try {
-      const res = await fetch(`/api/invitations/${invitationId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${invitationId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

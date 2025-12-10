@@ -38,7 +38,7 @@ export default function SubscriptionGate({
         return;
       }
 
-      const res = await fetch('/api/subscriptions/check');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`);
       if (!res.ok) {
         setHasAccess(false);
         return;
@@ -61,7 +61,7 @@ export default function SubscriptionGate({
       // If it's a limit-based feature, check usage
       if (typeof featureValue === 'number' && featureValue > 0) {
         // Check current usage via canPerformAction
-        const actionRes = await fetch(`/api/subscriptions/can-action?feature=${feature}`);
+        const actionRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/can-action?feature=${feature}`);
         if (actionRes.ok) {
           const actionData = await actionRes.json();
           setHasAccess(actionData.allowed);

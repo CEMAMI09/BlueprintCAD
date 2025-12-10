@@ -87,8 +87,8 @@ export default function FoldersPage() {
       }
 
       const url = currentParentId 
-        ? `/api/folders?parent_id=${currentParentId}`
-        : '/api/folders';
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/folders?parent_id=${currentParentId}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/folders`;
       
       const res = await fetch(url, { headers });
       if (res.ok) {
@@ -146,7 +146,7 @@ export default function FoldersPage() {
   const handleCreateFolder = async (folderData: any) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/folders', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

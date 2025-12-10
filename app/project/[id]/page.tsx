@@ -125,7 +125,7 @@ export default function ProjectDetail() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/projects/${id}/branches`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}/branches`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -150,7 +150,7 @@ export default function ProjectDetail() {
 
   const checkPurchaseStatus = async () => {
     try {
-      const res = await fetch('/api/orders/my-orders?type=purchases');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders?type=purchases`);
       if (res.ok) {
         const data = await res.json();
         const purchased = data.purchases?.some((order: any) => 
@@ -174,7 +174,7 @@ export default function ProjectDetail() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(`/api/users/${project.username}`, { 
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${project.username}`, { 
         headers,
         cache: 'no-store' 
       });
@@ -189,7 +189,7 @@ export default function ProjectDetail() {
 
   const fetchLikeState = async () => { // Fetches starred state
     try {
-      const res = await fetch(`/api/projects/${id}/like`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}/like`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         }
@@ -255,7 +255,7 @@ export default function ProjectDetail() {
             console.log('[Project] No thumbnail found, will check again in 2 seconds...');
             setTimeout(async () => {
               try {
-                const retryRes = await fetch(`/api/projects/${id}`, {
+                const retryRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}`, {
                   headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                   }
@@ -302,7 +302,7 @@ export default function ProjectDetail() {
 
     try {
       setActionError('');
-      const res = await fetch(`/api/projects/${id}/like`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}/like`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -355,7 +355,7 @@ export default function ProjectDetail() {
       }
       
       // Fetch the file from the download endpoint
-      const res = await fetch(`/api/projects/${id}/download`, { headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}/download`, { headers });
       
       if (!res.ok) {
         const error = await res.json().catch(() => ({ error: 'Download failed' }));
@@ -384,7 +384,7 @@ export default function ProjectDetail() {
 
   const handleRename = async (newTitle: string) => {
     try {
-      const res = await fetch(`/api/projects/${id}/rename`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}/rename`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -409,7 +409,7 @@ export default function ProjectDetail() {
     setActionError('');
 
     try {
-      const res = await fetch(`/api/projects/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

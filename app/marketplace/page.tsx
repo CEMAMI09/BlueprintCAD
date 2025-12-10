@@ -89,7 +89,7 @@ export default function MarketplacePage() {
       setLoading(true);
       setFetchError('');
       try {
-        const res = await fetch('/api/projects?for_sale=true');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects?for_sale=true`);
         if (res.ok) {
           const projects = await res.json();
           // Map API data to Listing format

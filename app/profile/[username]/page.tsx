@@ -155,7 +155,7 @@ export default function ProfilePage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(`/api/users/${username}`, { 
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}`, { 
         headers,
         cache: 'no-store'
       });
@@ -189,7 +189,7 @@ export default function ProfilePage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(`/api/projects?username=${username}`, { 
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects?username=${username}`, { 
         headers,
         cache: 'no-store' 
       });
@@ -213,7 +213,7 @@ export default function ProfilePage() {
     }
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/users/${username}/following-status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}/following-status`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -238,7 +238,7 @@ export default function ProfilePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/users/follow?username=${encodeURIComponent(username)}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/follow?username=${encodeURIComponent(username)}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -269,7 +269,7 @@ export default function ProfilePage() {
     if (!currentUser) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/projects/starred', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/starred`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -292,7 +292,7 @@ export default function ProfilePage() {
     if (!currentUser || !isOwnProfile) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/orders/my-orders?type=all', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

@@ -16,7 +16,7 @@ export default function ForgotUsername() {
     setMessage('');
 
     try {
-      const res = await fetch('/api/auth/forgot-username', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/forgot-username`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

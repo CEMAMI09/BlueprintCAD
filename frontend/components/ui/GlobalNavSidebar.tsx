@@ -96,7 +96,7 @@ export function GlobalNavSidebar() {
         if (!token) return;
 
         // Fetch unread notifications
-        const notificationsRes = await fetch('/api/notifications', {
+        const notificationsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (notificationsRes.ok) {
@@ -107,7 +107,7 @@ export function GlobalNavSidebar() {
         }
 
         // Fetch unread messages
-        const messagesRes = await fetch('/api/messages/unread', {
+        const messagesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages/unread`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (messagesRes.ok) {

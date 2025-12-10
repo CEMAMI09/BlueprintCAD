@@ -49,7 +49,7 @@ export default function StorefrontPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/subscriptions/check', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -70,7 +70,7 @@ export default function StorefrontPage() {
         return;
       }
 
-      const res = await fetch('/api/storefront', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -119,7 +119,7 @@ export default function StorefrontPage() {
         formDataToSend.append('logo', formData.logo);
       }
 
-      const res = await fetch('/api/storefront', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formDataToSend,

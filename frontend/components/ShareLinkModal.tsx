@@ -54,7 +54,7 @@ export default function ShareLinkModal({
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/share-links', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/share-links`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

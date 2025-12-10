@@ -26,7 +26,7 @@ export default function FolderBreadcrumb({ folderId, onProjectMove }: FolderBrea
 
   const fetchBreadcrumb = async () => {
     try {
-      const res = await fetch(`/api/folders/${folderId}/breadcrumb`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${folderId}/breadcrumb`);
       if (res.ok) {
         const data = await res.json();
         setPath(data);

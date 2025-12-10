@@ -30,7 +30,7 @@ export default function MoveFolderModal({
 
   const fetchFolders = async () => {
     try {
-      const res = await fetch('/api/folders/tree', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

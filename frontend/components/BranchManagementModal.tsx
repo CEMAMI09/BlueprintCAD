@@ -53,7 +53,7 @@ export default function BranchManagementModal({
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/projects/${projectId}/branches`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/branches`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -88,7 +88,7 @@ export default function BranchManagementModal({
       formData.append('is_master', isMaster ? 'true' : 'false');
       formData.append('file', newBranchFile);
 
-      const res = await fetch(`/api/projects/${projectId}/branches`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/branches`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -116,7 +116,7 @@ export default function BranchManagementModal({
   const handleSetMaster = async (branchId: number) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/projects/${projectId}/branches`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/branches`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -151,7 +151,7 @@ export default function BranchManagementModal({
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/projects/${projectId}/branches`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/branches`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -188,7 +188,7 @@ export default function BranchManagementModal({
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/projects/${projectId}/branches?branch_id=${branchId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/branches?branch_id=${branchId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

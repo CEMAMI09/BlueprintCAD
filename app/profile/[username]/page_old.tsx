@@ -39,7 +39,7 @@ export default function Profile() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(`/api/users/${username}`, { 
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}`, { 
         headers,
         cache: 'no-store'
       });
@@ -67,7 +67,7 @@ export default function Profile() {
     if (!currentUser) return;
     
     try {
-      const res = await fetch(`/api/users/${username}/following`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}/following`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -77,7 +77,7 @@ export default function Profile() {
         setFollowing(data.following);
         // Check if there's a pending request
         if (!data.following) {
-          const pendingRes = await fetch(`/api/users/check-pending?username=${username}`, {
+          const pendingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/check-pending?username=${username}`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -101,7 +101,7 @@ export default function Profile() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(`/api/projects?username=${username}`, { headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects?username=${username}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setProjects(data);
@@ -118,7 +118,7 @@ export default function Profile() {
     }
 
     try {
-      const res = await fetch(`/api/users/${username}/follow`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}/follow`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -592,7 +592,7 @@ function EditProfileModal({ profile, onClose, onSuccess }: { profile: any; onClo
         formData.append('banner', banner);
       }
 
-      const res = await fetch('/api/users/profile', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -604,7 +604,7 @@ function EditProfileModal({ profile, onClose, onSuccess }: { profile: any; onClo
         const updatedProfile = await res.json();
         
         // Update privacy setting
-        await fetch('/api/users/update-privacy', {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,

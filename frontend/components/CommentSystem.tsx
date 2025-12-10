@@ -56,7 +56,7 @@ export default function CommentSystem({
 
   const fetchComments = async () => {
     try {
-      const res = await fetch(`/api/comments/on/${entityType}/${entityId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comments/on/${entityType}/${entityId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -83,7 +83,7 @@ export default function CommentSystem({
 
     try {
       console.log('[CommentSystem] Submitting comment:', { entityType, entityId, content: content.substring(0, 50) });
-      const res = await fetch(`/api/comments/on/${entityType}/${entityId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comments/on/${entityType}/${entityId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export default function CommentSystem({
 
   const handleEditComment = async (commentId: number) => {
     try {
-      const res = await fetch(`/api/comments/${commentId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comments/${commentId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export default function CommentSystem({
     if (!confirm('Are you sure you want to delete this comment?')) return;
 
     try {
-      const res = await fetch(`/api/comments/${commentId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comments/${commentId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -155,7 +155,7 @@ export default function CommentSystem({
 
   const handleReaction = async (commentId: number, reactionType: string) => {
     try {
-      await fetch(`/api/comments/${commentId}/reactions`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comments/${commentId}/reactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

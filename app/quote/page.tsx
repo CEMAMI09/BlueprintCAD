@@ -114,7 +114,7 @@ export default function QuotePage() {
 
   const loadProjectFile = async (projectId: string) => {
     try {
-      const res = await fetch(`/api/projects/${projectId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}`);
       if (!res.ok) {
         throw new Error('Failed to fetch project');
       }
@@ -398,7 +398,7 @@ export default function QuotePage() {
       formData.append('file', selectedFile);
 
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/quote/analyze', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quote/analyze`, {
         method: 'POST',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         body: formData
@@ -450,7 +450,7 @@ export default function QuotePage() {
       });
 
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/projects/estimate', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/estimate`, {
         method: 'POST',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         body: formData
@@ -613,7 +613,7 @@ export default function QuotePage() {
       fileFormData.append('file', file);
 
       const token = localStorage.getItem('token');
-      const uploadRes = await fetch('/api/upload', {
+      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: fileFormData
@@ -637,7 +637,7 @@ export default function QuotePage() {
         price: projectData.for_sale ? parseFloat(projectData.price) || null : null
       };
 
-      const projectRes = await fetch('/api/projects', {
+      const projectRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

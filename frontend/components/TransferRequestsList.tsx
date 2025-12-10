@@ -29,8 +29,8 @@ export default function TransferRequestsList() {
   const fetchRequests = async () => {
     try {
       const [incomingRes, outgoingRes] = await Promise.all([
-        fetch('/api/ownership-transfer?type=incoming'),
-        fetch('/api/ownership-transfer?type=outgoing'),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ownership-transfer?type=incoming`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ownership-transfer?type=outgoing`),
       ]);
 
       const incoming = await incomingRes.json();
@@ -49,7 +49,7 @@ export default function TransferRequestsList() {
     setProcessingId(requestId);
 
     try {
-      const response = await fetch(`/api/ownership-transfer/${requestId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ownership-transfer/${requestId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),

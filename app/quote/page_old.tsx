@@ -101,7 +101,7 @@ export default function GetQuote() {
       formData.append('scale', currentScale.toString());
       formData.append('material', currentMaterial);
 
-      const res = await fetch('/api/projects/estimate', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/estimate`, {
         method: 'POST',
         body: formData
       });
@@ -204,7 +204,7 @@ export default function GetQuote() {
       const fileFormData = new FormData();
       fileFormData.append('file', selectedFile);
 
-      const uploadRes = await fetch('/api/quote/analyze', {
+      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quote/analyze`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -341,7 +341,7 @@ export default function GetQuote() {
         breakdown: aiEstimate.breakdown
       };
 
-      const res = await fetch('/api/manufacturing-orders/create', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/estimate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

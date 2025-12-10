@@ -40,7 +40,7 @@ export default function HistoryModal({
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/rename-move-history/${entityType}/${entityId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rename-move-history/${entityType}/${entityId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

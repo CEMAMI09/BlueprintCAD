@@ -150,7 +150,7 @@ export default function FolderDetailPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch(`/api/folders/${id}`, { headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${id}`, { headers });
       if (res.ok) {
         const data = await res.json();
         // API returns folder data with projects and subfolders as properties
@@ -171,7 +171,7 @@ export default function FolderDetailPage() {
 
   const fetchBreadcrumb = async () => {
     try {
-      const res = await fetch(`/api/folders/${id}/breadcrumb`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${id}/breadcrumb`);
       if (res.ok) {
         const path = await res.json();
         setBreadcrumb(path || []);
@@ -189,7 +189,7 @@ export default function FolderDetailPage() {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const res = await fetch(`/api/folders/${id}/notes?folder_only=true`, { headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${id}/notes?folder_only=true`, { headers });
       if (res.ok) {
         const data = await res.json();
         setNotes(data.notes || []);
@@ -205,7 +205,7 @@ export default function FolderDetailPage() {
     setSubmittingNote(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${id}/notes`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${id}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -231,7 +231,7 @@ export default function FolderDetailPage() {
     if (!id) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${id}/notes?note_id=${noteId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${id}/notes?note_id=${noteId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -248,7 +248,7 @@ export default function FolderDetailPage() {
     if (!id) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${id}/members`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${id}/members`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -270,7 +270,7 @@ export default function FolderDetailPage() {
     setIsSearching(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/search?q=${encodeURIComponent(query)}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -300,7 +300,7 @@ export default function FolderDetailPage() {
     setInviting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${id}/members`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${id}/members`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -333,7 +333,7 @@ export default function FolderDetailPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${id}/members`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${id}/members`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -395,7 +395,7 @@ export default function FolderDetailPage() {
     setUpdatingRole(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${id}/members/${selectedMember.id}/role`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${id}/members/${selectedMember.id}/role`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -425,7 +425,7 @@ export default function FolderDetailPage() {
   const handleCreateFolder = async (folderData: any) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/folders', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -75,7 +75,7 @@ export default function SellerAnalyticsPage() {
         return;
       }
 
-      const res = await fetch(`/api/analytics/seller?period=${period}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/analytics/seller?period=${period}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

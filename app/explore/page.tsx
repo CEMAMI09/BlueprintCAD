@@ -130,7 +130,7 @@ export default function ExplorePage() {
     }
 
     try {
-      const response = await fetch(`/api/users/search?q=${encodeURIComponent(search.trim())}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/search?q=${encodeURIComponent(search.trim())}`);
       if (response.ok) {
         const userResults = await response.json();
         setUsers(userResults);
@@ -148,7 +148,7 @@ export default function ExplorePage() {
   const fetchProjects = async (filterId: string = activeFilter, search: string = searchQuery) => {
     try {
       setLoading(true);
-      let url = '/api/projects?';
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/projects?`;
       const params = new URLSearchParams();
 
       // Add filter parameters
@@ -253,7 +253,7 @@ export default function ExplorePage() {
                         return;
                       }
                       try {
-                        const res = await fetch(`/api/subscriptions/can-action?feature=maxProjects`, {
+                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/can-action?feature=maxProjects`, {
                           headers: { 'Authorization': `Bearer ${token}` }
                         });
                         const data = await res.json();

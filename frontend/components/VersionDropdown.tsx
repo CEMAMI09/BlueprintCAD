@@ -39,7 +39,7 @@ export default function VersionDropdown({ projectId, onVersionSelect, className 
 
   const fetchVersions = async () => {
     try {
-      const res = await fetch(`/api/projects/${projectId}/versions`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/versions`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

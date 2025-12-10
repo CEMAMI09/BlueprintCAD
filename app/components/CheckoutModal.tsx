@@ -32,7 +32,7 @@ function CheckoutForm({ projectId, projectTitle, price, onClose, onSuccess }: Ch
 
     try {
       // Step 1: Create payment intent
-      const checkoutRes = await fetch('/api/orders/checkout', {
+      const checkoutRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId }),
@@ -66,7 +66,7 @@ function CheckoutForm({ projectId, projectTitle, price, onClose, onSuccess }: Ch
       }
 
       // Step 3: Confirm on backend and get download token
-      const confirmRes = await fetch('/api/orders/confirm', {
+      const confirmRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderNumber }),

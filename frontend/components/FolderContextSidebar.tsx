@@ -82,7 +82,7 @@ export default function FolderContextSidebar({
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${folderId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${folderId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -104,7 +104,7 @@ export default function FolderContextSidebar({
 
       // Fetch branches for this project
       if (projectId) {
-        const branchesRes = await fetch(`/api/projects/${projectId}/branches`, {
+        const branchesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/branches`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (branchesRes.ok) {
@@ -135,7 +135,7 @@ export default function FolderContextSidebar({
         params.append('folder_only', 'true');
       }
 
-      const res = await fetch(`/api/folders/${folderId}/notes?${params}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${folderId}/notes?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -153,7 +153,7 @@ export default function FolderContextSidebar({
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${folderId}/members`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${folderId}/members`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -173,7 +173,7 @@ export default function FolderContextSidebar({
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${folderId}/notes`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${folderId}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -202,7 +202,7 @@ export default function FolderContextSidebar({
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/folders/${folderId}/notes?note_id=${noteId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${folderId}/notes?note_id=${noteId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

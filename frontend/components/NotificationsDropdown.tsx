@@ -37,7 +37,7 @@ export default function NotificationsDropdown() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/notifications', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -54,7 +54,7 @@ export default function NotificationsDropdown() {
 
   const markAsRead = async (notificationId?: number) => {
     try {
-      await fetch('/api/notifications', {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ export default function NotificationsDropdown() {
 
   const handleFollowRequest = async (followerId: number, action: 'accept' | 'reject', notificationId: number) => {
     try {
-      const res = await fetch('/api/users/follow-request', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

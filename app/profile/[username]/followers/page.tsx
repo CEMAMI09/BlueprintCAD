@@ -46,7 +46,7 @@ export default function FollowersPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/users/${username}/followers?page=${page}&limit=${ITEMS_PER_PAGE}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}/followers?page=${page}&limit=${ITEMS_PER_PAGE}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

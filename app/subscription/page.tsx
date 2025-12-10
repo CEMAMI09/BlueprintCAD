@@ -100,7 +100,7 @@ export default function SubscriptionPage() {
         return;
       }
 
-      const res = await fetch('/api/subscriptions/check', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -129,7 +129,7 @@ export default function SubscriptionPage() {
       
       const backendTier = tierMapping[tier] || tier;
       
-      const res = await fetch('/api/subscriptions/upgrade', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ export default function SubscriptionPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/subscriptions/cancel', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/cancel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

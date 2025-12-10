@@ -59,7 +59,7 @@ export default function NotificationsPage() {
         return;
       }
 
-      const res = await fetch('/api/notifications', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -88,7 +88,7 @@ export default function NotificationsPage() {
       }
 
       const token = localStorage.getItem('token');
-      await fetch(`/api/notifications/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -122,7 +122,7 @@ export default function NotificationsPage() {
       }
       
       // Actually dismiss on server
-      const res = await fetch(`/api/notifications/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -158,7 +158,7 @@ export default function NotificationsPage() {
       }
       
       // Actually delete from server
-      const res = await fetch(`/api/notifications/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -184,7 +184,7 @@ export default function NotificationsPage() {
   const handleFollowRequest = async (followerId: number, action: 'accept' | 'reject') => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/users/follow-request', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -212,7 +212,7 @@ export default function NotificationsPage() {
   const handleFolderInvitation = async (invitationId: number, action: 'accept' | 'decline') => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/invitations/${invitationId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invitations/${invitationId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

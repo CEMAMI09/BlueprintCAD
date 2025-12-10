@@ -35,7 +35,7 @@ export default function Login() {
       // Determine if identifier is an email or username
       const isEmail = formData.identifier.includes('@');
       
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

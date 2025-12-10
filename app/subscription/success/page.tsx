@@ -41,7 +41,7 @@ export default function SubscriptionSuccess() {
         return;
       }
 
-      const res = await fetch('/api/subscriptions/check', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

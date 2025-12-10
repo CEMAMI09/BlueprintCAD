@@ -49,7 +49,7 @@ export default function FileVersioning({ projectId, currentVersion, onVersionCha
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/subscriptions/check', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -65,7 +65,7 @@ export default function FileVersioning({ projectId, currentVersion, onVersionCha
   const fetchVersions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/projects/${projectId}/versions`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/versions`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -91,7 +91,7 @@ export default function FileVersioning({ projectId, currentVersion, onVersionCha
       formData.append('file', file);
       formData.append('description', newVersionDescription);
 
-      const res = await fetch(`/api/projects/${projectId}/versions`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/versions`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -116,7 +116,7 @@ export default function FileVersioning({ projectId, currentVersion, onVersionCha
   const handleSetCurrentVersion = async (versionId: number) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/projects/${projectId}/versions/${versionId}/set-current`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/versions/${versionId}/set-current`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -138,7 +138,7 @@ export default function FileVersioning({ projectId, currentVersion, onVersionCha
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/projects/${projectId}/versions/${versionId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/versions/${versionId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });

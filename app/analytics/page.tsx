@@ -44,7 +44,7 @@ export default function AnalyticsPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/subscriptions/check', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
         return;
       }
 
-      const res = await fetch(`/api/analytics?range=${dateRange}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/analytics?range=${dateRange}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

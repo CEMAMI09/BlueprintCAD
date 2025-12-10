@@ -62,7 +62,7 @@ export default function SettingsPage() {
           headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const res = await fetch(`/api/users/${user.username}`, { headers });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.username}`, { headers });
         if (res.ok) {
           const data = await res.json();
           // Initialize social links if not present
@@ -89,7 +89,7 @@ export default function SettingsPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch('/api/subscriptions/check', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -151,7 +151,7 @@ export default function SettingsPage() {
     }
 
     try {
-      const res = await fetch(`/api/users/${username}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}`);
       if (res.ok) {
         setUsernameError('Username is already taken');
         return false;
@@ -200,7 +200,7 @@ export default function SettingsPage() {
         formData.append('banner', banner);
       }
 
-      const res = await fetch('/api/users/profile', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

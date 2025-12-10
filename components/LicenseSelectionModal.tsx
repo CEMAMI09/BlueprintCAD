@@ -59,7 +59,7 @@ export default function LicenseSelectionModal({
 
   const fetchLicenseTypes = async () => {
     try {
-      const res = await fetch('/api/licenses/types');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/licenses/types`);
       if (res.ok) {
         const types = await res.json();
         setLicenseTypes(types);

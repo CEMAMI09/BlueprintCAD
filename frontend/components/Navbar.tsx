@@ -45,7 +45,7 @@ export default function Navbar() {
 
     const fetchUnreadCount = async () => {
       try {
-        const res = await fetch('/api/messages', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

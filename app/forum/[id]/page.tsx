@@ -83,7 +83,7 @@ export default function ThreadDetail() {
 
   const fetchThread = async () => {
     try {
-      const res = await fetch(`/api/forum/${id}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/${id}`);
       if (res.ok) {
         const data = await res.json();
         setThread(data);
@@ -112,7 +112,7 @@ export default function ThreadDetail() {
       setSubmitting(true);
       setError('');
       
-      const res = await fetch(`/api/forum/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ export default function ThreadDetail() {
     }
 
     try {
-      const res = await fetch(`/api/forum/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

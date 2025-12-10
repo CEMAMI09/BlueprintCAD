@@ -204,10 +204,13 @@ export default function CADViewer({
           loadUrl = objectUrl;
         } else if (fileUrl) {
           // For API files, fetch with authentication and convert to blob URL
-          if (fileUrl.startsWith('/api/files/')) {
+          if (fileUrl.startsWith('/api/files/') || fileUrl.includes('/api/files/')) {
             try {
               const token = localStorage.getItem('token');
-              const response = await fetch(fileUrl, {
+              const apiUrl = fileUrl.startsWith('/api/') 
+                ? `${process.env.NEXT_PUBLIC_API_URL}${fileUrl}`
+                : fileUrl;
+              const response = await fetch(apiUrl, {
                 credentials: 'include', // Include cookies for authentication
                 headers: token ? {
                   'Authorization': `Bearer ${token}`

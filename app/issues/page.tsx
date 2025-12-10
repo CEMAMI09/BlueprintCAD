@@ -84,7 +84,7 @@ export default function IssuesPage() {
   const loadMyIssues = async () => {
     setLoadingIssues(true);
     try {
-      const response = await fetch('/api/issues/list');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/issues/list`);
       if (response.ok) {
         const data = await response.json();
         setMyIssues(data.issues || []);
@@ -104,7 +104,7 @@ export default function IssuesPage() {
       if (adminFilters.severity) queryParams.append('severity', adminFilters.severity);
       if (adminFilters.issue_type) queryParams.append('issue_type', adminFilters.issue_type);
       
-      const response = await fetch(`/api/issues/list?${queryParams.toString()}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/issues/list?${queryParams.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setAdminIssues(data.issues || []);
@@ -159,7 +159,7 @@ export default function IssuesPage() {
         formDataToSend.append('screenshot', formData.screenshot);
       }
 
-      const response = await fetch('/api/issues/submit', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/issues/submit`, {
         method: 'POST',
         body: formDataToSend
       });
@@ -196,7 +196,7 @@ export default function IssuesPage() {
 
   const updateIssueStatus = async (issueId: number, status: string) => {
     try {
-      const response = await fetch(`/api/issues/${issueId}/update`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/issues/${issueId}/update`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -215,7 +215,7 @@ export default function IssuesPage() {
 
   const assignIssue = async (issueId: number, adminId: number | null) => {
     try {
-      const response = await fetch(`/api/issues/${issueId}/update`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/issues/${issueId}/update`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assigned_to: adminId || null })

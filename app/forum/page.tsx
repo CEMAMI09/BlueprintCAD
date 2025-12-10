@@ -116,7 +116,7 @@ export default function ForumPage() {
 
   const fetchCategoryStats = async () => {
     try {
-      const res = await fetch('/api/forum/stats');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/stats`);
       if (res.ok) {
         const stats = await res.json();
         setCategoryStats(stats);
@@ -138,7 +138,7 @@ export default function ForumPage() {
       }
       params.append('sort', activeSort === 'hot' ? 'latest' : activeSort);
 
-      const res = await fetch(`/api/forum/threads?${params.toString()}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/threads?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         // Transform API data to match our Thread interface
@@ -185,7 +185,7 @@ export default function ForumPage() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const canPost = await fetch(`/api/subscriptions/can-action?feature=canPostForums`, {
+        const canPost = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/can-action?feature=canPostForums`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const postCheck = await canPost.json();
@@ -203,7 +203,7 @@ export default function ForumPage() {
     setCreating(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/forum/threads', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/threads`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -238,7 +238,7 @@ export default function ForumPage() {
 
     // Fetch full thread details with replies
     try {
-      const res = await fetch(`/api/forum/${thread.id}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/${thread.id}`);
       if (res.ok) {
         const fullThread = await res.json();
         // Transform to match our Thread interface
@@ -289,7 +289,7 @@ export default function ForumPage() {
     setSubmittingReply(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/forum/${threadId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/${threadId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -99,7 +99,7 @@ export default function BuyPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(`/api/users/${project.username}`, { 
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${project.username}`, { 
         headers,
         cache: 'no-store' 
       });
@@ -114,7 +114,7 @@ export default function BuyPage() {
 
   const fetchProject = async () => {
     try {
-      const res = await fetch(`/api/projects/${projectId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}`);
       if (!res.ok) {
         throw new Error('Failed to fetch project');
       }
@@ -131,7 +131,7 @@ export default function BuyPage() {
     if (!user || !projectId) return;
 
     try {
-      const res = await fetch(`/api/orders/my-orders?type=purchases`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders?type=purchases`);
       if (res.ok) {
         const orders = await res.json();
         const purchased = orders.some((order: any) => 

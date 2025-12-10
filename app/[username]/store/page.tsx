@@ -132,7 +132,7 @@ export default function PublicStorefrontPage() {
 
   const fetchStorefront = async () => {
     try {
-      const res = await fetch(`/api/storefront/${username}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront/${username}`);
       if (res.ok) {
         const data = await res.json();
         setStorefront(data.storefront);
@@ -159,7 +159,7 @@ export default function PublicStorefrontPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/users/${username}/follow`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}/follow`, {
         method: following ? 'DELETE' : 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

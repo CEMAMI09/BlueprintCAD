@@ -56,7 +56,7 @@ export default function DashboardPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
       
-      const res = await fetch('/api/subscriptions/check', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -77,7 +77,7 @@ export default function DashboardPage() {
       }
 
       // Fetch stats
-      const statsRes = await fetch('/api/dashboard/stats', { headers });
+      const statsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/stats`, { headers });
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
@@ -85,21 +85,21 @@ export default function DashboardPage() {
       }
 
       // Fetch recent activity
-      const activityRes = await fetch('/api/dashboard/activity', { headers });
+      const activityRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/activity`, { headers });
       if (activityRes.ok) {
         const activityData = await activityRes.json();
         setRecentActivity(activityData);
       }
 
       // Fetch trending designs
-      const trendingRes = await fetch('/api/dashboard/trending');
+      const trendingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/trending`);
       if (trendingRes.ok) {
         const trendingData = await trendingRes.json();
         setTrending(trendingData);
       }
 
       // Fetch storage usage
-      const storageRes = await fetch('/api/dashboard/storage', { headers });
+      const storageRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/storage`, { headers });
       if (storageRes.ok) {
         const storageData = await storageRes.json();
         setStorage(storageData);

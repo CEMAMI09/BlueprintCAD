@@ -81,7 +81,7 @@ export default function OrderPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/manufacturing-orders/create', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/my-orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

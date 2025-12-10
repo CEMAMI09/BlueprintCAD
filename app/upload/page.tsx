@@ -99,7 +99,7 @@ export default function Upload() {
         return;
       }
 
-      const res = await fetch(`/api/subscriptions/can-action?feature=${feature}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/can-action?feature=${feature}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -153,8 +153,8 @@ useEffect(() => {
 const fetchTags = async (searchTerm?: string) => {
   try {
     const url = searchTerm 
-      ? `/api/tags?search=${encodeURIComponent(searchTerm)}`
-      : '/api/tags';
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/tags?search=${encodeURIComponent(searchTerm)}`
+      : `${process.env.NEXT_PUBLIC_API_URL}/api/tags`;
     const res = await fetch(url);
     if (res.ok) {
       const tags = await res.json();
@@ -173,7 +173,7 @@ const fetchTags = async (searchTerm?: string) => {
 const fetchFolders = async () => {
   try {
     // Fetch all folders (including subfolders) using the all=true parameter
-    const res = await fetch('/api/folders?all=true', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -205,7 +205,7 @@ const fetchFolders = async () => {
           // If folder not found, try to fetch it directly (might be a subfolder we don't have access to)
           console.warn('[Upload] Folder not found in user folders, fetching directly:', folderIdNum);
           try {
-            const folderRes = await fetch(`/api/folders/${folderIdNum}`, {
+            const folderRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${folderIdNum}`, {
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
               }
@@ -317,7 +317,7 @@ const fetchFolders = async () => {
       const fileFormData = new FormData();
       fileFormData.append('file', file);
 
-      const uploadRes = await fetch('/api/upload', {
+      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -341,7 +341,7 @@ const fetchFolders = async () => {
       // Save new tags to the tags table
       if (selectedTags.length > 0) {
         try {
-          await fetch('/api/tags', {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tags`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -365,7 +365,7 @@ const fetchFolders = async () => {
         licenses: formData.for_sale ? licenseSelections.filter(l => l.enabled) : []
       };
 
-      const projectRes = await fetch('/api/projects', {
+      const projectRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

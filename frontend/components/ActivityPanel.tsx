@@ -108,7 +108,7 @@ export default function ActivityPanel({ folderId }: ActivityPanelProps) {
         }
       }
 
-      const res = await fetch(`/api/folders/${folderId}/activity?${params.toString()}&limit=500`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${folderId}/activity?${params.toString()}&limit=500`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
