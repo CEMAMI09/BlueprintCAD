@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import { Fira_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "./providers/AuthProvider";
 import VerificationBanner from "./components/VerificationBanner";
 
-const inter = localFont({
-  src: "../public/fonts/Inter-Regular.ttf",
-  variable: "--font-inter",
-  display: "swap",
-});
+const inter = {
+  className: "font-sans",
+};
 
 const firaMono = Fira_Mono({
   weight: "400",
@@ -30,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${firaMono.variable} antialiased bg-black text-white`}
+        className={`${inter.className} ${firaMono.variable} antialiased bg-black text-white`}
       >
         <AuthProvider>
           <VerificationBanner />
