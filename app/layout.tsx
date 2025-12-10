@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, Fira_Mono } from "next/font/google";
+import localFont from "next/font/local";
+import { Fira_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "./providers/AuthProvider";
 import VerificationBanner from "./components/VerificationBanner";
 
-const inter = Inter({
+const inter = localFont({
+  src: "../public/fonts/Inter-Regular.ttf",
   variable: "--font-inter",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 const firaMono = Fira_Mono({
