@@ -1,0 +1,66 @@
+Date : 2025-12-10 03:09:49
+Directory : c:\Users\codye\forge\pages\api_DISABLED
+Total : 30 files,  2515 codes, 238 comments, 482 blanks, all 3235 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| JavaScript |         24 |      2,079 |        190 |        383 |      2,652 |
+| TypeScript |          6 |        436 |         48 |         99 |        583 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                  | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                     |         30 |      2,515 |        238 |        482 |      3,235 |
+| . (Files)                                                             |          5 |        523 |         43 |         85 |        651 |
+| analytics                                                             |          2 |        362 |         37 |         52 |        451 |
+| auth                                                                  |         10 |        699 |         77 |        156 |        932 |
+| channels                                                              |          2 |        141 |         15 |         34 |        190 |
+| channels (Files)                                                      |          1 |         76 |          8 |         17 |        101 |
+| channels\[id]                                                         |          1 |         65 |          7 |         17 |         89 |
+| notifications                                                         |          2 |        121 |         13 |         26 |        160 |
+| share                                                                 |          1 |        101 |          7 |         14 |        122 |
+| share-links                                                           |          2 |        193 |         18 |         40 |        251 |
+| share\[token]                                                         |          1 |        101 |          7 |         14 |        122 |
+| subscriptions                                                         |          6 |        375 |         28 |         75 |        478 |
++-----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                              | language   | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\codye\forge\pages\api_DISABLED\analytics.js                  | JavaScript |        171 |         12 |         25 |        208 |
+| c:\Users\codye\forge\pages\api_DISABLED\analytics\seller.js           | JavaScript |        338 |         35 |         45 |        418 |
+| c:\Users\codye\forge\pages\api_DISABLED\analytics\track.js            | JavaScript |         24 |          2 |          7 |         33 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\[...nextauth].js         | JavaScript |        204 |         16 |         39 |        259 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\disconnect.js            | JavaScript |         57 |          7 |         14 |         78 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\forgot-password.ts       | TypeScript |         71 |         11 |         16 |         98 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\forgot-username.ts       | TypeScript |         60 |          6 |         13 |         79 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\login.js                 | JavaScript |         41 |          4 |         10 |         55 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\providers.js             | JavaScript |         41 |          3 |          9 |         53 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\register.js              | JavaScript |         73 |         10 |         17 |        100 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\resend-verification.js   | JavaScript |         62 |          9 |         14 |         85 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\reset-password.ts        | TypeScript |         53 |          6 |         14 |         73 |
+| c:\Users\codye\forge\pages\api_DISABLED\auth\verify-email.js          | JavaScript |         37 |          5 |         10 |         52 |
+| c:\Users\codye\forge\pages\api_DISABLED\channels\[id]\messages.ts     | TypeScript |         65 |          7 |         17 |         89 |
+| c:\Users\codye\forge\pages\api_DISABLED\channels\index.ts             | TypeScript |         76 |          8 |         17 |        101 |
+| c:\Users\codye\forge\pages\api_DISABLED\messages.ts                   | TypeScript |        111 |         10 |         22 |        143 |
+| c:\Users\codye\forge\pages\api_DISABLED\notifications\[id].js         | JavaScript |         79 |          8 |         18 |        105 |
+| c:\Users\codye\forge\pages\api_DISABLED\notifications\index.js        | JavaScript |         42 |          5 |          8 |         55 |
+| c:\Users\codye\forge\pages\api_DISABLED\share-links\[token].js        | JavaScript |         72 |          6 |         20 |         98 |
+| c:\Users\codye\forge\pages\api_DISABLED\share-links\index.js          | JavaScript |        121 |         12 |         20 |        153 |
+| c:\Users\codye\forge\pages\api_DISABLED\share\[token]\access.js       | JavaScript |        101 |          7 |         14 |        122 |
+| c:\Users\codye\forge\pages\api_DISABLED\stats.js                      | JavaScript |         18 |          1 |          4 |         23 |
+| c:\Users\codye\forge\pages\api_DISABLED\storefront.js                 | JavaScript |        129 |          7 |         19 |        155 |
+| c:\Users\codye\forge\pages\api_DISABLED\subscriptions\can-action.js   | JavaScript |         23 |          1 |          8 |         32 |
+| c:\Users\codye\forge\pages\api_DISABLED\subscriptions\cancel.js       | JavaScript |         31 |          4 |         10 |         45 |
+| c:\Users\codye\forge\pages\api_DISABLED\subscriptions\check.js        | JavaScript |         37 |          2 |          7 |         46 |
+| c:\Users\codye\forge\pages\api_DISABLED\subscriptions\platform-fee.js | JavaScript |         22 |          2 |          6 |         30 |
+| c:\Users\codye\forge\pages\api_DISABLED\subscriptions\upgrade.js      | JavaScript |         64 |          9 |         15 |         88 |
+| c:\Users\codye\forge\pages\api_DISABLED\subscriptions\webhook.js      | JavaScript |        198 |         10 |         29 |        237 |
+| c:\Users\codye\forge\pages\api_DISABLED\upload.js                     | JavaScript |         94 |         13 |         15 |        122 |
+| Total                                                                 |            |      2,515 |        238 |        482 |      3,235 |
++-----------------------------------------------------------------------+------------+------------+------------+------------+------------+
