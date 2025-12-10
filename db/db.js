@@ -169,6 +169,37 @@ async function initSchema(database) {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE CASCADE
       );
+
+      CREATE TABLE IF NOT EXISTS channels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        created_by INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS channel_members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        channel_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        role TEXT DEFAULT 'member' CHECK(role IN ('owner', 'admin', 'member')),
+        joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(channel_id, user_id),
+        FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS channel_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        channel_id INTEGER NOT NULL,
+        sender_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE,
+        FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+      );
     `);
     
     // 2) Lightweight migrations for legacy DBs missing newer columns
@@ -209,6 +240,11 @@ async function initSchema(database) {
       CREATE INDEX IF NOT EXISTS idx_folder_invitations_user ON folder_invitations(invited_user_id);
       CREATE INDEX IF NOT EXISTS idx_folder_comments_folder ON folder_comments(folder_id);
       CREATE INDEX IF NOT EXISTS idx_folder_comments_parent ON folder_comments(parent_id);
+      CREATE INDEX IF NOT EXISTS idx_channels_created_by ON channels(created_by);
+      CREATE INDEX IF NOT EXISTS idx_channel_members_channel ON channel_members(channel_id);
+      CREATE INDEX IF NOT EXISTS idx_channel_members_user ON channel_members(user_id);
+      CREATE INDEX IF NOT EXISTS idx_channel_messages_channel ON channel_messages(channel_id);
+      CREATE INDEX IF NOT EXISTS idx_channel_messages_sender ON channel_messages(sender_id);
     `);
     await database.exec('COMMIT');
   } catch (err) {

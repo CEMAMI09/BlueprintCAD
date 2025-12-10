@@ -164,23 +164,51 @@ export function GlobalNavSidebar() {
     <div className="h-full flex flex-col" style={{ backgroundColor: DS.colors.background.panel }}>
       {/* Logo / Brand */}
       <div
-        className="flex-shrink-0 px-4 flex items-center border-b"
-        style={{ borderColor: DS.colors.border.subtle, height: '90px', minHeight: '90px', padding: '0', margin: '0', lineHeight: '1' }}
+        className="flex-shrink-0 flex items-center border-b"
+        style={{
+          borderColor: DS.colors.border.subtle,
+          height: '90px',
+          minHeight: '90px',
+          padding: '0',
+          margin: '0',
+          lineHeight: '1',
+          minWidth: 90,
+          justifyContent: 'flex-start',
+          transition: 'padding 0.2s ease, justify-content 0.2s ease',
+          overflow: 'visible',
+        }}
       >
         {!leftPanelCollapsed ? (
-          <Link href="/dashboard" className="flex items-center group" style={{ padding: '0', margin: '0', lineHeight: '1' }}>
+          <Link
+            href="/dashboard"
+            className="flex items-center group"
+            style={{ padding: '0', margin: '0', lineHeight: '1', width: '100%', justifyContent: 'flex-start', display: 'flex' }}
+          >
             <img
               src="/bpcube2.png"
               alt="Blueprint Logo"
               className="logo-image"
+              style={{ flexShrink: 0, objectFit: 'contain', display: 'block' }}
             />
           </Link>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', padding: '0', margin: '0', lineHeight: '1' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              width: '100%',
+              padding: '0',
+              margin: '0',
+              lineHeight: '1',
+              overflow: 'visible',
+            }}
+          >
             <img
               src="/bpcube2.png"
               alt="Blueprint Logo"
               className="logo-image"
+              style={{ flexShrink: 0, objectFit: 'contain', display: 'block' }}
             />
           </div>
         )}

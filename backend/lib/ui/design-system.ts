@@ -127,7 +127,7 @@ export const DesignSystem = {
   layout: {
     leftPanel: {
       expanded: '240px',
-      collapsed: '80px',
+      collapsed: '90px',
     },
     rightPanel: {
       width: '320px',

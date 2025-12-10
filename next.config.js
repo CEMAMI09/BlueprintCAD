@@ -89,6 +89,22 @@ const nextConfig = {
         }
         callback();
       });
+      
+      // Don't bundle canvas - it's a native module with binary files
+      config.externals.push(({ request }, callback) => {
+        if (request === 'canvas') {
+          return callback(null, `commonjs ${request}`);
+        }
+        callback();
+      });
+      
+      // Ignore .node binary files (native modules) - they can't be bundled by webpack
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          resourceRegExp: /\.node$/,
+        })
+      );
     }
     
     return config;
