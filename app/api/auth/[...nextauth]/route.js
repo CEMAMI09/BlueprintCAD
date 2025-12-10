@@ -2,26 +2,11 @@ import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { getDb } from '../../../db/db';
-import { verifyPassword, generateToken } from '../../../backend/lib/auth';
+import { getDb } from '../../../../db/db';
+import { verifyPassword, generateToken } from '../../../../backend/lib/auth';
 
 export const authOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
-    }),
-    GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    }),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -32,29 +17,21 @@ export const authOptions = {
         if (!credentials?.identifier || !credentials?.password) {
           throw new Error('Please enter your credentials');
         }
-
+  
         const db = await getDb();
         const isEmail = credentials.identifier.includes('@');
-
+  
         const user = await db.get(
           'SELECT * FROM users WHERE email = ? OR username = ?',
           [isEmail ? credentials.identifier : null, !isEmail ? credentials.identifier : null]
         );
-
-        if (!user) {
-          throw new Error('Invalid credentials');
-        }
-
-        if (!user.password) {
-          throw new Error('Please sign in with your OAuth provider');
-        }
-
+  
+        if (!user) throw new Error('Invalid credentials');
+        if (!user.password) throw new Error('Please sign in with your OAuth provider');
+  
         const isValid = await verifyPassword(credentials.password, user.password);
-
-        if (!isValid) {
-          throw new Error('Invalid credentials');
-        }
-
+        if (!isValid) throw new Error('Invalid credentials');
+  
         return {
           id: user.id.toString(),
           email: user.email,
@@ -255,4 +232,5 @@ export const authOptions = {
   debug: process.env.NODE_ENV === 'development',
 };
 
-export default NextAuth(authOptions);
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
