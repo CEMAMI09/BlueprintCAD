@@ -22,7 +22,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const userId = user.userId;
+  const typedUser = user as { userId: number };
+  const userId = typedUser.userId;
 
   try {
     const form = formidable({
