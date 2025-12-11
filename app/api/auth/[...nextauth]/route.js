@@ -1,9 +1,9 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { getDb } from "@/db/db";
-import { verifyPassword, generateToken } from "@/backend/lib/auth";
+import { getDb } from "../../../../db/db";
+import { verifyPassword, generateToken } from "../../../../backend/lib/auth";
 
-const authOptions = {
+const handler = NextAuth({
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -11,32 +11,27 @@ const authOptions = {
         identifier: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
+
       async authorize(credentials) {
-        if (!credentials?.identifier || !credentials?.password) {
-          throw new Error("Please enter your credentials");
-        }
+        if (!credentials?.identifier || !credentials?.password) return null;
 
         const db = await getDb();
         const isEmail = credentials.identifier.includes("@");
 
         const user = await db.get(
           "SELECT * FROM users WHERE email = ? OR username = ?",
-          [
-            isEmail ? credentials.identifier : null,
-            !isEmail ? credentials.identifier : null
-          ]
+          [isEmail ? credentials.identifier : null, !isEmail ? credentials.identifier : null]
         );
 
-        if (!user) throw new Error("Invalid credentials");
-        if (!user.password)
-          throw new Error("Please sign in with your OAuth provider");
+        if (!user || !user.password) return null;
 
-        const valid = await verifyPassword(credentials.password, user.password);
-        if (!valid) throw new Error("Invalid credentials");
+        const isValid = await verifyPassword(credentials.password, user.password);
+        if (!isValid) return null;
 
         return {
           id: user.id.toString(),
           email: user.email,
+          name: user.username,
           username: user.username,
           image: user.profile_picture || user.avatar,
         };
@@ -44,55 +39,37 @@ const authOptions = {
     }),
   ],
 
-  session: {
-    strategy: "jwt",
-  },
-
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.username = user.username || user.name;
         token.email = user.email;
-        token.username = user.username;
-        token.image = user.image;
+        token.picture = user.image;
 
-        token.forgeToken = generateToken(parseInt(user.id), user.username);
+        token.forgeToken = generateToken(
+          parseInt(user.id),
+          user.username || user.name
+        );
       }
-
-      // fetch tier
-      if (token.id) {
-        try {
-          const db = await getDb();
-          const dbUser = await db.get(
-            "SELECT tier FROM users WHERE id = ?",
-            [token.id]
-          );
-          token.tier = dbUser?.tier || "free";
-        } catch {
-          token.tier = "free";
-        }
-      }
-
       return token;
     },
 
     async session({ session, token }) {
-      session.user = {
-        id: token.id,
-        email: token.email,
-        username: token.username,
-        image: token.image,
-        tier: token.tier || "free",
-      };
-
+      session.user.id = token.id;
+      session.user.username = token.username;
+      session.user.email = token.email;
+      session.user.image = token.picture;
       session.forgeToken = token.forgeToken;
       return session;
     },
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
-};
+  session: {
+    strategy: "jwt",
+  },
 
-const handler = NextAuth(authOptions);
+  secret: process.env.NEXTAUTH_SECRET,
+});
 
 export { handler as GET, handler as POST };
