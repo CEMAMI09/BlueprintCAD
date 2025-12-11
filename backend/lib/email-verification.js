@@ -1,14 +1,14 @@
 // Email verification utilities
-import crypto from 'crypto';
-import { getDb } from '../../db/db';
+const crypto = require('crypto');
+const { getDb } = require('../../db/db');
 
 // Generate secure verification token
-export function generateVerificationToken() {
+function generateVerificationToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
 // Create verification token in database
-export async function createVerificationToken(userId, email) {
+async function createVerificationToken(userId, email) {
   const db = await getDb();
   const token = generateVerificationToken();
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
@@ -26,7 +26,7 @@ export async function createVerificationToken(userId, email) {
 }
 
 // Verify token and mark user as verified
-export async function verifyEmailToken(token) {
+async function verifyEmailToken(token) {
   const db = await getDb();
   
   const tokenRecord = await db.get(
@@ -51,7 +51,7 @@ export async function verifyEmailToken(token) {
 }
 
 // Check rate limiting for verification emails
-export async function checkVerificationRateLimit(userId, email, type = 'send') {
+async function checkVerificationRateLimit(userId, email, type = 'send') {
   const db = await getDb();
   
   // Check attempts in last 15 minutes
@@ -70,7 +70,7 @@ export async function checkVerificationRateLimit(userId, email, type = 'send') {
 }
 
 // Record verification attempt
-export async function recordVerificationAttempt(userId, email, type = 'send', ipAddress = null) {
+async function recordVerificationAttempt(userId, email, type = 'send', ipAddress = null) {
   const db = await getDb();
   
   await db.run(
@@ -80,15 +80,25 @@ export async function recordVerificationAttempt(userId, email, type = 'send', ip
 }
 
 // Clean up expired tokens (run periodically)
-export async function cleanupExpiredTokens() {
+async function cleanupExpiredTokens() {
   const db = await getDb();
   const result = await db.run('DELETE FROM verification_tokens WHERE expires < datetime("now")');
   return result.changes;
 }
 
 // Check if user is verified
-export async function isUserVerified(userId) {
+async function isUserVerified(userId) {
   const db = await getDb();
   const user = await db.get('SELECT email_verified FROM users WHERE id = ?', [userId]);
   return user?.email_verified === 1;
 }
+
+module.exports = {
+  generateVerificationToken,
+  createVerificationToken,
+  verifyEmailToken,
+  checkVerificationRateLimit,
+  recordVerificationAttempt,
+  cleanupExpiredTokens,
+  isUserVerified
+};
