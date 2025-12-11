@@ -10,6 +10,7 @@ import { Github } from 'lucide-react';
 
 export default function Register() {
   const router = useRouter();
+  const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -41,7 +42,7 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+      const res = await fetch(`${apiBase}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
