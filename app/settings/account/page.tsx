@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
 import Layout from '@/components/Layout';
 
 interface ProviderInfo {
@@ -36,10 +35,12 @@ export default function AccountSettings() {
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/providers`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/providers`, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
+        credentials: 'include',
       });
 
       if (res.ok) {
@@ -56,25 +57,9 @@ export default function AccountSettings() {
   };
 
   const handleConnect = async (provider: 'google' | 'github') => {
-    try {
-      setConnecting(provider);
-      setMessage(null);
-
-      const result = await signIn(provider, {
-        callbackUrl: '/settings/account',
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setMessage({ type: 'error', text: `Failed to connect ${provider}. Please try again.` });
-      } else if (result?.url) {
-        window.location.href = result.url;
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: `Failed to connect ${provider}` });
-    } finally {
-      setConnecting(null);
-    }
+    // OAuth will be implemented later with Express backend
+    setMessage({ type: 'error', text: `OAuth connection with ${provider} is not yet available.` });
+    setConnecting(null);
   };
 
   const handleDisconnect = async (provider: 'google' | 'github') => {
@@ -87,12 +72,13 @@ export default function AccountSettings() {
       setMessage(null);
 
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/disconnect`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/disconnect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({ provider }),
       });
 

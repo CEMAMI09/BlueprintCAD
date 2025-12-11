@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import Layout from '@/components/Layout';
 
 export default function OAuthCallback() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -21,47 +19,13 @@ export default function OAuthCallback() {
         return;
       }
 
-      if (status === 'loading') {
-        return;
-      }
-
-      if (status === 'authenticated' && session?.user) {
-        try {
-          // Session is authenticated via NextAuth
-          // Now sync with our existing auth system
-          const user = {
-            id: session.user.id,
-            username: session.user.username,
-            email: session.user.email,
-            profile_picture: session.user.image,
-          };
-
-          // Store in localStorage for compatibility with existing system
-          localStorage.clear();
-          localStorage.setItem('token', session.forgeToken || '');
-          localStorage.setItem('user', JSON.stringify(user));
-
-          // Trigger update events
-          window.dispatchEvent(new Event('userChanged'));
-          window.dispatchEvent(new Event('storage'));
-
-          // Redirect to dashboard
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 1000);
-        } catch (err) {
-          console.error('Callback error:', err);
-          setError('Failed to complete sign in. Please try again.');
-          setTimeout(() => router.push('/login'), 3000);
-        }
-      } else if (status === 'unauthenticated') {
-        setError('Authentication failed. Please try again.');
-        setTimeout(() => router.push('/login'), 3000);
-      }
+      // OAuth callback will be implemented later with Express backend
+      setError('OAuth authentication is not yet available. Please use email/password login.');
+      setTimeout(() => router.push('/login'), 3000);
     };
 
     handleCallback();
-  }, [session, status, router, searchParams]);
+  }, [router, searchParams]);
 
   return (
     <Layout>

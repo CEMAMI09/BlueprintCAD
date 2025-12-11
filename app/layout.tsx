@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Fira_Mono } from "next/font/google";
 import "./globals.css";
-import AuthProvider from "./providers/AuthProvider";
+import { UserProvider } from "./context/UserContext";
 import VerificationBanner from "./components/VerificationBanner";
 
 const inter = {
@@ -29,10 +29,10 @@ export default function RootLayout({
       <body
         className={`${inter.className} ${firaMono.variable} antialiased bg-black text-white`}
       >
-        <AuthProvider>
+        <UserProvider>
           <VerificationBanner />
           {children}
-        </AuthProvider>
+        </UserProvider>
       </body>
     </html>
   );

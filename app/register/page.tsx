@@ -3,14 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
 import { Button, Card } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { Github } from 'lucide-react';
 
 export default function Register() {
   const router = useRouter();
-  const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -42,11 +40,12 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch(`${apiBase}/api/auth/register`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           username: formData.username,
           email: formData.email,
@@ -81,26 +80,9 @@ export default function Register() {
   };
 
   const handleOAuthSignIn = async (provider: 'google' | 'github') => {
-    try {
-      setOauthLoading(provider);
-      setError('');
-
-      const result = await signIn(provider, {
-        callbackUrl: '/auth/callback',
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError(`Failed to sign in with ${provider}. Please try again.`);
-        setOauthLoading(null);
-      } else if (result?.url) {
-        // Redirect to OAuth provider
-        window.location.href = result.url;
-      }
-    } catch (err: any) {
-      setError(err.message || `Failed to sign in with ${provider}`);
-      setOauthLoading(null);
-    }
+    // OAuth will be implemented later with Express backend
+    setError(`OAuth sign-in with ${provider} is not yet available. Please use email/password.`);
+    setOauthLoading(null);
   };
 
   return (
