@@ -1,104 +1,154 @@
-// Authentication routes
-const express = require('express');
+// backend/routes/auth.js
+const express = require("express");
 const router = express.Router();
-const { getDb } = require('../../db/db');
-const { hashPassword, verifyPassword, generateToken, getUserFromRequest } = require('../lib/auth');
+const { getDb } = require("../../db/db");
+const {
+  hashPassword,
+  verifyPassword,
+  generateToken,
+  getUserFromRequest,
+} = require("../lib/auth");
 
-// Register new user
-router.post('/register', async (req, res) => {
+// POST /auth/register
+router.post("/register", async (req, res) => {
   try {
-    // 🔥 LOG WHAT THE BACKEND RECEIVED
+    const { username, email, password } = req.body || {};
+
     console.log("REGISTER BODY:", req.body);
 
-    const { username, email, password } = req.body;
-
-    // 🔥 LOG THE VALUES WE'RE ABOUT TO QUERY WITH
-    console.log("Checking DB for:", { username, email });
-
     if (!username || !email || !password) {
-      console.log("❌ Missing field(s)");
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
     const db = await getDb();
 
-    // Check if user exists
+    console.log("Checking DB for:", { username, email });
     const existingUser = await db.get(
-      'SELECT id FROM users WHERE username = ? OR email = ?',
+      "SELECT id FROM users WHERE username = ? OR email = ?",
       [username, email]
     );
-
-    // 🔥 LOG WHAT THE DATABASE RETURNED
     console.log("DB returned:", existingUser);
 
     if (existingUser) {
-      return res.status(400).json({ error: 'Username or email already exists' });
+      return res
+        .status(400)
+        .json({ error: "Username or email already exists" });
     }
 
-    // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user
     const result = await db.run(
-      'INSERT INTO users (username, email, password, created_at) VALUES (?, ?, ?, datetime("now"))',
+      `INSERT INTO users (username, email, password, tier, created_at)
+       VALUES (?, ?, ?, 'free', datetime('now'))`,
       [username, email, hashedPassword]
     );
 
-    const token = generateToken(result.lastID, username);
+    const userId = result.lastID;
 
-    res.status(201).json({
+    const token = generateToken(userId, username, { tier: "free" });
+
+    const user = await db.get(
+      `SELECT id, username, email, tier, profile_picture, bio, location, website, created_at
+       FROM users WHERE id = ?`,
+      [userId]
+    );
+
+    return res.status(201).json({
       token,
-      user: {
-        id: result.lastID,
-        username,
-        email
-      }
+      user,
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Failed to register user' });
+    console.error("Registration error:", error);
+    return res.status(500).json({ error: "Failed to register user" });
   }
 });
 
-// Login
-router.post('/login', async (req, res) => {
+// POST /auth/login
+router.post("/login", async (req, res) => {
   try {
-    const { identifier, password } = req.body;
+    const { identifier, password } = req.body || {};
 
     if (!identifier || !password) {
-      return res.status(400).json({ error: 'Missing credentials' });
+      return res.status(400).json({ error: "Missing credentials" });
     }
 
     const db = await getDb();
-    const isEmail = identifier.includes('@');
+    const isEmail = identifier.includes("@");
 
     const user = await db.get(
-      'SELECT * FROM users WHERE email = ? OR username = ?',
+      "SELECT * FROM users WHERE email = ? OR username = ?",
       [isEmail ? identifier : null, !isEmail ? identifier : null]
     );
 
     if (!user || !user.password) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const isValid = await verifyPassword(password, user.password);
     if (!isValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = generateToken(user.id, user.username);
+    const token = generateToken(user.id, user.username, {
+      tier: user.tier || "free",
+    });
 
-    res.json({
+    // Strip password before sending
+    const safeUser = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      tier: user.tier || "free",
+      profile_picture: user.profile_picture,
+      bio: user.bio,
+      location: user.location,
+      website: user.website,
+      created_at: user.created_at,
+    };
+
+    return res.json({
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email
-      }
+      user: safeUser,
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Failed to login' });
+    console.error("Login error:", error);
+    return res.status(500).json({ error: "Failed to login" });
+  }
+});
+
+// GET /auth/me  → current user
+router.get("/me", async (req, res) => {
+  try {
+    const user = getUserFromRequest(req);
+
+    if (!user || !user.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const db = await getDb();
+    const dbUser = await db.get(
+      "SELECT id, username, email, tier, profile_picture, bio, location, website, created_at FROM users WHERE id = ?",
+      [user.userId]
+    );
+
+    if (!dbUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      id: dbUser.id,
+      username: dbUser.username,
+      email: dbUser.email,
+      tier: dbUser.tier || "free",
+      profile_picture: dbUser.profile_picture,
+      bio: dbUser.bio,
+      location: dbUser.location,
+      website: dbUser.website,
+      created_at: dbUser.created_at,
+    });
+  } catch (error) {
+    console.error("ME endpoint error:", error);
+    res.status(500).json({ error: "Failed to fetch user" });
   }
 });
 

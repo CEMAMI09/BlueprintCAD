@@ -76,12 +76,23 @@ export default function DashboardPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      // Fetch user info from /auth/me
+      const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, { 
+        headers,
+        credentials: 'include'
+      });
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        setUserInfo(userData);
+        // Update localStorage with fresh user data
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+
       // Fetch stats
       const statsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/stats`, { headers });
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
-        setUserInfo(statsData.user);
       }
 
       // Fetch recent activity

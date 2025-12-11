@@ -58,7 +58,8 @@ export function GlobalNavSidebar() {
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
-    const checkUser = () => {
+    const checkUser = async () => {
+      // First check localStorage for immediate display
       const userData = localStorage.getItem('user');
       if (userData) {
         try {
@@ -66,6 +67,34 @@ export function GlobalNavSidebar() {
           setUsername(user.username);
         } catch {
           setUsername(null);
+        }
+      }
+
+      // Then try to refresh from API if token exists
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          });
+
+          if (res.ok) {
+            const userData = await res.json();
+            setUsername(userData.username);
+            localStorage.setItem('user', JSON.stringify(userData));
+          } else if (res.status === 401) {
+            // Token invalid, clear storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setUsername(null);
+          }
+        } catch (error) {
+          console.error('Error fetching user:', error);
+          // Keep username from localStorage if API fails
         }
       } else {
         setUsername(null);

@@ -25,9 +25,7 @@ app.get("/health", (req, res) => {
 });
 
 // API Routes
-// API Routes
-app.use("/auth", require("./routes/auth"));        // NEW
-app.use("/api/auth", require("./routes/auth"));    // Keep old path working
+app.use("/api/auth", require("./routes/auth"));
 app.use("/api/cad", require("./routes/cad"));
 // Add more routes here as they are converted
 

@@ -40,6 +40,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (res.ok) {
         const userData = await res.json();
+        // Backend returns user object directly
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
       } else if (res.status === 401) {
