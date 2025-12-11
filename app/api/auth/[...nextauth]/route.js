@@ -1,9 +1,9 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { getDb } from "../../../../db/db";
-import { verifyPassword, generateToken } from "../../../../backend/lib/auth";
+import { getDb } from "@/db/db";
+import { verifyPassword, generateToken } from "@/backend/lib/auth";
 
-const handler = NextAuth({
+const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -21,19 +21,22 @@ const handler = NextAuth({
 
         const user = await db.get(
           "SELECT * FROM users WHERE email = ? OR username = ?",
-          [isEmail ? credentials.identifier : null, !isEmail ? credentials.identifier : null]
+          [
+            isEmail ? credentials.identifier : null,
+            !isEmail ? credentials.identifier : null
+          ]
         );
 
         if (!user) throw new Error("Invalid credentials");
-        if (!user.password) throw new Error("Please sign in with your OAuth provider");
+        if (!user.password)
+          throw new Error("Please sign in with your OAuth provider");
 
-        const isValid = await verifyPassword(credentials.password, user.password);
-        if (!isValid) throw new Error("Invalid credentials");
+        const valid = await verifyPassword(credentials.password, user.password);
+        if (!valid) throw new Error("Invalid credentials");
 
         return {
           id: user.id.toString(),
           email: user.email,
-          name: user.username,
           username: user.username,
           image: user.profile_picture || user.avatar,
         };
@@ -41,21 +44,22 @@ const handler = NextAuth({
     }),
   ],
 
+  session: {
+    strategy: "jwt",
+  },
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.username = user.username || user.name;
         token.email = user.email;
-        token.picture = user.image;
+        token.username = user.username;
+        token.image = user.image;
 
-        const forgeToken = generateToken(
-          parseInt(user.id),
-          user.username || user.name
-        );
-        token.forgeToken = forgeToken;
+        token.forgeToken = generateToken(parseInt(user.id), user.username);
       }
 
+      // fetch tier
       if (token.id) {
         try {
           const db = await getDb();
@@ -63,7 +67,7 @@ const handler = NextAuth({
             "SELECT tier FROM users WHERE id = ?",
             [token.id]
           );
-          if (dbUser) token.tier = dbUser.tier || "free";
+          token.tier = dbUser?.tier || "free";
         } catch {
           token.tier = "free";
         }
@@ -73,32 +77,22 @@ const handler = NextAuth({
     },
 
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.username = token.username;
-        session.user.email = token.email;
-        session.user.image = token.picture;
-        session.user.tier = token.tier || "free";
-        session.forgeToken = token.forgeToken;
-      }
+      session.user = {
+        id: token.id,
+        email: token.email,
+        username: token.username,
+        image: token.image,
+        tier: token.tier || "free",
+      };
 
+      session.forgeToken = token.forgeToken;
       return session;
     },
   },
 
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
+  secret: process.env.NEXTAUTH_SECRET,
+};
 
-  session: {
-    strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60,
-  },
-
-  secret: process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET,
-
-  debug: process.env.NODE_ENV === "development",
-});
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
