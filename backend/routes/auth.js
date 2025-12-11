@@ -7,9 +7,16 @@ const { hashPassword, verifyPassword, generateToken, getUserFromRequest } = requ
 // Register new user
 router.post('/register', async (req, res) => {
   try {
+    // 🔥 LOG WHAT THE BACKEND RECEIVED
+    console.log("REGISTER BODY:", req.body);
+
     const { username, email, password } = req.body;
 
+    // 🔥 LOG THE VALUES WE'RE ABOUT TO QUERY WITH
+    console.log("Checking DB for:", { username, email });
+
     if (!username || !email || !password) {
+      console.log("❌ Missing field(s)");
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -20,6 +27,9 @@ router.post('/register', async (req, res) => {
       'SELECT id FROM users WHERE username = ? OR email = ?',
       [username, email]
     );
+
+    // 🔥 LOG WHAT THE DATABASE RETURNED
+    console.log("DB returned:", existingUser);
 
     if (existingUser) {
       return res.status(400).json({ error: 'Username or email already exists' });
@@ -93,4 +103,3 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
-
