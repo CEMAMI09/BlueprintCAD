@@ -4,7 +4,17 @@ const path = require("path");
 
 const app = express();
 
-app.use(cors());
+// FIXED CORS CONFIG
+app.use(cors({
+  origin: ["https://www.blueprintcad.io"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
+
+// Required for browser preflight requests
+app.options("*", cors());
+
 app.use(express.json());
 
 // Dynamically load all backend routes
