@@ -43,7 +43,6 @@ router.post("/register", async (req, res) => {
       id: userId,
       username,
       email,
-      tier: "free",
     };
 
     const token = generateToken(user);
@@ -93,7 +92,6 @@ router.post("/login", async (req, res) => {
       id: user.id,
       username: user.username,
       email: user.email,
-      tier: user.tier || "free",
     };
 
     const token = generateToken(userObj);

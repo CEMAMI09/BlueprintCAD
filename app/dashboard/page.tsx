@@ -373,24 +373,11 @@ export default function DashboardPage() {
           <PanelContent className="p-6">
             {/* User Quick Profile */}
             <div className="text-center mb-6">
-              {user?.profile_picture ? (
-                <img
-                  src={`/api/users/profile-picture/${user.profile_picture}`}
-                  alt={user.username}
-                  className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                />
-              ) : null}
               <div
                 className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold"
                 style={{ 
                   backgroundColor: DS.colors.primary.blue, 
                   color: '#ffffff',
-                  display: user?.profile_picture ? 'none' : 'flex'
                 }}
               >
                 {user ? getInitials(user.username) : 'U'}
