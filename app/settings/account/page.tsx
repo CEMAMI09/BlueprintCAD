@@ -35,7 +35,7 @@ export default function AccountSettings() {
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/providers`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/providers`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ export default function AccountSettings() {
       setMessage(null);
 
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/disconnect`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/disconnect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

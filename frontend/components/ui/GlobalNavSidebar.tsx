@@ -10,6 +10,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { useLayout } from './ThreePanelLayout';
+import { useAuth } from '@/app/context/AuthContext';
+import { apiFetch } from '@/lib/apiClient';
 import {
   Home,
   Compass,
@@ -53,67 +55,12 @@ const baseNavItems: NavItem[] = [
 export function GlobalNavSidebar() {
   const pathname = usePathname();
   const { leftPanelCollapsed, toggleLeftPanel } = useLayout();
-  const [username, setUsername] = useState<string | null>(null);
+  const { user, logout } = useAuth();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
-    const checkUser = async () => {
-      // First check localStorage for immediate display
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        try {
-          const user = JSON.parse(userData);
-          setUsername(user.username);
-        } catch {
-          setUsername(null);
-        }
-      }
-
-      // Then try to refresh from API if token exists
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-          });
-
-          if (res.ok) {
-            const userData = await res.json();
-            setUsername(userData.username);
-            localStorage.setItem('user', JSON.stringify(userData));
-          } else if (res.status === 401) {
-            // Token invalid, clear storage
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setUsername(null);
-          }
-        } catch (error) {
-          console.error('Error fetching user:', error);
-          // Keep username from localStorage if API fails
-        }
-      } else {
-        setUsername(null);
-      }
-    };
-
-    checkUser();
-    const handleUserChange = () => checkUser();
-    window.addEventListener('userChanged', handleUserChange);
-    window.addEventListener('storage', handleUserChange);
-
-    return () => {
-      window.removeEventListener('userChanged', handleUserChange);
-      window.removeEventListener('storage', handleUserChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!username) {
+    if (!user) {
       setUnreadNotifications(0);
       setUnreadMessages(0);
       return;
@@ -121,29 +68,24 @@ export function GlobalNavSidebar() {
 
     const fetchUnreadCounts = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
         // Fetch unread notifications
-        const notificationsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (notificationsRes.ok) {
-          const notificationsData = await notificationsRes.json();
+        try {
+          const notificationsData = await apiFetch('/api/notifications');
           const count = notificationsData.unreadCount || 0;
           console.log('[GlobalNavSidebar] Unread notifications:', count);
           setUnreadNotifications(count);
+        } catch (err) {
+          // Ignore errors for notifications
         }
 
         // Fetch unread messages
-        const messagesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages/unread`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (messagesRes.ok) {
-          const messagesData = await messagesRes.json();
+        try {
+          const messagesData = await apiFetch('/api/messages/unread');
           const count = messagesData.count || 0;
           console.log('[GlobalNavSidebar] Unread messages:', count);
           setUnreadMessages(count);
+        } catch (err) {
+          // Ignore errors for messages
         }
       } catch (error) {
         console.error('Error fetching unread counts:', error);
@@ -154,20 +96,17 @@ export function GlobalNavSidebar() {
     // Refresh every 30 seconds
     const interval = setInterval(fetchUnreadCounts, 30000);
     return () => clearInterval(interval);
-  }, [username]);
+  }, [user]);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    setUsername(null);
-    window.dispatchEvent(new Event('userChanged'));
-    window.dispatchEvent(new Event('storage'));
+  const handleLogout = async () => {
+    await logout();
     window.location.href = '/';
   };
 
   // Update profile href with username if available and add unread indicators
   const navItems = baseNavItems.map(item => {
     if (item.id === 'profile') {
-      return { ...item, href: username ? `/profile/${username}` : '/profile' };
+      return { ...item, href: user?.username ? `/profile/${user.username}` : '/profile' };
     }
     // Show badge on Messages and Notifications tabs
     if (item.id === 'messages') {
@@ -308,7 +247,7 @@ export function GlobalNavSidebar() {
       </nav>
 
       {/* User Section & Logout */}
-      {username && (
+      {user && (
         <div
           className="flex-shrink-0 p-4 border-t"
           style={{ borderColor: DS.colors.border.subtle }}

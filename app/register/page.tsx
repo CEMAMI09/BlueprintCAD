@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Card } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { Github } from 'lucide-react';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function Register() {
   const router = useRouter();
@@ -40,24 +41,14 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+      const data = await apiFetch('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify({
           username: formData.username,
           email: formData.email,
           password: formData.password,
         }),
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Something went wrong');
-      }
 
       // Clear any existing data first
       localStorage.clear();

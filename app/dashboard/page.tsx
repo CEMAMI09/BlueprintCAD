@@ -7,6 +7,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/context/AuthContext';
+import { apiFetch } from '@/lib/apiClient';
 import {
   ThreePanelLayout,
   CenterPanel,
@@ -37,11 +39,11 @@ import TierBadge from '@/frontend/components/TierBadge';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [trending, setTrending] = useState<any[]>([]);
-  const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [storage, setStorage] = useState<{ used: number; max: number; percentage: number } | null>(null);
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
@@ -53,16 +55,8 @@ export default function DashboardPage() {
 
   const fetchSubscriptionTier = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSubscriptionTier(data.tier || 'free');
-      }
+      const data = await apiFetch('/api/subscriptions/check');
+      setSubscriptionTier(data.tier || 'free');
     } catch (error) {
       console.error('Error fetching subscription:', error);
     }
@@ -70,50 +64,36 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      // Fetch user info from /auth/me
-      const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, { 
-        headers,
-        credentials: 'include'
-      });
-      if (userRes.ok) {
-        const userData = await userRes.json();
-        setUserInfo(userData);
-        // Update localStorage with fresh user data
-        localStorage.setItem('user', JSON.stringify(userData));
-      }
-
       // Fetch stats
-      const statsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/stats`, { headers });
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
+      try {
+        const statsData = await apiFetch('/api/dashboard/stats');
         setStats(statsData);
+      } catch (err) {
+        console.error('Error fetching stats:', err);
       }
 
       // Fetch recent activity
-      const activityRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/activity`, { headers });
-      if (activityRes.ok) {
-        const activityData = await activityRes.json();
+      try {
+        const activityData = await apiFetch('/api/dashboard/activity');
         setRecentActivity(activityData);
+      } catch (err) {
+        console.error('Error fetching activity:', err);
       }
 
       // Fetch trending designs
-      const trendingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/trending`);
-      if (trendingRes.ok) {
-        const trendingData = await trendingRes.json();
+      try {
+        const trendingData = await apiFetch('/api/dashboard/trending');
         setTrending(trendingData);
+      } catch (err) {
+        console.error('Error fetching trending:', err);
       }
 
       // Fetch storage usage
-      const storageRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/storage`, { headers });
-      if (storageRes.ok) {
-        const storageData = await storageRes.json();
+      try {
+        const storageData = await apiFetch('/api/dashboard/storage');
         setStorage(storageData);
+      } catch (err) {
+        console.error('Error fetching storage:', err);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -393,10 +373,10 @@ export default function DashboardPage() {
           <PanelContent className="p-6">
             {/* User Quick Profile */}
             <div className="text-center mb-6">
-              {userInfo?.profile_picture ? (
+              {user?.profile_picture ? (
                 <img
-                  src={`/api/users/profile-picture/${userInfo.profile_picture}`}
-                  alt={userInfo.username}
+                  src={`/api/users/profile-picture/${user.profile_picture}`}
+                  alt={user.username}
                   className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
@@ -410,16 +390,16 @@ export default function DashboardPage() {
                 style={{ 
                   backgroundColor: DS.colors.primary.blue, 
                   color: '#ffffff',
-                  display: userInfo?.profile_picture ? 'none' : 'flex'
+                  display: user?.profile_picture ? 'none' : 'flex'
                 }}
               >
-                {userInfo ? getInitials(userInfo.username) : 'U'}
+                {user ? getInitials(user.username) : 'U'}
               </div>
               <h3 className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                {userInfo?.username || 'Loading...'}
+                {user?.username || 'Loading...'}
               </h3>
               <p className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                @{userInfo?.username || 'user'}
+                @{user?.username || 'user'}
               </p>
               <div className="flex items-center justify-center mt-2">
                 <TierBadge tier={subscriptionTier} size="sm" />
@@ -489,12 +469,12 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {userInfo && (
+            {user && (
               <Button 
                 variant="secondary" 
                 fullWidth 
                 className="mt-6"
-                onClick={() => router.push(`/profile/${userInfo.username}`)}
+                onClick={() => router.push(`/profile/${user.username}`)}
               >
                 View Full Profile
               </Button>

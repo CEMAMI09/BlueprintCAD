@@ -1,12 +1,15 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const path = require("path");
 
 const app = express();
 
 // CORS Configuration
+const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:3000";
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "https://www.blueprintcad.io",
+  origin: allowedOrigin,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -15,9 +18,12 @@ app.use(cors({
 // Required for browser preflight requests
 app.options("*", cors());
 
+// Cookie parser (must come before routes)
+app.use(cookieParser());
+
 // Body parsing middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Health check
 app.get("/health", (req, res) => {

@@ -17,6 +17,7 @@
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.4.1",
     "canvas": "^3.2.0",
+    "cookie-parser": "^1.4.7",
     "formidable": "^3.5.1",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.4",

@@ -9,12 +9,10 @@ const {
   getUserFromRequest,
 } = require("../lib/auth");
 
-// POST /auth/register
+// POST /api/auth/register
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body || {};
-
-    console.log("REGISTER BODY:", req.body);
 
     if (!username || !email || !password) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -22,17 +20,13 @@ router.post("/register", async (req, res) => {
 
     const db = await getDb();
 
-    console.log("Checking DB for:", { username, email });
     const existingUser = await db.get(
       "SELECT id FROM users WHERE username = ? OR email = ?",
       [username, email]
     );
-    console.log("DB returned:", existingUser);
 
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ error: "Username or email already exists" });
+      return res.status(400).json({ error: "Username or email already exists" });
     }
 
     const hashedPassword = await hashPassword(password);
@@ -45,25 +39,31 @@ router.post("/register", async (req, res) => {
 
     const userId = result.lastID;
 
-    const token = generateToken(userId, username, { tier: "free" });
+    const user = {
+      id: userId,
+      username,
+      email,
+      tier: "free",
+    };
 
-    const user = await db.get(
-      `SELECT id, username, email, tier, profile_picture, bio, location, website, created_at
-       FROM users WHERE id = ?`,
-      [userId]
-    );
+    const token = generateToken(user);
 
-    return res.status(201).json({
-      token,
-      user,
+    // Set HttpOnly cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
+
+    return res.status(201).json({ token, user });
   } catch (error) {
     console.error("Registration error:", error);
     return res.status(500).json({ error: "Failed to register user" });
   }
 });
 
-// POST /auth/login
+// POST /api/auth/login
 router.post("/login", async (req, res) => {
   try {
     const { identifier, password } = req.body || {};
@@ -89,46 +89,43 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = generateToken(user.id, user.username, {
-      tier: user.tier || "free",
-    });
-
-    // Strip password before sending
-    const safeUser = {
+    const userObj = {
       id: user.id,
       username: user.username,
       email: user.email,
       tier: user.tier || "free",
-      profile_picture: user.profile_picture,
-      bio: user.bio,
-      location: user.location,
-      website: user.website,
-      created_at: user.created_at,
     };
 
-    return res.json({
-      token,
-      user: safeUser,
+    const token = generateToken(userObj);
+
+    // Set HttpOnly cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
+
+    return res.json({ token, user: userObj });
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({ error: "Failed to login" });
   }
 });
 
-// GET /auth/me  → current user
+// GET /api/auth/me
 router.get("/me", async (req, res) => {
   try {
-    const user = getUserFromRequest(req);
+    const decoded = getUserFromRequest(req);
 
-    if (!user || !user.userId) {
+    if (!decoded || !decoded.userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const db = await getDb();
     const dbUser = await db.get(
-      "SELECT id, username, email, tier, profile_picture, bio, location, website, created_at FROM users WHERE id = ?",
-      [user.userId]
+      "SELECT id, username, email, tier, profile_picture, created_at FROM users WHERE id = ?",
+      [decoded.userId]
     );
 
     if (!dbUser) {
@@ -136,20 +133,29 @@ router.get("/me", async (req, res) => {
     }
 
     res.json({
-      id: dbUser.id,
-      username: dbUser.username,
-      email: dbUser.email,
-      tier: dbUser.tier || "free",
-      profile_picture: dbUser.profile_picture,
-      bio: dbUser.bio,
-      location: dbUser.location,
-      website: dbUser.website,
-      created_at: dbUser.created_at,
+      user: {
+        id: dbUser.id,
+        username: dbUser.username,
+        email: dbUser.email,
+        tier: dbUser.tier || "free",
+        profile_picture: dbUser.profile_picture || null,
+        created_at: dbUser.created_at,
+      },
     });
   } catch (error) {
     console.error("ME endpoint error:", error);
     res.status(500).json({ error: "Failed to fetch user" });
   }
+});
+
+// POST /api/auth/logout
+router.post("/logout", async (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  res.json({ success: true });
 });
 
 module.exports = router;

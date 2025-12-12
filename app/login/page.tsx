@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Card } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { Github } from 'lucide-react';
+import { apiFetch } from '@/lib/apiClient';
 
 export default function Login() {
   const router = useRouter();
@@ -31,10 +32,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Determine if identifier is an email or username
-      const isEmail = formData.identifier.includes('@');
-      
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

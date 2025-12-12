@@ -2,12 +2,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
-
-if (!JWT_SECRET) {
-  console.warn("⚠️ WARNING: JWT_SECRET or NEXTAUTH_SECRET is not defined in environment!");
-}
-
 // Hash password
 async function hashPassword(password) {
   return bcrypt.hash(password, 10);
@@ -18,19 +12,21 @@ async function verifyPassword(password, hashedPassword) {
   return bcrypt.compare(password, hashedPassword);
 }
 
-// Generate JWT
-function generateToken(userId, username, extra = {}) {
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is missing");
+// Generate JWT with canonical payload format
+function generateToken(user) {
+  const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error("JWT secret is not configured");
   }
 
   return jwt.sign(
     {
-      userId,
-      username,
-      ...extra, // tier, profile info, etc.
+      userId: user.id,
+      username: user.username,
+      email: user.email,
+      tier: user.tier || "free",
     },
-    JWT_SECRET,
+    secret,
     { expiresIn: "7d" }
   );
 }
@@ -38,7 +34,11 @@ function generateToken(userId, username, extra = {}) {
 // Decode JWT safely
 function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      return null;
+    }
+    return jwt.verify(token, secret);
   } catch (err) {
     return null;
   }
@@ -60,7 +60,7 @@ function getUserFromRequest(req) {
 
     if (!token) return null;
 
-    return verifyToken(token); // { userId, username, tier }
+    return verifyToken(token); // { userId, username, email, tier }
   } catch (err) {
     return null;
   }
