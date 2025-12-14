@@ -53,28 +53,24 @@ export default function SettingsPage() {
 
   const fetchUserInfo = async () => {
     try {
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        const token = localStorage.getItem('token');
-        const headers: HeadersInit = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.username}`, { headers });
-        if (res.ok) {
-          const data = await res.json();
-          // Initialize social links if not present
-          const socialLinks = data.social_links || { github: '', twitter: '', instagram: '', youtube: '' };
-          setUserInfo({ ...data, social_links: socialLinks, originalUsername: data.username });
-          // Set previews for existing images
-          if (data.profile_picture) {
-            setProfilePicturePreview(`/api/users/profile-picture/${data.profile_picture}`);
-          }
-          if (data.banner) {
-            setBannerPreview(`/api/users/banner/${data.banner}`);
-          }
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        // Initialize social links if not present
+        const socialLinks = data.social_links || { github: '', twitter: '', instagram: '', youtube: '' };
+        setUserInfo({ ...data, social_links: socialLinks, originalUsername: data.username });
+        // Set previews for existing images
+        if (data.profile_picture) {
+          setProfilePicturePreview(`/api/users/profile-picture/${data.profile_picture}`);
+        }
+        if (data.banner) {
+          setBannerPreview(`/api/users/banner/${data.banner}`);
         }
       }
     } catch (error) {
@@ -200,7 +196,7 @@ export default function SettingsPage() {
         formData.append('banner', banner);
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

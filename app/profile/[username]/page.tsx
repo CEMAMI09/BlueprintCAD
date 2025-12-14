@@ -155,7 +155,12 @@ export default function ProfilePage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}`, { 
+      // Use /api/users/me for own profile, otherwise use username route
+      const endpoint = isOwnProfile 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/users/me`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}`;
+      
+      const res = await fetch(endpoint, { 
         headers,
         cache: 'no-store'
       });
@@ -164,7 +169,14 @@ export default function ProfilePage() {
         console.log('[Profile] Fetched profile data:', { username: data.username, subscription_tier: data.subscription_tier });
         setProfile(data);
         // Set storage if available (only for own profile)
-        if (data.storage) {
+        if (isOwnProfile && data.stats) {
+          setStorage({
+            used: data.stats.storage_used || 0,
+            limit: data.stats.storage_used || 0, // Will need to get from tier limits
+            remaining: 0,
+            percentUsed: 0,
+          });
+        } else if (data.storage) {
           setStorage(data.storage);
         }
       } else {

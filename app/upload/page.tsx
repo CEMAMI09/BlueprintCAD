@@ -317,7 +317,7 @@ const fetchFolders = async () => {
       const fileFormData = new FormData();
       fileFormData.append('file', file);
 
-      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
+      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cad/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

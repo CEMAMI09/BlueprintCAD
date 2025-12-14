@@ -15,15 +15,30 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
 
   const fullUrl = `${base}${path}`;
 
+  // Don't set Content-Type if it's FormData (browser will set it with boundary)
+  const isFormData = options.body instanceof FormData;
+  const defaultHeaders: HeadersInit = {};
+  if (!isFormData) {
+    defaultHeaders["Content-Type"] = "application/json";
+  }
+
   const res = await fetch(fullUrl, {
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...defaultHeaders,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
     ...options,
   });
+
+  // Handle 401 Unauthorized - redirect to login
+  if (res.status === 401) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+    throw new Error("Unauthorized");
+  }
 
   const data = await res.json().catch(() => ({}));
 

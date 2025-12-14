@@ -64,10 +64,18 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch stats
+      // Fetch stats (includes storage info)
       try {
-        const statsData = await apiFetch('/api/dashboard/stats');
+        const statsData = await apiFetch('/api/stats/dashboard');
         setStats(statsData);
+        // Set storage from stats
+        if (statsData) {
+          setStorage({
+            used: statsData.storage_used || 0,
+            max: statsData.storage_max || 0,
+            percentage: statsData.storage_percentage || 0,
+          });
+        }
       } catch (err) {
         console.error('Error fetching stats:', err);
       }
@@ -86,14 +94,6 @@ export default function DashboardPage() {
         setTrending(trendingData);
       } catch (err) {
         console.error('Error fetching trending:', err);
-      }
-
-      // Fetch storage usage
-      try {
-        const storageData = await apiFetch('/api/dashboard/storage');
-        setStorage(storageData);
-      } catch (err) {
-        console.error('Error fetching storage:', err);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
