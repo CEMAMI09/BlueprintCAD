@@ -1,7 +1,7 @@
 // backend/routes/users.js
 const express = require("express");
 const router = express.Router();
-const { getDb } = require("../../db/db");
+const { getOne, getAll, execute } = require("../lib/db");
 const { getUserFromRequest } = require("../lib/auth");
 const formidable = require("formidable");
 
@@ -14,8 +14,8 @@ router.get("/me", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const db = await getDb();
-    const user = await db.get(
+    // Get user from PostgreSQL
+    const user = await getOne(
       `SELECT 
         id, 
         username, 
@@ -31,7 +31,7 @@ router.get("/me", async (req, res) => {
         profile_private,
         created_at 
       FROM users 
-      WHERE id = ?`,
+      WHERE id = $1`,
       [decoded.userId]
     );
 
@@ -39,38 +39,45 @@ router.get("/me", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Parse JSON fields
+    // Parse JSON fields (PostgreSQL stores JSONB as objects, but handle text too)
     let socialLinks = {};
     let visibilityOptions = {};
     try {
-      socialLinks = user.social_links ? JSON.parse(user.social_links) : {};
+      if (typeof user.social_links === 'string') {
+        socialLinks = user.social_links ? JSON.parse(user.social_links) : {};
+      } else {
+        socialLinks = user.social_links || {};
+      }
     } catch (e) {
       // Ignore parse errors
     }
     try {
-      visibilityOptions = user.visibility_options ? JSON.parse(user.visibility_options) : {};
+      if (typeof user.visibility_options === 'string') {
+        visibilityOptions = user.visibility_options ? JSON.parse(user.visibility_options) : {};
+      } else {
+        visibilityOptions = user.visibility_options || {};
+      }
     } catch (e) {
       // Ignore parse errors
     }
 
     // Get user stats
-    const stats = await db.get(
+    const stats = await getOne(
       `SELECT 
-        COUNT(DISTINCT p.id) as total_projects,
-        COUNT(DISTINCT f.id) as total_files
+        COUNT(DISTINCT p.id)::int as total_projects,
+        COUNT(DISTINCT cf.id)::int as total_files
       FROM users u
       LEFT JOIN projects p ON p.user_id = u.id
       LEFT JOIN cad_files cf ON cf.user_id = u.id
-      LEFT JOIN folders f ON f.owner_id = u.id
-      WHERE u.id = ?`,
+      WHERE u.id = $1`,
       [decoded.userId]
     );
 
-    // Calculate storage used (sum of project file sizes)
-    const storageResult = await db.get(
-      `SELECT COALESCE(SUM(file_size), 0) as storage_used
+    // Calculate storage used (sum of file sizes)
+    const storageResult = await getOne(
+      `SELECT COALESCE(SUM(file_size), 0)::bigint as storage_used
        FROM cad_files
-       WHERE user_id = ?`,
+       WHERE user_id = $1`,
       [decoded.userId]
     );
 
@@ -91,7 +98,7 @@ router.get("/me", async (req, res) => {
       stats: {
         total_projects: stats?.total_projects || 0,
         total_files: stats?.total_files || 0,
-        storage_used: storageResult?.storage_used || 0,
+        storage_used: Number(storageResult?.storage_used) || 0,
       },
     });
   } catch (error) {
@@ -108,8 +115,6 @@ router.put("/me", async (req, res) => {
     if (!decoded || !decoded.userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-
-    const db = await getDb();
     
     // Handle both JSON and FormData
     let username, email, bio, location, website, profile_private, social_links, visibility_options;
@@ -145,7 +150,7 @@ router.put("/me", async (req, res) => {
       }
       
       // File handling is stubbed - files are in the files object but not processed
-      // In a full implementation, you would save profile_picture and banner files here
+      // In a full implementation, you would save profile_picture and banner files to R2 here
     } else {
       // Handle JSON body
       ({ username, email, bio, location, website, profile_private, social_links, visibility_options } = req.body);
@@ -153,8 +158,8 @@ router.put("/me", async (req, res) => {
 
     // Check if username is being changed and if it's available
     if (username) {
-      const existingUser = await db.get(
-        "SELECT id FROM users WHERE username = ? AND id != ?",
+      const existingUser = await getOne(
+        "SELECT id FROM users WHERE username = $1 AND id != $2",
         [username, decoded.userId]
       );
       if (existingUser) {
@@ -164,8 +169,8 @@ router.put("/me", async (req, res) => {
 
     // Check if email is being changed and if it's available
     if (email) {
-      const existingUser = await db.get(
-        "SELECT id FROM users WHERE email = ? AND id != ?",
+      const existingUser = await getOne(
+        "SELECT id FROM users WHERE email = $1 AND id != $2",
         [email, decoded.userId]
       );
       if (existingUser) {
@@ -176,37 +181,38 @@ router.put("/me", async (req, res) => {
     // Build update query dynamically
     const updates = [];
     const values = [];
+    let paramIndex = 1;
 
     if (username) {
-      updates.push("username = ?");
+      updates.push(`username = $${paramIndex++}`);
       values.push(username);
     }
     if (email) {
-      updates.push("email = ?");
+      updates.push(`email = $${paramIndex++}`);
       values.push(email);
     }
     if (bio !== undefined) {
-      updates.push("bio = ?");
+      updates.push(`bio = $${paramIndex++}`);
       values.push(bio);
     }
     if (location !== undefined) {
-      updates.push("location = ?");
+      updates.push(`location = $${paramIndex++}`);
       values.push(location);
     }
     if (website !== undefined) {
-      updates.push("website = ?");
+      updates.push(`website = $${paramIndex++}`);
       values.push(website);
     }
     if (profile_private !== undefined) {
-      updates.push("profile_private = ?");
-      values.push(profile_private ? 1 : 0);
+      updates.push(`profile_private = $${paramIndex++}`);
+      values.push(profile_private);
     }
     if (social_links !== undefined) {
-      updates.push("social_links = ?");
+      updates.push(`social_links = $${paramIndex++}`);
       values.push(JSON.stringify(social_links));
     }
     if (visibility_options !== undefined) {
-      updates.push("visibility_options = ?");
+      updates.push(`visibility_options = $${paramIndex++}`);
       values.push(JSON.stringify(visibility_options));
     }
 
@@ -215,14 +221,15 @@ router.put("/me", async (req, res) => {
     }
 
     values.push(decoded.userId);
+    const whereClause = `WHERE id = $${paramIndex}`;
 
-    await db.run(
-      `UPDATE users SET ${updates.join(", ")} WHERE id = ?`,
+    await execute(
+      `UPDATE users SET ${updates.join(", ")} ${whereClause}`,
       values
     );
 
     // Fetch updated user
-    const updatedUser = await db.get(
+    const updatedUser = await getOne(
       `SELECT 
         id, 
         username, 
@@ -238,7 +245,7 @@ router.put("/me", async (req, res) => {
         profile_private,
         created_at 
       FROM users 
-      WHERE id = ?`,
+      WHERE id = $1`,
       [decoded.userId]
     );
 
@@ -246,12 +253,20 @@ router.put("/me", async (req, res) => {
     let socialLinks = {};
     let visibilityOptions = {};
     try {
-      socialLinks = updatedUser.social_links ? JSON.parse(updatedUser.social_links) : {};
+      if (typeof updatedUser.social_links === 'string') {
+        socialLinks = updatedUser.social_links ? JSON.parse(updatedUser.social_links) : {};
+      } else {
+        socialLinks = updatedUser.social_links || {};
+      }
     } catch (e) {
       // Ignore parse errors
     }
     try {
-      visibilityOptions = updatedUser.visibility_options ? JSON.parse(updatedUser.visibility_options) : {};
+      if (typeof updatedUser.visibility_options === 'string') {
+        visibilityOptions = updatedUser.visibility_options ? JSON.parse(updatedUser.visibility_options) : {};
+      } else {
+        visibilityOptions = updatedUser.visibility_options || {};
+      }
     } catch (e) {
       // Ignore parse errors
     }
@@ -277,5 +292,82 @@ router.put("/me", async (req, res) => {
   }
 });
 
-module.exports = router;
+// GET /api/users/:username - Get user by username (for profile pages)
+router.get("/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const decoded = getUserFromRequest(req); // Optional - for checking if viewing own profile
 
+    // Get user from PostgreSQL
+    const user = await getOne(
+      `SELECT 
+        id, 
+        username, 
+        email, 
+        tier, 
+        profile_picture, 
+        bio,
+        location,
+        website,
+        banner,
+        social_links,
+        visibility_options,
+        profile_private,
+        created_at 
+      FROM users 
+      WHERE username = $1`,
+      [username]
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Parse JSON fields
+    let socialLinks = {};
+    let visibilityOptions = {};
+    try {
+      if (typeof user.social_links === 'string') {
+        socialLinks = user.social_links ? JSON.parse(user.social_links) : {};
+      } else {
+        socialLinks = user.social_links || {};
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+    try {
+      if (typeof user.visibility_options === 'string') {
+        visibilityOptions = user.visibility_options ? JSON.parse(user.visibility_options) : {};
+      } else {
+        visibilityOptions = user.visibility_options || {};
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+
+    // Only return email if viewing own profile or if visibility allows
+    const isOwnProfile = decoded && decoded.userId === user.id;
+    const showEmail = isOwnProfile || (visibilityOptions?.showEmail !== false);
+
+    res.json({
+      id: user.id,
+      username: user.username,
+      email: showEmail ? user.email : null,
+      tier: user.tier || "free",
+      profile_picture: user.profile_picture || null,
+      bio: user.bio || null,
+      location: user.location || null,
+      website: user.website || null,
+      banner: user.banner || null,
+      social_links: socialLinks,
+      visibility_options: visibilityOptions,
+      profile_private: user.profile_private || false,
+      created_at: user.created_at,
+    });
+  } catch (error) {
+    console.error("GET /api/users/:username error:", error);
+    res.status(500).json({ error: "Failed to fetch user" });
+  }
+});
+
+module.exports = router;

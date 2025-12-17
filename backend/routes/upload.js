@@ -1,7 +1,7 @@
 // backend/routes/upload.js
 const express = require("express");
 const router = express.Router();
-const { getDb } = require("../../db/db");
+const { execute } = require("../lib/db");
 const { getUserFromRequest } = require("../lib/auth");
 
 // POST /api/cad/upload - Upload CAD file (stubbed - accepts multipart/form-data)
@@ -15,17 +15,19 @@ router.post("/upload", async (req, res) => {
 
     // For now, just accept the request and return success
     // File handling is stubbed as per requirements
-    // In a full implementation, you would process the multipart/form-data file here
+    // In a full implementation, you would:
+    // 1. Parse multipart/form-data file
+    // 2. Upload file to Cloudflare R2
+    // 3. Store metadata in PostgreSQL cad_files table
+    // 4. Return R2 object key or signed URL
     
-    const db = await getDb();
-
     // Return success response with stub metadata
     res.json({
       success: true,
       file: {
         id: null, // Would be the database ID in a full implementation
         filename: req.body.filename || "uploaded_file.stl",
-        filepath: "storage/uploads/stub",
+        filepath: "r2://uploads/stub", // R2 object key format
         file_size: 0,
         file_type: "application/octet-stream",
         uploaded_at: new Date().toISOString(),
@@ -39,4 +41,3 @@ router.post("/upload", async (req, res) => {
 });
 
 module.exports = router;
-

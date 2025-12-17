@@ -1,7 +1,7 @@
 // backend/routes/auth.js
 const express = require("express");
 const router = express.Router();
-const { getDb } = require("../../db/db");
+const { getOne, execute } = require("../lib/db");
 const {
   hashPassword,
   verifyPassword,
@@ -18,10 +18,9 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const db = await getDb();
-
-    const existingUser = await db.get(
-      "SELECT id FROM users WHERE username = ? OR email = ?",
+    // Check for existing user
+    const existingUser = await getOne(
+      "SELECT id FROM users WHERE username = $1 OR email = $2",
       [username, email]
     );
 
@@ -31,13 +30,16 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await hashPassword(password);
 
-    const result = await db.run(
+    // Insert user and return the new user ID
+    const result = await execute(
       `INSERT INTO users (username, email, password, tier, created_at)
-       VALUES (?, ?, ?, 'free', datetime('now'))`,
+       VALUES ($1, $2, $3, 'free', NOW())
+       RETURNING id`,
       [username, email, hashedPassword]
     );
 
-    const userId = result.lastID;
+    // PostgreSQL returns rows in result.rows
+    const userId = result.rows?.[0]?.id;
 
     const user = {
       id: userId,
@@ -71,13 +73,21 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Missing credentials" });
     }
 
-    const db = await getDb();
     const isEmail = identifier.includes("@");
 
-    const user = await db.get(
-      "SELECT * FROM users WHERE email = ? OR username = ?",
-      [isEmail ? identifier : null, !isEmail ? identifier : null]
-    );
+    // Query PostgreSQL - handle both email and username
+    let user;
+    if (isEmail) {
+      user = await getOne(
+        "SELECT * FROM users WHERE email = $1",
+        [identifier]
+      );
+    } else {
+      user = await getOne(
+        "SELECT * FROM users WHERE username = $1",
+        [identifier]
+      );
+    }
 
     if (!user || !user.password) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -120,9 +130,8 @@ router.get("/me", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const db = await getDb();
-    const dbUser = await db.get(
-      "SELECT id, username, email, tier, profile_picture, created_at FROM users WHERE id = ?",
+    const dbUser = await getOne(
+      "SELECT id, username, email, tier, profile_picture, created_at FROM users WHERE id = $1",
       [decoded.userId]
     );
 

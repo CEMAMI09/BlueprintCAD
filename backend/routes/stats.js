@@ -1,7 +1,7 @@
 // backend/routes/stats.js
 const express = require("express");
 const router = express.Router();
-const { getDb } = require("../../db/db");
+const { getOne } = require("../lib/db");
 const { getUserFromRequest } = require("../lib/auth");
 
 // GET /api/stats/dashboard - Get dashboard statistics
@@ -13,29 +13,27 @@ router.get("/dashboard", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const db = await getDb();
-
     // Get total projects
-    const projectsCount = await db.get(
-      "SELECT COUNT(*) as count FROM projects WHERE user_id = ?",
+    const projectsCount = await getOne(
+      "SELECT COUNT(*)::int as count FROM projects WHERE user_id = $1",
       [decoded.userId]
     );
 
     // Get total files (from cad_files table)
-    const filesCount = await db.get(
-      "SELECT COUNT(*) as count FROM cad_files WHERE user_id = ?",
+    const filesCount = await getOne(
+      "SELECT COUNT(*)::int as count FROM cad_files WHERE user_id = $1",
       [decoded.userId]
     );
 
     // Calculate storage used
-    const storageResult = await db.get(
-      "SELECT COALESCE(SUM(file_size), 0) as storage_used FROM cad_files WHERE user_id = ?",
+    const storageResult = await getOne(
+      "SELECT COALESCE(SUM(file_size), 0)::bigint as storage_used FROM cad_files WHERE user_id = $1",
       [decoded.userId]
     );
 
     // Get user tier
-    const user = await db.get(
-      "SELECT tier FROM users WHERE id = ?",
+    const user = await getOne(
+      "SELECT tier FROM users WHERE id = $1",
       [decoded.userId]
     );
 
@@ -50,7 +48,7 @@ router.get("/dashboard", async (req, res) => {
     };
 
     const limits = tierLimits[tier] || tierLimits.free;
-    const storageUsed = storageResult?.storage_used || 0;
+    const storageUsed = Number(storageResult?.storage_used) || 0;
     const maxStorage = limits.maxStorage;
 
     res.json({
@@ -68,4 +66,3 @@ router.get("/dashboard", async (req, res) => {
 });
 
 module.exports = router;
-

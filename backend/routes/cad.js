@@ -1,43 +1,35 @@
 // CAD file routes
 const express = require('express');
 const router = express.Router();
-const { getDb } = require('../../db/db');
-const { verifyToken } = require('../lib/auth');
-const jwt = require('jsonwebtoken');
-
-// Middleware to verify authentication
-const authenticate = (req, res, next) => {
-  const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-};
+const { getAll, getOne } = require('../lib/db');
+const { getUserFromRequest } = require('../lib/auth');
 
 // List user's CAD files
-router.get('/list', authenticate, async (req, res) => {
+router.get('/list', async (req, res) => {
   try {
-    const db = await getDb();
+    const decoded = getUserFromRequest(req);
 
-    // Get user's CAD files
-    const files = await db.all(
+    if (!decoded || !decoded.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Get user's CAD files from PostgreSQL
+    const files = await getAll(
       `SELECT cf.*, p.title as project_title
        FROM cad_files cf
        LEFT JOIN projects p ON cf.project_id = p.id
-       WHERE cf.user_id = ?
+       WHERE cf.user_id = $1
        ORDER BY cf.updated_at DESC`,
-      [req.user.userId]
+      [decoded.userId]
     );
 
-    // Get tier info
-    const userTier = req.user.tier || 'free';
+    // Get tier info from user
+    const user = await getOne(
+      'SELECT tier FROM users WHERE id = $1',
+      [decoded.userId]
+    );
+
+    const userTier = user?.tier || 'free';
     const tierLimits = {
       free: { maxFiles: 5, storage: 1024 * 1024 * 1024 },
       pro: { maxFiles: 25, storage: 10 * 1024 * 1024 * 1024 },
@@ -46,7 +38,7 @@ router.get('/list', authenticate, async (req, res) => {
     };
 
     const limits = tierLimits[userTier];
-    const totalStorage = files.reduce((sum, f) => sum + (f.file_size || 0), 0);
+    const totalStorage = files.reduce((sum, f) => sum + (Number(f.file_size) || 0), 0);
 
     res.json({
       files,
@@ -66,4 +58,3 @@ router.get('/list', authenticate, async (req, res) => {
 });
 
 module.exports = router;
-
