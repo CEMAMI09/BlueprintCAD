@@ -67,7 +67,13 @@ export default function DashboardPage() {
       // Fetch stats (includes storage info)
       try {
         const statsData = await apiFetch('/api/stats/dashboard');
-        setStats(statsData);
+        // Normalize stats shape for UI consumption
+        setStats({
+          totalProjects: statsData.total_projects ?? 0,
+          activeVersions: statsData.total_files ?? 0,
+          totalEarnings: '0', // Earnings not implemented yet
+          totalViews: statsData.total_files ?? 0,
+        });
         // Set storage from stats
         if (statsData) {
           setStorage({
