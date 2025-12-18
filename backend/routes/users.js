@@ -123,36 +123,43 @@ router.put("/me", async (req, res) => {
     const contentType = req.headers["content-type"] || "";
     if (contentType.includes("multipart/form-data")) {
       try {
-        // Parse FormData using formidable
+        // Parse FormData using formidable v3
         const form = formidable({ 
           multiples: true,
           keepExtensions: true
         });
-        const [fields, files] = await form.parse(req);
         
-        username = fields.username?.[0];
-        email = fields.email?.[0];
-        bio = fields.bio?.[0] || null;
-        location = fields.location?.[0] || null;
-        website = fields.website?.[0] || null;
-        profile_private = fields.profile_private?.[0] === "true" || fields.profile_private?.[0] === true;
+        // Formidable v3 returns { fields, files } object
+        const { fields, files } = await form.parse(req);
+        
+        // Extract field values (formidable v3 returns arrays)
+        username = Array.isArray(fields.username) ? fields.username[0] : fields.username;
+        email = Array.isArray(fields.email) ? fields.email[0] : fields.email;
+        bio = Array.isArray(fields.bio) ? (fields.bio[0] || null) : (fields.bio || null);
+        location = Array.isArray(fields.location) ? (fields.location[0] || null) : (fields.location || null);
+        website = Array.isArray(fields.website) ? (fields.website[0] || null) : (fields.website || null);
+        
+        const profilePrivateValue = Array.isArray(fields.profile_private) ? fields.profile_private[0] : fields.profile_private;
+        profile_private = profilePrivateValue === "true" || profilePrivateValue === true;
         
         // Parse JSON fields
-        if (fields.social_links?.[0]) {
+        if (fields.social_links) {
           try {
-            social_links = typeof fields.social_links[0] === 'string' 
-              ? JSON.parse(fields.social_links[0]) 
-              : fields.social_links[0];
+            const socialLinksValue = Array.isArray(fields.social_links) ? fields.social_links[0] : fields.social_links;
+            social_links = typeof socialLinksValue === 'string' 
+              ? JSON.parse(socialLinksValue) 
+              : socialLinksValue || {};
           } catch (e) {
             console.error('Error parsing social_links:', e);
             social_links = {};
           }
         }
-        if (fields.visibility_options?.[0]) {
+        if (fields.visibility_options) {
           try {
-            visibility_options = typeof fields.visibility_options[0] === 'string'
-              ? JSON.parse(fields.visibility_options[0])
-              : fields.visibility_options[0];
+            const visibilityValue = Array.isArray(fields.visibility_options) ? fields.visibility_options[0] : fields.visibility_options;
+            visibility_options = typeof visibilityValue === 'string'
+              ? JSON.parse(visibilityValue)
+              : visibilityValue || {};
           } catch (e) {
             console.error('Error parsing visibility_options:', e);
             visibility_options = {};
@@ -163,7 +170,8 @@ router.put("/me", async (req, res) => {
         // In a full implementation, you would save profile_picture and banner files to R2 here
       } catch (formError) {
         console.error('Error parsing FormData:', formError);
-        return res.status(400).json({ error: "Failed to parse form data" });
+        console.error('FormData error stack:', formError.stack);
+        return res.status(400).json({ error: "Failed to parse form data", details: process.env.NODE_ENV === 'development' ? formError.message : undefined });
       }
     } else {
       // Handle JSON body
