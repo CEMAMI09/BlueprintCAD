@@ -294,6 +294,40 @@ router.put("/me", async (req, res) => {
   }
 });
 
+// Proxy to serve profile pictures from R2 while keeping existing frontend URLs working
+router.get("/profile-picture/:key(*)", async (req, res) => {
+  try {
+    const publicBase = process.env.R2_PUBLIC_URL;
+    if (!publicBase) {
+      return res.status(404).send("Profile pictures not configured");
+    }
+    const base = publicBase.replace(/\/$/, "");
+    const key = req.params.key;
+    const url = `${base}/${key}`;
+    return res.redirect(302, url);
+  } catch (error) {
+    console.error("GET /api/users/profile-picture error:", error);
+    res.status(500).send("Failed to load profile picture");
+  }
+});
+
+// Proxy to serve banners from R2 while keeping existing frontend URLs working
+router.get("/banner/:key(*)", async (req, res) => {
+  try {
+    const publicBase = process.env.R2_PUBLIC_URL;
+    if (!publicBase) {
+      return res.status(404).send("Banners not configured");
+    }
+    const base = publicBase.replace(/\/$/, "");
+    const key = req.params.key;
+    const url = `${base}/${key}`;
+    return res.redirect(302, url);
+  } catch (error) {
+    console.error("GET /api/users/banner error:", error);
+    res.status(500).send("Failed to load banner image");
+  }
+});
+
 // GET /api/users/:username - Get user by username (for profile pages)
 router.get("/:username", async (req, res) => {
   try {
