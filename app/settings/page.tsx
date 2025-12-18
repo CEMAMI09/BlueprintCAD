@@ -178,6 +178,59 @@ export default function SettingsPage() {
 
     try {
       const token = localStorage.getItem('token');
+      
+      // If no files are being uploaded, send JSON instead of FormData
+      if (!profilePicture && !banner) {
+        const jsonData = {
+          bio: userInfo.bio || '',
+          location: userInfo.location || '',
+          website: userInfo.website || '',
+          profile_private: userInfo.profile_private || false,
+          social_links: userInfo.social_links || {},
+          visibility_options: userInfo.visibility_options || {},
+        };
+        
+        if (userInfo.username && userInfo.username !== userInfo.originalUsername) {
+          jsonData.username = userInfo.username;
+        }
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(jsonData),
+        });
+
+        if (res.ok) {
+          const updatedData = await res.json();
+          setUserInfo({ ...updatedData, originalUsername: updatedData.username });
+          setMessage({ type: 'success', text: 'Profile updated successfully' });
+          // Update localStorage if username changed
+          if (updatedData.username !== userInfo.username) {
+            const userData = localStorage.getItem('user');
+            if (userData) {
+              const user = JSON.parse(userData);
+              user.username = updatedData.username;
+              localStorage.setItem('user', JSON.stringify(user));
+            }
+          }
+          // Clear file inputs
+          setProfilePicture(null);
+          setBanner(null);
+          return;
+        } else {
+          const data = await res.json();
+          setMessage({ type: 'error', text: data.error || 'Failed to update profile' });
+          if (data.error?.includes('username')) {
+            setUsernameError(data.error);
+          }
+          return;
+        }
+      }
+      
+      // If files are present, use FormData (file uploads not fully implemented yet)
       const formData = new FormData();
       formData.append('bio', userInfo.bio || '');
       formData.append('location', userInfo.location || '');
