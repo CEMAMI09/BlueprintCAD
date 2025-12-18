@@ -3,7 +3,6 @@ const express = require("express");
 const router = express.Router();
 const { getOne, getAll, execute } = require("../lib/db");
 const { getUserFromRequest } = require("../lib/auth");
-const formidable = require("formidable");
 
 // GET /api/users/me - Get current user
 router.get("/me", async (req, res) => {
@@ -81,16 +80,29 @@ router.get("/me", async (req, res) => {
       [decoded.userId]
     );
 
+    // Build public URLs for profile picture and banner if R2 is used
+    const publicBase = process.env.R2_PUBLIC_URL
+      ? process.env.R2_PUBLIC_URL.replace(/\/$/, "")
+      : null;
+    const profilePictureUrl =
+      publicBase && user.profile_picture
+        ? `${publicBase}/${user.profile_picture}`
+        : null;
+    const bannerUrl =
+      publicBase && user.banner ? `${publicBase}/${user.banner}` : null;
+
     res.json({
       id: user.id,
       username: user.username,
       email: user.email,
       tier: user.tier || "free",
       profile_picture: user.profile_picture || null,
+      profile_picture_url: profilePictureUrl,
       bio: user.bio || null,
       location: user.location || null,
       website: user.website || null,
       banner: user.banner || null,
+      banner_url: bannerUrl,
       social_links: socialLinks,
       visibility_options: visibilityOptions,
       profile_private: user.profile_private || false,
@@ -116,81 +128,19 @@ router.put("/me", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
     
-    // Handle both JSON and FormData
-    let username, email, bio, location, website, profile_private, social_links, visibility_options;
-    
-    // Check if content-type is multipart/form-data
-    const contentType = req.headers["content-type"] || "";
-    if (contentType.includes("multipart/form-data")) {
-      try {
-        // Parse FormData using formidable v3
-        const form = formidable({ 
-          multiples: true,
-          keepExtensions: true,
-          maxFileSize: 10 * 1024 * 1024, // 10MB
-        });
-        
-        // Formidable v3 returns { fields, files } object
-        const result = await form.parse(req);
-        const fields = result[0] || result.fields || {};
-        const files = result[1] || result.files || {};
-        
-        // Extract field values (formidable v3 returns arrays for each field)
-        const getField = (fieldName) => {
-          const field = fields[fieldName];
-          if (!field) return undefined;
-          return Array.isArray(field) ? field[0] : field;
-        };
-        
-        username = getField('username');
-        email = getField('email');
-        bio = getField('bio') || null;
-        location = getField('location') || null;
-        website = getField('website') || null;
-        
-        const profilePrivateValue = getField('profile_private');
-        profile_private = profilePrivateValue === "true" || profilePrivateValue === true || profilePrivateValue === "1";
-        
-        // Parse JSON fields
-        const socialLinksValue = getField('social_links');
-        if (socialLinksValue) {
-          try {
-            social_links = typeof socialLinksValue === 'string' 
-              ? JSON.parse(socialLinksValue) 
-              : socialLinksValue;
-          } catch (e) {
-            console.error('Error parsing social_links:', e);
-            social_links = {};
-          }
-        }
-        
-        const visibilityValue = getField('visibility_options');
-        if (visibilityValue) {
-          try {
-            visibility_options = typeof visibilityValue === 'string'
-              ? JSON.parse(visibilityValue)
-              : visibilityValue;
-          } catch (e) {
-            console.error('Error parsing visibility_options:', e);
-            visibility_options = {};
-          }
-        }
-        
-        // File handling is stubbed - files are in the files object but not processed
-        // In a full implementation, you would save profile_picture and banner files to R2 here
-        console.log('FormData parsed successfully. Fields:', Object.keys(fields), 'Files:', Object.keys(files));
-      } catch (formError) {
-        console.error('Error parsing FormData:', formError);
-        console.error('FormData error message:', formError.message);
-        console.error('FormData error stack:', formError.stack);
-        console.error('Content-Type:', contentType);
-        console.error('Request headers:', JSON.stringify(req.headers, null, 2));
-        return res.status(400).json({ error: "Failed to parse form data", details: process.env.NODE_ENV === 'development' ? formError.message : undefined });
-      }
-    } else {
-      // Handle JSON body
-      ({ username, email, bio, location, website, profile_private, social_links, visibility_options } = req.body);
-    }
+    // Handle JSON body only (file uploads happen via /api/upload/profile)
+    const {
+      username,
+      email,
+      bio,
+      location,
+      website,
+      profile_private,
+      social_links,
+      visibility_options,
+      profile_picture,
+      banner,
+    } = req.body || {};
 
     // Check if username is being changed and if it's available
     if (username) {
@@ -250,6 +200,14 @@ router.put("/me", async (req, res) => {
     if (visibility_options !== undefined) {
       updates.push(`visibility_options = $${paramIndex++}`);
       values.push(JSON.stringify(visibility_options));
+    }
+    if (profile_picture !== undefined) {
+      updates.push(`profile_picture = $${paramIndex++}`);
+      values.push(profile_picture);
+    }
+    if (banner !== undefined) {
+      updates.push(`banner = $${paramIndex++}`);
+      values.push(banner);
     }
 
     if (updates.length === 0) {
