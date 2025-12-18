@@ -181,7 +181,15 @@ export default function SettingsPage() {
       
       // If no files are being uploaded, send JSON instead of FormData
       if (!profilePicture && !banner) {
-        const jsonData = {
+        const jsonData: {
+          bio: string;
+          location: string;
+          website: string;
+          profile_private: boolean;
+          social_links: any;
+          visibility_options: any;
+          username?: string;
+        } = {
           bio: userInfo.bio || '',
           location: userInfo.location || '',
           website: userInfo.website || '',
