@@ -34,9 +34,22 @@ app.options("*", cors());
 // Cookie parser (must come before routes)
 app.use(cookieParser());
 
-// Body parsing middleware
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// Body parsing middleware - skip for multipart/form-data (handled by formidable)
+app.use((req, res, next) => {
+  const contentType = req.headers["content-type"] || "";
+  if (contentType.includes("multipart/form-data")) {
+    return next(); // Skip body parsing for FormData
+  }
+  express.json({ limit: "50mb" })(req, res, next);
+});
+
+app.use((req, res, next) => {
+  const contentType = req.headers["content-type"] || "";
+  if (contentType.includes("multipart/form-data")) {
+    return next(); // Skip body parsing for FormData
+  }
+  express.urlencoded({ extended: true, limit: "50mb" })(req, res, next);
+});
 
 // Health check
 app.get("/health", (req, res) => {

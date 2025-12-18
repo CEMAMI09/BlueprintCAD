@@ -122,35 +122,49 @@ router.put("/me", async (req, res) => {
     // Check if content-type is multipart/form-data
     const contentType = req.headers["content-type"] || "";
     if (contentType.includes("multipart/form-data")) {
-      // Parse FormData using formidable
-      const form = formidable({ multiples: true });
-      const [fields, files] = await form.parse(req);
-      
-      username = fields.username?.[0];
-      email = fields.email?.[0];
-      bio = fields.bio?.[0];
-      location = fields.location?.[0];
-      website = fields.website?.[0];
-      profile_private = fields.profile_private?.[0] === "true";
-      
-      // Parse JSON fields
-      if (fields.social_links?.[0]) {
-        try {
-          social_links = JSON.parse(fields.social_links[0]);
-        } catch (e) {
-          social_links = {};
+      try {
+        // Parse FormData using formidable
+        const form = formidable({ 
+          multiples: true,
+          keepExtensions: true
+        });
+        const [fields, files] = await form.parse(req);
+        
+        username = fields.username?.[0];
+        email = fields.email?.[0];
+        bio = fields.bio?.[0] || null;
+        location = fields.location?.[0] || null;
+        website = fields.website?.[0] || null;
+        profile_private = fields.profile_private?.[0] === "true" || fields.profile_private?.[0] === true;
+        
+        // Parse JSON fields
+        if (fields.social_links?.[0]) {
+          try {
+            social_links = typeof fields.social_links[0] === 'string' 
+              ? JSON.parse(fields.social_links[0]) 
+              : fields.social_links[0];
+          } catch (e) {
+            console.error('Error parsing social_links:', e);
+            social_links = {};
+          }
         }
-      }
-      if (fields.visibility_options?.[0]) {
-        try {
-          visibility_options = JSON.parse(fields.visibility_options[0]);
-        } catch (e) {
-          visibility_options = {};
+        if (fields.visibility_options?.[0]) {
+          try {
+            visibility_options = typeof fields.visibility_options[0] === 'string'
+              ? JSON.parse(fields.visibility_options[0])
+              : fields.visibility_options[0];
+          } catch (e) {
+            console.error('Error parsing visibility_options:', e);
+            visibility_options = {};
+          }
         }
+        
+        // File handling is stubbed - files are in the files object but not processed
+        // In a full implementation, you would save profile_picture and banner files to R2 here
+      } catch (formError) {
+        console.error('Error parsing FormData:', formError);
+        return res.status(400).json({ error: "Failed to parse form data" });
       }
-      
-      // File handling is stubbed - files are in the files object but not processed
-      // In a full implementation, you would save profile_picture and banner files to R2 here
     } else {
       // Handle JSON body
       ({ username, email, bio, location, website, profile_private, social_links, visibility_options } = req.body);
@@ -223,10 +237,17 @@ router.put("/me", async (req, res) => {
     values.push(decoded.userId);
     const whereClause = `WHERE id = $${paramIndex}`;
 
-    await execute(
-      `UPDATE users SET ${updates.join(", ")} ${whereClause}`,
-      values
-    );
+    try {
+      await execute(
+        `UPDATE users SET ${updates.join(", ")} ${whereClause}`,
+        values
+      );
+    } catch (dbError) {
+      console.error('Database update error:', dbError);
+      console.error('Query:', `UPDATE users SET ${updates.join(", ")} ${whereClause}`);
+      console.error('Values:', values);
+      return res.status(500).json({ error: "Failed to update user in database" });
+    }
 
     // Fetch updated user
     const updatedUser = await getOne(
@@ -288,7 +309,8 @@ router.put("/me", async (req, res) => {
     });
   } catch (error) {
     console.error("PUT /api/users/me error:", error);
-    res.status(500).json({ error: "Failed to update user" });
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ error: "Failed to update user", details: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 });
 
