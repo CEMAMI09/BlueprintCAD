@@ -126,40 +126,50 @@ router.put("/me", async (req, res) => {
         // Parse FormData using formidable v3
         const form = formidable({ 
           multiples: true,
-          keepExtensions: true
+          keepExtensions: true,
+          maxFileSize: 10 * 1024 * 1024, // 10MB
         });
         
         // Formidable v3 returns { fields, files } object
-        const { fields, files } = await form.parse(req);
+        const result = await form.parse(req);
+        const fields = result[0] || result.fields || {};
+        const files = result[1] || result.files || {};
         
-        // Extract field values (formidable v3 returns arrays)
-        username = Array.isArray(fields.username) ? fields.username[0] : fields.username;
-        email = Array.isArray(fields.email) ? fields.email[0] : fields.email;
-        bio = Array.isArray(fields.bio) ? (fields.bio[0] || null) : (fields.bio || null);
-        location = Array.isArray(fields.location) ? (fields.location[0] || null) : (fields.location || null);
-        website = Array.isArray(fields.website) ? (fields.website[0] || null) : (fields.website || null);
+        // Extract field values (formidable v3 returns arrays for each field)
+        const getField = (fieldName) => {
+          const field = fields[fieldName];
+          if (!field) return undefined;
+          return Array.isArray(field) ? field[0] : field;
+        };
         
-        const profilePrivateValue = Array.isArray(fields.profile_private) ? fields.profile_private[0] : fields.profile_private;
-        profile_private = profilePrivateValue === "true" || profilePrivateValue === true;
+        username = getField('username');
+        email = getField('email');
+        bio = getField('bio') || null;
+        location = getField('location') || null;
+        website = getField('website') || null;
+        
+        const profilePrivateValue = getField('profile_private');
+        profile_private = profilePrivateValue === "true" || profilePrivateValue === true || profilePrivateValue === "1";
         
         // Parse JSON fields
-        if (fields.social_links) {
+        const socialLinksValue = getField('social_links');
+        if (socialLinksValue) {
           try {
-            const socialLinksValue = Array.isArray(fields.social_links) ? fields.social_links[0] : fields.social_links;
             social_links = typeof socialLinksValue === 'string' 
               ? JSON.parse(socialLinksValue) 
-              : socialLinksValue || {};
+              : socialLinksValue;
           } catch (e) {
             console.error('Error parsing social_links:', e);
             social_links = {};
           }
         }
-        if (fields.visibility_options) {
+        
+        const visibilityValue = getField('visibility_options');
+        if (visibilityValue) {
           try {
-            const visibilityValue = Array.isArray(fields.visibility_options) ? fields.visibility_options[0] : fields.visibility_options;
             visibility_options = typeof visibilityValue === 'string'
               ? JSON.parse(visibilityValue)
-              : visibilityValue || {};
+              : visibilityValue;
           } catch (e) {
             console.error('Error parsing visibility_options:', e);
             visibility_options = {};
@@ -168,9 +178,13 @@ router.put("/me", async (req, res) => {
         
         // File handling is stubbed - files are in the files object but not processed
         // In a full implementation, you would save profile_picture and banner files to R2 here
+        console.log('FormData parsed successfully. Fields:', Object.keys(fields), 'Files:', Object.keys(files));
       } catch (formError) {
         console.error('Error parsing FormData:', formError);
+        console.error('FormData error message:', formError.message);
         console.error('FormData error stack:', formError.stack);
+        console.error('Content-Type:', contentType);
+        console.error('Request headers:', JSON.stringify(req.headers, null, 2));
         return res.status(400).json({ error: "Failed to parse form data", details: process.env.NODE_ENV === 'development' ? formError.message : undefined });
       }
     } else {
