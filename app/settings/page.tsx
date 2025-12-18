@@ -238,31 +238,111 @@ export default function SettingsPage() {
         }
       }
       
-      // If files are present, use FormData (file uploads not fully implemented yet)
-      const formData = new FormData();
-      formData.append('bio', userInfo.bio || '');
-      formData.append('location', userInfo.location || '');
-      formData.append('website', userInfo.website || '');
-      if (userInfo.username && userInfo.username !== userInfo.originalUsername) {
-        formData.append('username', userInfo.username);
-      }
-      formData.append('profile_private', userInfo.profile_private ? 'true' : 'false');
-      formData.append('social_links', JSON.stringify(userInfo.social_links || {}));
-      formData.append('visibility_options', JSON.stringify(userInfo.visibility_options || {}));
+      // If files are present, upload them first to /api/upload/profile, then update user via JSON
+      let profilePictureKey: string | undefined;
+      let bannerKey: string | undefined;
 
       if (profilePicture) {
-        formData.append('profile_picture', profilePicture);
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', profilePicture);
+        uploadFormData.append('type', 'profile_picture');
+
+        try {
+          const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload/profile`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: uploadFormData,
+          });
+
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            profilePictureKey = uploadData.key;
+          } else {
+            const errData = await uploadRes.json().catch(() => ({}));
+            console.error('Profile picture upload failed:', errData);
+            setMessage({ type: 'error', text: errData.error || 'Failed to upload profile picture' });
+            setSaving(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Profile picture upload error:', err);
+          setMessage({ type: 'error', text: 'Failed to upload profile picture' });
+          setSaving(false);
+          return;
+        }
       }
+
       if (banner) {
-        formData.append('banner', banner);
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', banner);
+        uploadFormData.append('type', 'banner');
+
+        try {
+          const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload/profile`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: uploadFormData,
+          });
+
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            bannerKey = uploadData.key;
+          } else {
+            const errData = await uploadRes.json().catch(() => ({}));
+            console.error('Banner upload failed:', errData);
+            setMessage({ type: 'error', text: errData.error || 'Failed to upload banner image' });
+            setSaving(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Banner upload error:', err);
+          setMessage({ type: 'error', text: 'Failed to upload banner image' });
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Now update user profile with new keys plus other fields
+      const jsonDataWithFiles: {
+        bio: string;
+        location: string;
+        website: string;
+        profile_private: boolean;
+        social_links: any;
+        visibility_options: any;
+        username?: string;
+        profile_picture?: string;
+        banner?: string;
+      } = {
+        bio: userInfo.bio || '',
+        location: userInfo.location || '',
+        website: userInfo.website || '',
+        profile_private: userInfo.profile_private || false,
+        social_links: userInfo.social_links || {},
+        visibility_options: userInfo.visibility_options || {},
+      };
+
+      if (userInfo.username && userInfo.username !== userInfo.originalUsername) {
+        jsonDataWithFiles.username = userInfo.username;
+      }
+      if (profilePictureKey) {
+        jsonDataWithFiles.profile_picture = profilePictureKey;
+      }
+      if (bannerKey) {
+        jsonDataWithFiles.banner = bannerKey;
       }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify(jsonDataWithFiles),
       });
 
       if (res.ok) {
