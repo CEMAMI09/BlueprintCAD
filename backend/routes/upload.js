@@ -1,7 +1,9 @@
 // backend/routes/upload.js
 const express = require("express");
 const router = express.Router();
-const formidable = require("formidable");
+// Formidable v3 CommonJS interop: module exports an object with .formidable
+const formidableLib = require("formidable");
+const formidable = formidableLib.formidable || formidableLib;
 const { execute } = require("../lib/db");
 const { getUserFromRequest } = require("../lib/auth");
 const { uploadToR2, generateUserAssetKey } = require("../lib/r2");
