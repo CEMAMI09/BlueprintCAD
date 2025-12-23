@@ -94,10 +94,16 @@ router.post('/upload', async (req, res) => {
     }
 
     // Store metadata in PostgreSQL
+    // Note: file_type is stored in the data JSONB column since the table doesn't have a file_type column
     let result;
     try {
+      const fileData = {
+        file_type: contentType,
+        mime_type: contentType,
+      };
+      
       result = await execute(
-        `INSERT INTO cad_files (user_id, filename, filepath, file_size, file_type, created_at, updated_at)
+        `INSERT INTO cad_files (user_id, filename, filepath, file_size, data, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
          RETURNING id`,
         [
@@ -105,13 +111,13 @@ router.post('/upload', async (req, res) => {
           file.originalFilename || path.basename(file.filepath),
           objectKey,
           fileBuffer.length,
-          contentType,
+          JSON.stringify(fileData),
         ]
       );
       console.log("File metadata stored in database. ID:", result.rows[0]?.id);
     } catch (dbError) {
       console.error("Database insert failed:", dbError);
-      console.error("SQL:", `INSERT INTO cad_files (user_id, filename, filepath, file_size, file_type, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id`);
+      console.error("SQL:", `INSERT INTO cad_files (user_id, filename, filepath, file_size, data, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id`);
       return res.status(500).json({ 
         error: "Failed to save file metadata", 
         details: process.env.NODE_ENV === 'development' ? dbError.message : undefined 
