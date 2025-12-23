@@ -170,7 +170,12 @@ export default function ExplorePage() {
 
       url += params.toString();
 
-      const response = await fetch(url);
+      // Use the full API URL if available
+      const apiUrl = url.startsWith('/api/') 
+        ? `${process.env.NEXT_PUBLIC_API_URL || ''}${url}`
+        : url;
+
+      const response = await fetch(apiUrl);
       if (response.ok) {
         const projects = await response.json();
         const mappedDesigns = mapProjectsToDesigns(projects);
@@ -497,7 +502,9 @@ export default function ExplorePage() {
                                     {design.thumbnailUrl ? (
                                       <img
                                         key={`thumb-${design.id}-${design.thumbnailUrl}`}
-                                        src={design.thumbnailUrl}
+                                        src={design.thumbnailUrl.startsWith('/api/') 
+                                          ? `${process.env.NEXT_PUBLIC_API_URL || ''}${design.thumbnailUrl}`
+                                          : design.thumbnailUrl}
                                         alt={design.title}
                                         className="design-thumbnail"
                                         loading="lazy"
@@ -642,7 +649,9 @@ export default function ExplorePage() {
                                     <div className="w-24 h-24 rounded-lg flex-shrink-0 overflow-hidden" style={{ backgroundColor: DS.colors.background.panelHover }}>
                                       {design.thumbnailUrl ? (
                                         <img
-                                          src={design.thumbnailUrl}
+                                          src={design.thumbnailUrl.startsWith('/api/') 
+                                            ? `${process.env.NEXT_PUBLIC_API_URL || ''}${design.thumbnailUrl}`
+                                            : design.thumbnailUrl}
                                           alt={design.title}
                                           className="w-full h-full object-cover"
                                           loading="lazy"
@@ -739,7 +748,9 @@ export default function ExplorePage() {
                           <div className="aspect-video rounded-t-lg overflow-hidden flex-shrink-0 relative" style={{ backgroundColor: DS.colors.background.panel }}>
                             {design.thumbnailUrl ? (
                               <img
-                                src={design.thumbnailUrl}
+                                src={design.thumbnailUrl.startsWith('/api/') 
+                                  ? `${process.env.NEXT_PUBLIC_API_URL || ''}${design.thumbnailUrl}`
+                                  : design.thumbnailUrl}
                                 alt={design.title}
                                 className="design-thumbnail w-full h-full object-cover"
                                 loading="lazy"
@@ -849,7 +860,9 @@ export default function ExplorePage() {
                             <div className="w-24 h-24 rounded-lg flex-shrink-0 overflow-hidden" style={{ backgroundColor: DS.colors.background.panelHover }}>
                               {design.thumbnailUrl ? (
                                 <img
-                                  src={design.thumbnailUrl}
+                                  src={design.thumbnailUrl.startsWith('/api/') 
+                                    ? `${process.env.NEXT_PUBLIC_API_URL || ''}${design.thumbnailUrl}`
+                                    : design.thumbnailUrl}
                                   alt={design.title}
                                   className="w-full h-full object-cover"
                                   loading="lazy"

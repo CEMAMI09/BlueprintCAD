@@ -4,50 +4,124 @@ const router = express.Router();
 const { getUserFromRequest } = require("../lib/auth");
 const { getOne, getAll, execute } = require("../lib/db");
 
-// GET /api/projects - List projects (with optional username filter)
+// GET /api/projects - List projects (with optional filters: username, sort, for_sale, search)
 router.get("/", async (req, res) => {
   try {
     const decoded = getUserFromRequest(req); // Optional
     const username = req.query.username;
+    const sort = req.query.sort || 'recent'; // trending, recent, popular
+    const forSale = req.query.for_sale; // 'true' or 'false'
+    const search = req.query.search; // Search term
 
+    let query = `
+      SELECT 
+        p.id,
+        p.title,
+        p.description,
+        p.file_path,
+        p.file_type,
+        p.tags,
+        p.is_public,
+        p.for_sale,
+        p.price,
+        p.views,
+        p.likes,
+        p.created_at,
+        p.updated_at,
+        p.thumbnail_path,
+        u.username
+      FROM projects p
+      INNER JOIN users u ON p.user_id = u.id
+      WHERE 1=1
+    `;
+    const params = [];
+    let paramIndex = 1;
+
+    // Filter by username if provided
     if (username) {
-      // Get projects for a specific user
-      const projects = await getAll(
-        `SELECT 
-          p.id,
-          p.title,
-          p.description,
-          p.file_path,
-          p.file_type,
-          p.tags,
-          p.is_public,
-          p.for_sale,
-          p.price,
-          p.views,
-          p.likes,
-          p.created_at,
-          p.updated_at,
-          u.username
-        FROM projects p
-        INNER JOIN users u ON p.user_id = u.id
-        WHERE u.username = $1
-        ORDER BY p.created_at DESC`,
-        [username]
-      );
+      query += ` AND u.username = $${paramIndex}`;
+      params.push(username);
+      paramIndex++;
+    }
 
-      // Check if viewing own profile
-      const isOwnProfile = decoded && decoded.userId;
-      let user = null;
-      if (isOwnProfile) {
-        user = await getOne("SELECT id FROM users WHERE username = $1", [username]);
+    // Filter by for_sale if provided
+    if (forSale === 'true') {
+      query += ` AND p.for_sale = true`;
+    } else if (forSale === 'false') {
+      query += ` AND (p.for_sale = false OR p.for_sale IS NULL)`;
+    }
+
+    // Filter by search term if provided
+    if (search && search.trim()) {
+      query += ` AND (p.title ILIKE $${paramIndex} OR p.description ILIKE $${paramIndex} OR p.tags ILIKE $${paramIndex})`;
+      const searchTerm = `%${search.trim()}%`;
+      params.push(searchTerm);
+      params.push(searchTerm);
+      params.push(searchTerm);
+      paramIndex += 3;
+    }
+
+    // Only show public projects (unless user is viewing their own)
+    if (username && decoded && decoded.userId) {
+      // Check if viewing own profile - allow private projects
+      const user = await getOne("SELECT id FROM users WHERE username = $1", [username]);
+      if (user && user.id === decoded.userId) {
+        // User viewing their own profile - show all projects
+      } else {
+        // Viewing someone else's profile - only public
+        query += ` AND p.is_public = true`;
       }
+    } else {
+      // General listing - only public projects
+      query += ` AND p.is_public = true`;
+    }
 
-      // Filter out private projects if not owner
-      const filteredProjects = projects.filter(p => {
-        if (p.is_public === true || p.is_public === 1) return true;
-        if (isOwnProfile && user && user.id === p.user_id) return true;
-        return false;
-      });
+    // Add sorting
+    switch (sort) {
+      case 'trending':
+        // Trending = most views in last 7 days, or most views overall
+        query += ` ORDER BY p.views DESC, p.likes DESC, p.created_at DESC`;
+        break;
+      case 'popular':
+        // Popular = most likes
+        query += ` ORDER BY p.likes DESC, p.views DESC, p.created_at DESC`;
+        break;
+      case 'recent':
+      default:
+        // Recent = newest first
+        query += ` ORDER BY p.created_at DESC`;
+        break;
+    }
+
+    // Limit results
+    query += ` LIMIT 50`;
+
+    const projects = await getAll(query, params);
+
+    // Build thumbnail URLs
+    const publicBase = process.env.R2_PUBLIC_URL
+      ? process.env.R2_PUBLIC_URL.replace(/\/$/, "")
+      : null;
+
+    const formattedProjects = projects.map((p) => ({
+      id: p.id,
+      title: p.title,
+      description: p.description || "",
+      file_path: p.file_path,
+      file_type: p.file_type || "stl",
+      tags: p.tags,
+      is_public: p.is_public,
+      for_sale: p.for_sale || false,
+      price: p.price || null,
+      views: p.views || 0,
+      likes: p.likes || 0,
+      created_at: p.created_at,
+      updated_at: p.updated_at,
+      thumbnail_path: p.thumbnail_path || null,
+      username: p.username,
+    }));
+
+    res.json(formattedProjects);
 
       res.json(filteredProjects);
     } else {
