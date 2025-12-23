@@ -207,7 +207,7 @@ export default function ProjectDetail() {
   const fetchProject = async () => {
     try {
       const shareToken = searchParams?.get('share') || sessionStorage.getItem('shareToken');
-      const url = `/api/projects/${id}${shareToken ? `?share=${shareToken}` : ''}`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}${shareToken ? `?share=${shareToken}` : ''}`;
       const res = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || ''}`

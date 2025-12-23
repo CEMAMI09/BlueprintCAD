@@ -88,7 +88,24 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/projects/:id - Get project by ID
+// GET /api/projects/starred - Get user's starred projects (must come before /:id)
+router.get("/starred", async (req, res) => {
+  try {
+    const decoded = getUserFromRequest(req);
+
+    if (!decoded || !decoded.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Stub for now - would need a starred_projects or favorites table
+    res.json([]);
+  } catch (error) {
+    console.error("GET /api/projects/starred error:", error);
+    res.status(500).json({ error: "Failed to fetch starred projects" });
+  }
+});
+
+// GET /api/projects/:id - Get project by ID (must come after /starred)
 router.get("/:id", async (req, res) => {
   try {
     const decoded = getUserFromRequest(req); // Optional - for checking ownership
