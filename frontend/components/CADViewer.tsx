@@ -285,36 +285,7 @@ export default function CADViewer({
           throw new Error('No file or fileUrl provided');
         }
 
-        // Set up animation loop early (needed for both ArrayBuffer and URL paths)
-        const animate = () => {
-          animationId = requestAnimationFrame(animate);
-          if (!disposed && seq === seqRef.current) {
-            if (controls) controls.update();
-            if (renderer && scene && camera) {
-              renderer.render(scene, camera);
-            }
-          }
-        };
-        
-        // Handle window resize
-        const onResize = () => {
-          if (!containerRef.current || !renderer || !camera) return;
-          const container = containerRef.current;
-          const w = container.clientWidth || container.offsetWidth || 800;
-          const h = container.clientHeight || container.offsetHeight || 600;
-          if (w > 0 && h > 0) {
-            renderer.setSize(w, h);
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-          }
-        };
-        window.addEventListener('resize', onResize);
-        setTimeout(onResize, 100);
-        
-        // Start animation loop
-        animate();
-        
-        // Set up animation loop and resize handler (needed for both paths)
+        // Set up animation loop and resize handler early (needed for both ArrayBuffer and URL paths)
         const onResize = () => {
           if (!containerRef.current || !renderer || !camera) return;
           const container = containerRef.current;
