@@ -122,40 +122,6 @@ router.get("/", async (req, res) => {
     }));
 
     res.json(formattedProjects);
-
-      res.json(filteredProjects);
-    } else {
-      // Get all public projects (or user's projects if authenticated)
-      let query = `SELECT 
-        p.id,
-        p.title,
-        p.description,
-        p.file_path,
-        p.file_type,
-        p.tags,
-        p.is_public,
-        p.for_sale,
-        p.price,
-        p.views,
-        p.likes,
-        p.created_at,
-        p.updated_at,
-        u.username
-      FROM projects p
-      INNER JOIN users u ON p.user_id = u.id
-      WHERE p.is_public = true`;
-
-      const params = [];
-      if (decoded && decoded.userId) {
-        query += ` OR p.user_id = $1`;
-        params.push(decoded.userId);
-      }
-
-      query += ` ORDER BY p.created_at DESC LIMIT 50`;
-
-      const projects = await getAll(query, params);
-      res.json(projects);
-    }
   } catch (error) {
     console.error("GET /api/projects error:", error);
     res.status(500).json({ error: "Failed to fetch projects" });
