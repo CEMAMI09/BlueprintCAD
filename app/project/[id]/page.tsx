@@ -535,10 +535,8 @@ export default function ProjectDetail() {
                           <img
                             src={(() => {
                               const thumbnailPath = String(project.thumbnail_path);
-                              const filename = thumbnailPath.includes('/') 
-                                ? thumbnailPath.split('/').pop() || thumbnailPath
-                                : thumbnailPath;
-                              return `/api/thumbnails/${encodeURIComponent(filename)}`;
+                              // Use the full path, not just filename
+                              return `/api/thumbnails/${encodeURIComponent(thumbnailPath)}`;
                             })()}
                             alt={project.title}
                             className="w-full h-full object-cover"
