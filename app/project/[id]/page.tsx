@@ -235,7 +235,7 @@ export default function ProjectDetail() {
             file_type: data.file_type, 
             thumbnail_path: data.thumbnail_path,
             hasThumbnail: !!data.thumbnail_path,
-            thumbnailUrl: data.thumbnail_path ? `/api/thumbnails/${data.thumbnail_path.replace('thumbnails/', '')}` : null,
+            thumbnailUrl: data.thumbnail_path ? `${process.env.NEXT_PUBLIC_API_URL || ''}/api/thumbnails/${encodeURIComponent(data.thumbnail_path)}` : null,
             fileUrl: data.file_path ? `/api/files/${encodeURIComponent(data.file_path)}` : null,
             metadata: {
               file_size_bytes: data.file_size_bytes,

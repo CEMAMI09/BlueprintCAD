@@ -311,10 +311,8 @@ export default function PurchasePage() {
                           <img
                             src={(() => {
                               const thumbnailPath = String(project.thumbnail_path);
-                              const filename = thumbnailPath.includes('/') 
-                                ? thumbnailPath.split('/').pop() || thumbnailPath
-                                : thumbnailPath;
-                              return `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
+                              const base = process.env.NEXT_PUBLIC_API_URL || '';
+                              return `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}?t=${Date.now()}`;
                             })()}
                             alt={project.title}
                             className="w-full h-full object-cover"

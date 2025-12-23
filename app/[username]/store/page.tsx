@@ -736,7 +736,11 @@ function ProductCard({ product, viewMode, onBuy, primaryColor }: {
           <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
             {product.thumbnail_path ? (
               <img
-                src={`/api/thumbnails/${encodeURIComponent(product.thumbnail_path.split('/').pop() || '')}`}
+                src={(() => {
+                  const base = process.env.NEXT_PUBLIC_API_URL || '';
+                  const thumbnailPath = String(product.thumbnail_path);
+                  return `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}`;
+                })()}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
@@ -799,7 +803,11 @@ function ProductCard({ product, viewMode, onBuy, primaryColor }: {
       <div className="aspect-video rounded-t-lg overflow-hidden relative" style={{ backgroundColor: '#1a1a1a' }}>
         {product.thumbnail_path ? (
           <img
-            src={`/api/thumbnails/${encodeURIComponent(product.thumbnail_path.split('/').pop() || '')}`}
+            src={(() => {
+              const base = process.env.NEXT_PUBLIC_API_URL || '';
+              const thumbnailPath = String(product.thumbnail_path);
+              return `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}`;
+            })()}
             alt={product.title}
             className="w-full h-full object-cover"
           />

@@ -721,11 +721,9 @@ export default function ProfilePage() {
                                 <img
                                   src={(() => {
                                     const thumbnailPath = String(project.thumbnail_path);
-                                    const filename = thumbnailPath.includes('/') 
-                                      ? thumbnailPath.split('/').pop() || thumbnailPath
-                                      : thumbnailPath;
-                                    // Add cache-busting query parameter to ensure fresh images
-                                    return `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
+                                    const base = process.env.NEXT_PUBLIC_API_URL || '';
+                                    // Use full R2 key via thumbnails proxy with cache-busting
+                                    return `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}?t=${Date.now()}`;
                                   })()}
                                   alt={project.title || project.name}
                                   className="w-full h-full object-cover"

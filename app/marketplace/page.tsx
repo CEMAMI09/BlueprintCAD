@@ -102,11 +102,9 @@ export default function MarketplacePage() {
             thumbnail: p.thumbnail_path || '',
             thumbnailUrl: p.thumbnail_path ? (() => {
               const thumbnailPath = String(p.thumbnail_path);
-              const filename = thumbnailPath.includes('/') 
-                ? thumbnailPath.split('/').pop() 
-                : thumbnailPath;
-              // Add cache-busting query parameter to ensure fresh images
-              return `/api/thumbnails/${encodeURIComponent(filename || "fallback")}?t=${Date.now()}`;
+              const base = process.env.NEXT_PUBLIC_API_URL || '';
+              // Use full R2 key through thumbnails proxy with cache-busting
+              return `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}?t=${Date.now()}`;
             })() : null,
             seller: {
               username: p.username,

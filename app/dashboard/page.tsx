@@ -300,11 +300,9 @@ export default function DashboardPage() {
                             <img 
                               src={(() => {
                                 const thumbnailPath = String(design.thumbnail);
-                                const filename = thumbnailPath.includes('/') 
-                                  ? thumbnailPath.split('/').pop() || thumbnailPath
-                                  : thumbnailPath;
-                                // Add cache-busting query parameter to ensure fresh images
-                                const url = `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
+                                const base = process.env.NEXT_PUBLIC_API_URL || '';
+                                // Use full R2 key via thumbnails proxy with cache-busting
+                                const url = `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}?t=${Date.now()}`;
                                 console.log(`[Dashboard] Loading thumbnail for ${design.id}: ${url}`);
                                 return url;
                               })()}

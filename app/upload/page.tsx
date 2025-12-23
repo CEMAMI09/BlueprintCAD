@@ -386,7 +386,7 @@ const fetchFolders = async () => {
         thumbnail_path: project.thumbnail_path,
         file_path: project.file_path,
         hasThumbnail: !!project.thumbnail_path,
-        thumbnailUrl: project.thumbnail_path ? `/api/thumbnails/${project.thumbnail_path.replace('thumbnails/', '')}` : null
+        thumbnailUrl: project.thumbnail_path ? `${process.env.NEXT_PUBLIC_API_URL || ''}/api/thumbnails/${encodeURIComponent(project.thumbnail_path)}` : null
       });
       
       if (!project.thumbnail_path) {
