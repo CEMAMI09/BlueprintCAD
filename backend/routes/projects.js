@@ -4,12 +4,98 @@ const router = express.Router();
 const { getUserFromRequest } = require("../lib/auth");
 const { getOne, getAll, execute } = require("../lib/db");
 
+// GET /api/projects - List projects (with optional username filter)
+router.get("/", async (req, res) => {
+  try {
+    const decoded = getUserFromRequest(req); // Optional
+    const username = req.query.username;
+
+    if (username) {
+      // Get projects for a specific user
+      const projects = await getAll(
+        `SELECT 
+          p.id,
+          p.title,
+          p.description,
+          p.file_path,
+          p.file_type,
+          p.tags,
+          p.is_public,
+          p.for_sale,
+          p.price,
+          p.views,
+          p.likes,
+          p.created_at,
+          p.updated_at,
+          u.username
+        FROM projects p
+        INNER JOIN users u ON p.user_id = u.id
+        WHERE u.username = $1
+        ORDER BY p.created_at DESC`,
+        [username]
+      );
+
+      // Check if viewing own profile
+      const isOwnProfile = decoded && decoded.userId;
+      let user = null;
+      if (isOwnProfile) {
+        user = await getOne("SELECT id FROM users WHERE username = $1", [username]);
+      }
+
+      // Filter out private projects if not owner
+      const filteredProjects = projects.filter(p => {
+        if (p.is_public === true || p.is_public === 1) return true;
+        if (isOwnProfile && user && user.id === p.user_id) return true;
+        return false;
+      });
+
+      res.json(filteredProjects);
+    } else {
+      // Get all public projects (or user's projects if authenticated)
+      let query = `SELECT 
+        p.id,
+        p.title,
+        p.description,
+        p.file_path,
+        p.file_type,
+        p.tags,
+        p.is_public,
+        p.for_sale,
+        p.price,
+        p.views,
+        p.likes,
+        p.created_at,
+        p.updated_at,
+        u.username
+      FROM projects p
+      INNER JOIN users u ON p.user_id = u.id
+      WHERE p.is_public = true`;
+
+      const params = [];
+      if (decoded && decoded.userId) {
+        query += ` OR p.user_id = $1`;
+        params.push(decoded.userId);
+      }
+
+      query += ` ORDER BY p.created_at DESC LIMIT 50`;
+
+      const projects = await getAll(query, params);
+      res.json(projects);
+    }
+  } catch (error) {
+    console.error("GET /api/projects error:", error);
+    res.status(500).json({ error: "Failed to fetch projects" });
+  }
+});
+
 // GET /api/projects/:id - Get project by ID
 router.get("/:id", async (req, res) => {
   try {
     const decoded = getUserFromRequest(req); // Optional - for checking ownership
     const { id } = req.params;
     const shareToken = req.query.share; // Optional share token
+
+    console.log(`GET /api/projects/${id} - Fetching project`);
 
     // Get project from database
     const project = await getOne(
@@ -39,8 +125,11 @@ router.get("/:id", async (req, res) => {
     );
 
     if (!project) {
+      console.log(`GET /api/projects/${id} - Project not found in database`);
       return res.status(404).json({ error: "Project not found" });
     }
+
+    console.log(`GET /api/projects/${id} - Project found: ${project.title} (user_id: ${project.user_id})`);
 
     // Check if user can view this project
     const isOwner = decoded && decoded.userId === project.user_id;
