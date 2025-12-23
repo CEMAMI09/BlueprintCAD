@@ -16,32 +16,59 @@ router.post('/upload', async (req, res) => {
       return res.status(401).json({ error: "Authentication required" });
     }
 
+    console.log("POST /api/cad/upload: Starting file upload for user", decoded.userId);
+    console.log("Content-Type:", req.headers["content-type"]);
+
     const form = formidable({
       multiples: false,
       keepExtensions: true,
       maxFileSize: 100 * 1024 * 1024, // 100MB
     });
 
-    const { fields, files } = await new Promise((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve({ fields, files });
+    let fields, files;
+    try {
+      const result = await new Promise((resolve, reject) => {
+        form.parse(req, (err, fields, files) => {
+          if (err) {
+            console.error("Formidable parse error:", err);
+            return reject(err);
+          }
+          resolve({ fields, files });
+        });
       });
-    });
+      fields = result.fields;
+      files = result.files;
+      console.log("Formidable parsed successfully. Files:", Object.keys(files));
+    } catch (parseError) {
+      console.error("Failed to parse form data:", parseError);
+      return res.status(400).json({ 
+        error: "Failed to parse form data", 
+        details: process.env.NODE_ENV === 'development' ? parseError.message : undefined 
+      });
+    }
 
     const fileField = files.file || files.cad_file;
     const file = Array.isArray(fileField) ? fileField[0] : fileField;
 
     if (!file) {
+      console.error("No file found in upload. Available files:", Object.keys(files));
       return res.status(400).json({ error: "No file uploaded" });
     }
+
+    console.log("File received:", file.originalFilename || file.name, "Size:", file.size);
 
     const fs = require("fs");
     const path = require("path");
 
-    const fileBuffer = await fs.promises.readFile(file.filepath);
+    let fileBuffer;
+    try {
+      fileBuffer = await fs.promises.readFile(file.filepath);
+      console.log("File read successfully, size:", fileBuffer.length);
+    } catch (readError) {
+      console.error("Failed to read file:", readError);
+      return res.status(500).json({ error: "Failed to read uploaded file" });
+    }
+
     const contentType =
       file.mimetype ||
       file.type ||
@@ -49,23 +76,47 @@ router.post('/upload', async (req, res) => {
 
     // Generate R2 key for CAD file
     const key = generateUserAssetKey(decoded.userId, "cad", file.originalFilename || path.basename(file.filepath));
+    console.log("Generated R2 key:", key);
 
     // Upload to R2
-    const { key: objectKey, url } = await uploadToR2(fileBuffer, key, contentType);
+    let objectKey, url;
+    try {
+      const uploadResult = await uploadToR2(fileBuffer, key, contentType);
+      objectKey = uploadResult.key;
+      url = uploadResult.url;
+      console.log("File uploaded to R2 successfully. Key:", objectKey);
+    } catch (r2Error) {
+      console.error("R2 upload failed:", r2Error);
+      return res.status(500).json({ 
+        error: "Failed to upload file to storage", 
+        details: process.env.NODE_ENV === 'development' ? r2Error.message : undefined 
+      });
+    }
 
     // Store metadata in PostgreSQL
-    const result = await execute(
-      `INSERT INTO cad_files (user_id, filename, filepath, file_size, file_type, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-       RETURNING id`,
-      [
-        decoded.userId,
-        file.originalFilename || path.basename(file.filepath),
-        objectKey,
-        fileBuffer.length,
-        contentType,
-      ]
-    );
+    let result;
+    try {
+      result = await execute(
+        `INSERT INTO cad_files (user_id, filename, filepath, file_size, file_type, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+         RETURNING id`,
+        [
+          decoded.userId,
+          file.originalFilename || path.basename(file.filepath),
+          objectKey,
+          fileBuffer.length,
+          contentType,
+        ]
+      );
+      console.log("File metadata stored in database. ID:", result.rows[0]?.id);
+    } catch (dbError) {
+      console.error("Database insert failed:", dbError);
+      console.error("SQL:", `INSERT INTO cad_files (user_id, filename, filepath, file_size, file_type, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id`);
+      return res.status(500).json({ 
+        error: "Failed to save file metadata", 
+        details: process.env.NODE_ENV === 'development' ? dbError.message : undefined 
+      });
+    }
 
     res.json({
       success: true,
@@ -81,7 +132,11 @@ router.post('/upload', async (req, res) => {
     });
   } catch (error) {
     console.error("POST /api/cad/upload error:", error);
-    res.status(500).json({ error: "Failed to upload file" });
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ 
+      error: "Failed to upload file",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 });
 
