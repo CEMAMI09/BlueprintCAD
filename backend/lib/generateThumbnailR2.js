@@ -5,7 +5,20 @@ const fs = require("fs");
 const path = require("path");
 const { getR2Client, uploadToR2, generateUserAssetKey } = require("./r2");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
-const { generateThumbnailForDesign } = require("./generateThumbnail");
+
+// Lazy load generateThumbnailForDesign to avoid canvas import errors
+let generateThumbnailForDesign = null;
+function tryLoadThumbnailGenerator() {
+  if (generateThumbnailForDesign) return generateThumbnailForDesign;
+  try {
+    const thumbnailModule = require("./generateThumbnail");
+    generateThumbnailForDesign = thumbnailModule.generateThumbnailForDesign;
+    return generateThumbnailForDesign;
+  } catch (error) {
+    console.warn("[Thumbnail] Canvas-based thumbnail generator not available:", error.message);
+    return null;
+  }
+}
 
 /**
  * Generate thumbnail for a CAD file in R2 and upload it back to R2
@@ -62,27 +75,32 @@ async function generateThumbnailFromR2(r2FilePath, projectId, userId) {
     
     try {
       // Try to use the full thumbnail generator first (if canvas works)
-      try {
-        const thumbnailRelativePath = await generateThumbnailForDesign(tempFilePath, projectId.toString());
-        const generatedPath = path.join(process.cwd(), "storage", "uploads", thumbnailRelativePath);
-        if (fs.existsSync(generatedPath)) {
-          const stats = fs.statSync(generatedPath);
-          if (stats.size > 15000) {
-            // Use the generated thumbnail
-            thumbnailBuffer = await fs.promises.readFile(generatedPath);
-            console.log(`[Thumbnail] Generated 3D thumbnail: ${thumbnailBuffer.length} bytes`);
-            
-            // Clean up generated file after reading
-            try {
-              await fs.promises.unlink(generatedPath);
-            } catch (cleanupError) {
-              console.warn("[Thumbnail] Failed to clean up generated thumbnail:", cleanupError);
+      const thumbnailGen = tryLoadThumbnailGenerator();
+      if (thumbnailGen) {
+        try {
+          const thumbnailRelativePath = await thumbnailGen(tempFilePath, projectId.toString());
+          const generatedPath = path.join(process.cwd(), "storage", "uploads", thumbnailRelativePath);
+          if (fs.existsSync(generatedPath)) {
+            const stats = fs.statSync(generatedPath);
+            if (stats.size > 15000) {
+              // Use the generated thumbnail
+              thumbnailBuffer = await fs.promises.readFile(generatedPath);
+              console.log(`[Thumbnail] Generated 3D thumbnail: ${thumbnailBuffer.length} bytes`);
+              
+              // Clean up generated file after reading
+              try {
+                await fs.promises.unlink(generatedPath);
+              } catch (cleanupError) {
+                console.warn("[Thumbnail] Failed to clean up generated thumbnail:", cleanupError);
+              }
             }
           }
+        } catch (threeError) {
+          console.warn(`[Thumbnail] 3D thumbnail generation failed:`, threeError.message);
+          // Fall through to simple placeholder
         }
-      } catch (threeError) {
-        console.warn(`[Thumbnail] 3D thumbnail generation failed (canvas issue?):`, threeError.message);
-        // Fall through to simple placeholder
+      } else {
+        console.log(`[Thumbnail] Canvas not available, skipping 3D generation`);
       }
       
       // If 3D generation failed, use simple placeholder
