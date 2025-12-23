@@ -210,11 +210,20 @@ export default function CADViewer({
               const apiUrl = fileUrl.startsWith('/api/') 
                 ? `${process.env.NEXT_PUBLIC_API_URL}${fileUrl}`
                 : fileUrl;
+              console.log(`[CADViewer] Fetching file from: ${apiUrl}`);
               const response = await fetch(apiUrl, {
                 credentials: 'include', // Include cookies for authentication
                 headers: token ? {
                   'Authorization': `Bearer ${token}`
                 } : {}
+              });
+              
+              console.log(`[CADViewer] File fetch response:`, {
+                status: response.status,
+                statusText: response.statusText,
+                contentType: response.headers.get('content-type'),
+                contentLength: response.headers.get('content-length'),
+                ok: response.ok
               });
               
               if (!response.ok) {
@@ -235,8 +244,35 @@ export default function CADViewer({
               }
               
               const blob = await response.blob();
-              objectUrl = URL.createObjectURL(blob);
-              loadUrl = objectUrl;
+              console.log(`[CADViewer] Blob created:`, {
+                size: blob.size,
+                type: blob.type
+              });
+              
+              if (blob.size === 0) {
+                throw new Error('File is empty (0 bytes)');
+              }
+              
+              // For STL and other binary formats, try using ArrayBuffer directly
+              // Some Three.js loaders work better with ArrayBuffer than blob URLs
+              if (format === 'stl' || format === 'ply') {
+                try {
+                  const arrayBuffer = await blob.arrayBuffer();
+                  console.log(`[CADViewer] Converted to ArrayBuffer: ${arrayBuffer.byteLength} bytes`);
+                  // STL loader can accept ArrayBuffer directly
+                  objectUrl = arrayBuffer;
+                  loadUrl = arrayBuffer;
+                  console.log(`[CADViewer] Using ArrayBuffer for ${format} loader`);
+                } catch (abError) {
+                  console.warn(`[CADViewer] Failed to convert to ArrayBuffer, using blob URL:`, abError);
+                  objectUrl = URL.createObjectURL(blob);
+                  loadUrl = objectUrl;
+                }
+              } else {
+                objectUrl = URL.createObjectURL(blob);
+                loadUrl = objectUrl;
+                console.log(`[CADViewer] Blob URL created: ${loadUrl}`);
+              }
             } catch (err) {
               console.error(`[CADViewer] File fetch error for ${fileUrl}:`, err);
               throw new Error(`Failed to fetch file: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -249,10 +285,84 @@ export default function CADViewer({
         }
 
         // Load and display model
+        console.log(`[CADViewer] Starting model load, format: ${format}, loadUrl type: ${typeof loadUrl}`);
+        
+        // For STL/PLY with ArrayBuffer, use parse() instead of load()
+        if ((format === 'stl' || format === 'ply') && loadUrl instanceof ArrayBuffer) {
+          console.log(`[CADViewer] Using parse() for ${format} with ArrayBuffer`);
+          try {
+            const result = loader.parse(loadUrl);
+            console.log(`[CADViewer] Parse success, result type:`, result?.constructor?.name || typeof result);
+            
+            if (seq !== seqRef.current) {
+              console.log(`[CADViewer] Sequence mismatch, ignoring result`);
+              return;
+            }
+
+            // STL/PLY return BufferGeometry
+            const material = new MeshStandardMaterial({ 
+              color: 0x60a5fa, 
+              roughness: 0.5, 
+              metalness: 0.1 
+            });
+            const meshToAdd = new Mesh(result, material);
+            
+            // Continue with centering and scaling logic (same as below)
+            const box = new Box3().setFromObject(meshToAdd);
+            const size = new Vector3();
+            box.getSize(size);
+            let maxDim = Math.max(size.x, size.y, size.z) || 1;
+            if (maxDim < 0.01) maxDim = 0.01;
+            
+            const isCardView = !showControls && !autoRotate;
+            const scale = isCardView ? 0.4 / maxDim : 0.8 / maxDim;
+            const center = box.getCenter(new Vector3());
+            meshToAdd.scale.setScalar(scale);
+            meshToAdd.position.sub(center.multiplyScalar(scale));
+
+            const toRemove: any[] = [];
+            scene.traverse((obj: any) => {
+              if (obj.isMesh || obj.isGroup) toRemove.push(obj);
+            });
+            toRemove.forEach((obj) => scene.remove(obj));
+
+            scene.add(meshToAdd);
+            
+            const boxSize = Math.max(size.x, size.y, size.z) * scale;
+            const fovRad = (50 * Math.PI) / 180;
+            const distance = (boxSize / 2) / Math.tan(fovRad / 2) * 1.8;
+            
+            if (isCardView) {
+              camera.position.set(distance * 0.7, distance * 0.7, distance * 0.7);
+            } else {
+              camera.position.set(distance * 0.7, distance * 0.5, distance * 0.7);
+            }
+            
+            camera.lookAt(0, 0, 0);
+            
+            if (controls) {
+              controls.target.set(0, 0, 0);
+              controls.update();
+            }
+            setLoading(false);
+          } catch (parseError) {
+            console.error('[CADViewer] Parse error:', parseError);
+            setError(`Failed to parse ${format.toUpperCase()} file: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+            setLoading(false);
+          }
+          return; // Exit early for ArrayBuffer path
+        }
+        
+        // For other formats or blob URLs, use load()
+        console.log(`[CADViewer] Using loader.load() with URL: ${loadUrl}`);
         loader.load(
           loadUrl,
           (result: any) => {
-            if (seq !== seqRef.current) return;
+            console.log(`[CADViewer] Loader success callback fired, result type:`, result?.constructor?.name || typeof result);
+            if (seq !== seqRef.current) {
+              console.log(`[CADViewer] Sequence mismatch, ignoring result`);
+              return;
+            }
 
             let meshToAdd: any;
 
