@@ -87,13 +87,10 @@ export default function ExplorePage() {
     return projects.map((p: any) => {
       let thumbnailUrl = null;
       if (p.thumbnail_path) {
-        // Extract just the filename from thumbnail_path (remove "thumbnails/" prefix)
         const thumbnailPath = String(p.thumbnail_path);
-        const filename = thumbnailPath.includes('/') 
-          ? (thumbnailPath.split('/').pop() || thumbnailPath)
-          : thumbnailPath;
+        // Use the full R2 key with the thumbnails proxy route
         // Add cache-busting query parameter to ensure fresh images
-        thumbnailUrl = `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
+        thumbnailUrl = `/api/thumbnails/${encodeURIComponent(thumbnailPath)}?t=${Date.now()}`;
       }
       return {
         id: p.id.toString(),
@@ -102,8 +99,10 @@ export default function ExplorePage() {
         authorAvatar: p.username?.substring(0, 2).toUpperCase() || 'UN',
         authorProfilePicture: p.profile_picture || null,
         authorSubscriptionTier: p.subscription_tier || null,
-        thumbnail: '📦', // Default thumbnail emoji
-        thumbnailUrl,
+        // ProjectCard uses project.thumbnail as the image URL
+        // Fallback to box emoji if no thumbnail URL is available
+        thumbnail: thumbnailUrl || '📦',
+        thumbnailUrl, // keep for any other consumers
         stars: p.likes || 0,
         downloads: p.downloads || 0,
         views: p.views || 0,
@@ -130,7 +129,7 @@ export default function ExplorePage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/search?q=${encodeURIComponent(search.trim())}`);
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(search.trim())}`);
       if (response.ok) {
         const userResults = await response.json();
         setUsers(userResults);
@@ -148,7 +147,7 @@ export default function ExplorePage() {
   const fetchProjects = async (filterId: string = activeFilter, search: string = searchQuery) => {
     try {
       setLoading(true);
-      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/projects?`;
+      let url = '/api/projects?';
       const params = new URLSearchParams();
 
       // Add filter parameters
@@ -253,7 +252,7 @@ export default function ExplorePage() {
                         return;
                       }
                       try {
-                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/can-action?feature=maxProjects`, {
+                        const res = await fetch(`/api/subscriptions/can-action?feature=maxProjects`, {
                           headers: { 'Authorization': `Bearer ${token}` }
                         });
                         const data = await res.json();
