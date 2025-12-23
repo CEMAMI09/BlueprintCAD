@@ -66,7 +66,7 @@ export default function CADViewer({
     let camera: any;
     let controls: any;
     let animationId: number | null = null;
-    let objectUrl: string | null = null;
+    let objectUrl: string | ArrayBuffer | null = null;
     let disposed = false;
 
     const seq = ++seqRef.current;
@@ -198,7 +198,8 @@ export default function CADViewer({
         }
 
         // Get file URL (either from File object or direct URL)
-        let loadUrl: string;
+        // Can be string (URL) or ArrayBuffer (for binary formats like STL)
+        let loadUrl: string | ArrayBuffer;
         if (file) {
           objectUrl = URL.createObjectURL(file);
           loadUrl = objectUrl;
@@ -502,7 +503,7 @@ export default function CADViewer({
               }
             }
           } catch {}
-          if (objectUrl) URL.revokeObjectURL(objectUrl);
+          if (objectUrl && typeof objectUrl === 'string') URL.revokeObjectURL(objectUrl);
         };
       } catch (e) {
         console.error('[CADViewer] Init error:', e);
