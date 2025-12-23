@@ -398,16 +398,29 @@ router.get("/:username", async (req, res) => {
     const isOwnProfile = decoded && decoded.userId === user.id;
     const showEmail = isOwnProfile || (visibilityOptions?.showEmail !== false);
 
+    // Build public URLs for profile picture and banner if R2 is used
+    const publicBase = process.env.R2_PUBLIC_URL
+      ? process.env.R2_PUBLIC_URL.replace(/\/$/, "")
+      : null;
+    const profilePictureUrl =
+      publicBase && user.profile_picture
+        ? `${publicBase}/${user.profile_picture}`
+        : null;
+    const bannerUrl =
+      publicBase && user.banner ? `${publicBase}/${user.banner}` : null;
+
     res.json({
       id: user.id,
       username: user.username,
       email: showEmail ? user.email : null,
       tier: user.tier || "free",
       profile_picture: user.profile_picture || null,
+      profile_picture_url: profilePictureUrl,
       bio: user.bio || null,
       location: user.location || null,
       website: user.website || null,
       banner: user.banner || null,
+      banner_url: bannerUrl,
       social_links: socialLinks,
       visibility_options: visibilityOptions,
       profile_private: user.profile_private || false,

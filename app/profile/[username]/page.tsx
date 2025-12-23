@@ -383,7 +383,7 @@ export default function ProfilePage() {
                 {profile.banner && (
                   <div className="w-full h-48 relative overflow-hidden">
                     <img
-                      src={`/api/users/banner/${profile.banner}`}
+                      src={profile.banner_url || `${process.env.NEXT_PUBLIC_API_URL}/api/users/banner/${profile.banner}`}
                       alt="Profile Banner"
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -407,7 +407,7 @@ export default function ProfilePage() {
                     >
                       {profile.profile_picture ? (
                         <img
-                          src={`/api/users/profile-picture/${profile.profile_picture}`}
+                          src={profile.profile_picture_url || `${process.env.NEXT_PUBLIC_API_URL}/api/users/profile-picture/${profile.profile_picture}`}
                           alt={username}
                           className="w-full h-full rounded-full object-cover"
                           onError={(e) => {
