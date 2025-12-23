@@ -31,20 +31,48 @@ router.get("/:path(*)", async (req, res) => {
 
       const response = await s3Client.send(command);
       
+      if (!response.Body) {
+        console.error(`[Files] No body in R2 response for ${filePath}`);
+        return res.status(404).json({ error: "File not found" });
+      }
+
       // Set appropriate headers
       const contentType = response.ContentType || 'application/octet-stream';
       res.setHeader('Content-Type', contentType);
+      
+      // Set CORS headers for 3D viewer (browser needs these for blob conversion)
+      const origin = req.headers.origin;
+      if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+      } else {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+      }
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Type');
+      
       if (response.ContentLength) {
         res.setHeader('Content-Length', response.ContentLength);
       }
       res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
       
-      // Stream the file
-      if (response.Body) {
-        response.Body.pipe(res);
-      } else {
-        return res.status(404).json({ error: "File not found" });
-      }
+      console.log(`[Files] Streaming file ${filePath} (${response.ContentLength || 'unknown'} bytes, type: ${contentType})`);
+      
+      // Stream the file directly (better for large files)
+      // Three.js loaders can handle streams via blob URLs
+      response.Body.pipe(res);
+      
+      // Handle stream errors
+      response.Body.on('error', (err) => {
+        console.error(`[Files] Stream error for ${filePath}:`, err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Failed to stream file" });
+        }
+      });
+      
+      res.on('close', () => {
+        console.log(`[Files] Finished streaming ${filePath}`);
+      });
     } catch (s3Error) {
       console.error(`Failed to fetch file from R2: ${filePath}`, s3Error);
       if (s3Error.name === 'NoSuchKey' || s3Error.$metadata?.httpStatusCode === 404) {
