@@ -66,6 +66,7 @@ app.use("/api/subscriptions", require("./routes/subscriptions"));
 app.use("/api/folders", require("./routes/folders"));
 app.use("/api/projects", require("./routes/projects"));
 app.use("/api/files", require("./routes/files"));
+app.use("/api/thumbnails", require("./routes/thumbnails"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 
 // Root endpoint
