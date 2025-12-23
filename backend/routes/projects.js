@@ -114,6 +114,17 @@ router.get("/:id", async (req, res) => {
 
     console.log(`GET /api/projects/${id} - Fetching project`);
 
+    // Ensure thumbnail_path column exists
+    try {
+      const { query } = require("../lib/db");
+      await query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS thumbnail_path TEXT`);
+    } catch (alterError) {
+      // Column might already exist, that's fine
+      if (!alterError.message.includes('already exists') && !alterError.message.includes('duplicate')) {
+        console.warn(`[Projects] Could not ensure thumbnail_path column exists:`, alterError.message);
+      }
+    }
+
     // Get project from database
     const project = await getOne(
       `SELECT 
@@ -133,44 +144,14 @@ router.get("/:id", async (req, res) => {
         p.likes,
         p.created_at,
         p.updated_at,
+        p.thumbnail_path,
         u.username,
         u.tier as user_tier
       FROM projects p
       INNER JOIN users u ON p.user_id = u.id
       WHERE p.id = $1`,
       [id]
-    ).catch(async (err) => {
-      // If thumbnail_path column doesn't exist, try without it
-      if (err.message && err.message.includes('thumbnail_path')) {
-        console.warn("thumbnail_path column not found, trying without it");
-        return await getOne(
-          `SELECT 
-            p.id,
-            p.user_id,
-            p.folder_id,
-            p.title,
-            p.description,
-            p.file_path,
-            p.file_type,
-            p.tags,
-            p.is_public,
-            p.for_sale,
-            p.price,
-            p.ai_estimate,
-            p.views,
-            p.likes,
-            p.created_at,
-            p.updated_at,
-            u.username,
-            u.tier as user_tier
-          FROM projects p
-          INNER JOIN users u ON p.user_id = u.id
-          WHERE p.id = $1`,
-          [id]
-        );
-      }
-      throw err;
-    });
+    );
 
     if (!project) {
       console.log(`GET /api/projects/${id} - Project not found in database`);
@@ -187,18 +168,24 @@ router.get("/:id", async (req, res) => {
       return res.status(403).json({ error: "Project is private" });
     }
 
-    // Increment view count if not owner
+    // Increment view count if not owner (or if no auth - anonymous views)
     if (!isOwner) {
       try {
-        await execute(
-          `UPDATE projects SET views = views + 1 WHERE id = $1`,
+        const updateResult = await execute(
+          `UPDATE projects SET views = COALESCE(views, 0) + 1 WHERE id = $1 RETURNING views`,
           [id]
         );
-        project.views = (project.views || 0) + 1;
+        if (updateResult.rows && updateResult.rows[0]) {
+          project.views = updateResult.rows[0].views;
+          console.log(`[Views] Incremented views for project ${id}: ${project.views}`);
+        }
       } catch (viewError) {
         console.error("Failed to increment view count:", viewError);
         // Don't fail the request if view increment fails
       }
+    } else {
+      // For owners, just ensure views is set
+      project.views = project.views || 0;
     }
 
     // Get CAD file info if linked
@@ -237,18 +224,9 @@ router.get("/:id", async (req, res) => {
       ? `${publicBase}/${project.file_path}`
       : null;
 
-    // Get thumbnail_path from database (may not exist in schema yet)
-    let thumbnailPath = null;
-    try {
-      const projectWithThumb = await getOne(
-        `SELECT thumbnail_path FROM projects WHERE id = $1`,
-        [id]
-      );
-      thumbnailPath = projectWithThumb?.thumbnail_path || null;
-    } catch (thumbError) {
-      // Column might not exist yet - that's okay
-      console.log("thumbnail_path column may not exist yet");
-    }
+    // Get thumbnail_path from database
+    // Note: thumbnail_path column should exist (added to schema), but handle gracefully if it doesn't
+    let thumbnailPath = project.thumbnail_path || null;
 
     // Build thumbnail URL if thumbnail exists
     const thumbnailUrl = publicBase && thumbnailPath

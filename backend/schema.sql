@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS projects (
   for_sale BOOLEAN DEFAULT false,
   price DECIMAL(10,2),
   ai_estimate TEXT,
+  thumbnail_path TEXT,
   views INTEGER DEFAULT 0,
   likes INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),

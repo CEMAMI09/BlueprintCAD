@@ -117,20 +117,24 @@ router.post("/", async (req, res) => {
     // Generate thumbnail asynchronously (don't block response)
     let thumbnailPath = null;
     if (file_path && file_type) {
+      console.log(`[Thumbnail] Starting thumbnail generation for project ${project.id}, file: ${file_path}`);
       try {
         const { generateThumbnailFromR2 } = require("../lib/generateThumbnailR2");
+        const { query } = require("../lib/db");
+        
         // Generate thumbnail in background
         generateThumbnailFromR2(file_path, project.id, decoded.userId)
           .then(async (thumbnailKey) => {
+            console.log(`[Thumbnail] Generation completed for project ${project.id}, result: ${thumbnailKey || 'null'}`);
             if (thumbnailKey) {
               try {
                 // Ensure thumbnail_path column exists
-                const { query } = require("../lib/db");
                 try {
                   await query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS thumbnail_path TEXT`);
+                  console.log(`[Thumbnail] Ensured thumbnail_path column exists`);
                 } catch (alterError) {
                   // Column might already exist, that's fine
-                  if (!alterError.message.includes('already exists')) {
+                  if (!alterError.message.includes('already exists') && !alterError.message.includes('duplicate')) {
                     console.warn(`[Thumbnail] Could not ensure thumbnail_path column exists:`, alterError.message);
                   }
                 }
@@ -140,19 +144,26 @@ router.post("/", async (req, res) => {
                   `UPDATE projects SET thumbnail_path = $1 WHERE id = $2`,
                   [thumbnailKey, project.id]
                 );
-                console.log(`[Thumbnail] Updated project ${project.id} with thumbnail: ${thumbnailKey}`);
+                console.log(`[Thumbnail] Successfully updated project ${project.id} with thumbnail: ${thumbnailKey}`);
               } catch (updateError) {
-                console.error(`[Thumbnail] Failed to update project with thumbnail:`, updateError);
+                console.error(`[Thumbnail] Failed to update project ${project.id} with thumbnail:`, updateError);
+                console.error(`[Thumbnail] Update error stack:`, updateError.stack);
               }
+            } else {
+              console.warn(`[Thumbnail] Thumbnail generation returned null for project ${project.id}`);
             }
           })
           .catch((thumbError) => {
             console.error(`[Thumbnail] Background generation failed for project ${project.id}:`, thumbError);
+            console.error(`[Thumbnail] Error stack:`, thumbError.stack);
           });
       } catch (thumbGenError) {
-        console.error("Failed to start thumbnail generation:", thumbGenError);
+        console.error("[Thumbnail] Failed to start thumbnail generation:", thumbGenError);
+        console.error("[Thumbnail] Error stack:", thumbGenError.stack);
         // Don't fail the request if thumbnail generation fails
       }
+    } else {
+      console.log(`[Thumbnail] Skipping thumbnail generation - file_path: ${file_path}, file_type: ${file_type}`);
     }
 
     // Return project (thumbnail will be null initially, updated later)
