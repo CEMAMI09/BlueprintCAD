@@ -139,7 +139,38 @@ router.get("/:id", async (req, res) => {
       INNER JOIN users u ON p.user_id = u.id
       WHERE p.id = $1`,
       [id]
-    );
+    ).catch(async (err) => {
+      // If thumbnail_path column doesn't exist, try without it
+      if (err.message && err.message.includes('thumbnail_path')) {
+        console.warn("thumbnail_path column not found, trying without it");
+        return await getOne(
+          `SELECT 
+            p.id,
+            p.user_id,
+            p.folder_id,
+            p.title,
+            p.description,
+            p.file_path,
+            p.file_type,
+            p.tags,
+            p.is_public,
+            p.for_sale,
+            p.price,
+            p.ai_estimate,
+            p.views,
+            p.likes,
+            p.created_at,
+            p.updated_at,
+            u.username,
+            u.tier as user_tier
+          FROM projects p
+          INNER JOIN users u ON p.user_id = u.id
+          WHERE p.id = $1`,
+          [id]
+        );
+      }
+      throw err;
+    });
 
     if (!project) {
       console.log(`GET /api/projects/${id} - Project not found in database`);
@@ -206,6 +237,24 @@ router.get("/:id", async (req, res) => {
       ? `${publicBase}/${project.file_path}`
       : null;
 
+    // Get thumbnail_path from database (may not exist in schema yet)
+    let thumbnailPath = null;
+    try {
+      const projectWithThumb = await getOne(
+        `SELECT thumbnail_path FROM projects WHERE id = $1`,
+        [id]
+      );
+      thumbnailPath = projectWithThumb?.thumbnail_path || null;
+    } catch (thumbError) {
+      // Column might not exist yet - that's okay
+      console.log("thumbnail_path column may not exist yet");
+    }
+
+    // Build thumbnail URL if thumbnail exists
+    const thumbnailUrl = publicBase && thumbnailPath
+      ? `${publicBase}/${thumbnailPath}`
+      : null;
+
     // Return project data in format expected by frontend
     res.json({
       id: project.id.toString(),
@@ -221,7 +270,8 @@ router.get("/:id", async (req, res) => {
       price: project.price || null,
       ai_estimate: project.ai_estimate || null,
       tags: project.tags || null,
-      thumbnail_path: null, // TODO: Generate thumbnails
+      thumbnail_path: thumbnailPath,
+      thumbnail_url: thumbnailUrl,
       is_public: project.is_public,
       folder_id: project.folder_id,
       isOwner: isOwner,

@@ -66,7 +66,7 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Title and file_path are required" });
     }
 
-    // Insert into projects table
+    // Insert into projects table (thumbnail_path will be added later)
     const result = await execute(
       `INSERT INTO projects (
         user_id, 
@@ -114,7 +114,48 @@ router.post("/", async (req, res) => {
       }
     }
 
-    // Return project with thumbnail_path (stub for now - would need thumbnail generation)
+    // Generate thumbnail asynchronously (don't block response)
+    let thumbnailPath = null;
+    if (file_path && file_type) {
+      try {
+        const { generateThumbnailFromR2 } = require("../lib/generateThumbnailR2");
+        // Generate thumbnail in background
+        generateThumbnailFromR2(file_path, project.id, decoded.userId)
+          .then(async (thumbnailKey) => {
+            if (thumbnailKey) {
+              try {
+                // Ensure thumbnail_path column exists
+                const { query } = require("../lib/db");
+                try {
+                  await query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS thumbnail_path TEXT`);
+                } catch (alterError) {
+                  // Column might already exist, that's fine
+                  if (!alterError.message.includes('already exists')) {
+                    console.warn(`[Thumbnail] Could not ensure thumbnail_path column exists:`, alterError.message);
+                  }
+                }
+                
+                // Update project with thumbnail path
+                await execute(
+                  `UPDATE projects SET thumbnail_path = $1 WHERE id = $2`,
+                  [thumbnailKey, project.id]
+                );
+                console.log(`[Thumbnail] Updated project ${project.id} with thumbnail: ${thumbnailKey}`);
+              } catch (updateError) {
+                console.error(`[Thumbnail] Failed to update project with thumbnail:`, updateError);
+              }
+            }
+          })
+          .catch((thumbError) => {
+            console.error(`[Thumbnail] Background generation failed for project ${project.id}:`, thumbError);
+          });
+      } catch (thumbGenError) {
+        console.error("Failed to start thumbnail generation:", thumbGenError);
+        // Don't fail the request if thumbnail generation fails
+      }
+    }
+
+    // Return project (thumbnail will be null initially, updated later)
     res.json({
       id: project.id,
       title: project.title,
@@ -125,7 +166,7 @@ router.post("/", async (req, res) => {
       is_public: project.is_public,
       for_sale: project.for_sale,
       price: project.price,
-      thumbnail_path: null, // TODO: Generate thumbnail
+      thumbnail_path: thumbnailPath, // Will be null initially, updated asynchronously
       created_at: project.created_at,
       updated_at: project.updated_at,
     });
