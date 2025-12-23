@@ -64,6 +64,7 @@ app.use("/api/stats", require("./routes/stats"));
 app.use("/api/upload", require("./routes/upload"));
 app.use("/api/subscriptions", require("./routes/subscriptions"));
 app.use("/api/folders", require("./routes/folders"));
+app.use("/api/projects", require("./routes/projects"));
 
 // Root endpoint
 app.get("/", (req, res) => {
