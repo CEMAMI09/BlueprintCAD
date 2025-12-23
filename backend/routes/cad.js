@@ -124,8 +124,10 @@ router.post('/upload', async (req, res) => {
       });
     }
 
+    // Return response in format expected by frontend
     res.json({
       success: true,
+      filePath: objectKey, // Top-level for backward compatibility
       file: {
         id: result.rows[0]?.id,
         filename: file.originalFilename || path.basename(file.filepath),
@@ -135,6 +137,10 @@ router.post('/upload', async (req, res) => {
         url: url,
         uploaded_at: new Date().toISOString(),
       },
+      // Note: dimensions and volume would need to be calculated from the STL file
+      // For now, return null - frontend can handle this
+      dimensions: null,
+      volume: null,
     });
   } catch (error) {
     console.error("POST /api/cad/upload error:", error);
