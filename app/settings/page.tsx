@@ -65,12 +65,16 @@ export default function SettingsPage() {
         // Initialize social links if not present
         const socialLinks = data.social_links || { github: '', twitter: '', instagram: '', youtube: '' };
         setUserInfo({ ...data, social_links: socialLinks, originalUsername: data.username });
-        // Set previews for existing images
-        if (data.profile_picture) {
-          setProfilePicturePreview(`/api/users/profile-picture/${data.profile_picture}`);
+        // Set previews for existing images - use the URL from backend if available, otherwise construct proxy URL
+        if (data.profile_picture_url) {
+          setProfilePicturePreview(data.profile_picture_url);
+        } else if (data.profile_picture) {
+          setProfilePicturePreview(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile-picture/${data.profile_picture}`);
         }
-        if (data.banner) {
-          setBannerPreview(`/api/users/banner/${data.banner}`);
+        if (data.banner_url) {
+          setBannerPreview(data.banner_url);
+        } else if (data.banner) {
+          setBannerPreview(`${process.env.NEXT_PUBLIC_API_URL}/api/users/banner/${data.banner}`);
         }
       }
     } catch (error) {
@@ -357,6 +361,17 @@ export default function SettingsPage() {
             user.username = updatedData.username;
             localStorage.setItem('user', JSON.stringify(user));
           }
+        }
+        // Update preview URLs with the new URLs from the response
+        if (updatedData.profile_picture_url) {
+          setProfilePicturePreview(updatedData.profile_picture_url);
+        } else if (updatedData.profile_picture) {
+          setProfilePicturePreview(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile-picture/${updatedData.profile_picture}`);
+        }
+        if (updatedData.banner_url) {
+          setBannerPreview(updatedData.banner_url);
+        } else if (updatedData.banner) {
+          setBannerPreview(`${process.env.NEXT_PUBLIC_API_URL}/api/users/banner/${updatedData.banner}`);
         }
         // Clear file inputs
         setProfilePicture(null);

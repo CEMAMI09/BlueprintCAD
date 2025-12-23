@@ -272,16 +272,29 @@ router.put("/me", async (req, res) => {
       // Ignore parse errors
     }
 
+    // Build public URLs for profile picture and banner if R2 is used
+    const publicBase = process.env.R2_PUBLIC_URL
+      ? process.env.R2_PUBLIC_URL.replace(/\/$/, "")
+      : null;
+    const profilePictureUrl =
+      publicBase && updatedUser.profile_picture
+        ? `${publicBase}/${updatedUser.profile_picture}`
+        : null;
+    const bannerUrl =
+      publicBase && updatedUser.banner ? `${publicBase}/${updatedUser.banner}` : null;
+
     res.json({
       id: updatedUser.id,
       username: updatedUser.username,
       email: updatedUser.email,
       tier: updatedUser.tier || "free",
       profile_picture: updatedUser.profile_picture || null,
+      profile_picture_url: profilePictureUrl,
       bio: updatedUser.bio || null,
       location: updatedUser.location || null,
       website: updatedUser.website || null,
       banner: updatedUser.banner || null,
+      banner_url: bannerUrl,
       social_links: socialLinks,
       visibility_options: visibilityOptions,
       profile_private: updatedUser.profile_private || false,
