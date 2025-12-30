@@ -44,12 +44,16 @@ async function handleOAuthCallback(provider, req, res) {
 
     if (provider === "google") {
       // Exchange code for token
+      const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+      const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+      const redirectUri = `${process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8080"}/api/auth/oauth/google/callback`;
+      
       const tokenResponse = await axios.post("https://oauth2.googleapis.com/token", {
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        client_id: clientId,
+        client_secret: clientSecret,
         code,
         grant_type: "authorization_code",
-        redirect_uri: `${process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8080"}/api/auth/oauth/google/callback`,
+        redirect_uri: redirectUri,
       });
 
       const { access_token } = tokenResponse.data;
