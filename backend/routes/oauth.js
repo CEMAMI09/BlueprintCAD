@@ -14,67 +14,8 @@ function generateState() {
 // Store state temporarily (in production, use Redis or similar)
 const stateStore = new Map();
 
-// GET /api/auth/oauth/:provider - Initiate OAuth flow
-router.get("/:provider", async (req, res) => {
-  try {
-    const { provider } = req.params;
-    const redirectUri = req.query.redirect_uri || "/dashboard";
-
-    if (!["google", "github"].includes(provider)) {
-      return res.status(400).json({ error: "Invalid OAuth provider" });
-    }
-
-    const state = generateState();
-    stateStore.set(state, { provider, redirectUri, timestamp: Date.now() });
-
-    // Clean up old states (older than 10 minutes)
-    for (const [key, value] of stateStore.entries()) {
-      if (Date.now() - value.timestamp > 10 * 60 * 1000) {
-        stateStore.delete(key);
-      }
-    }
-
-    let authUrl;
-
-    if (provider === "google") {
-      const clientId = process.env.GOOGLE_CLIENT_ID;
-      const redirectUrl = `${process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8080"}/api/auth/oauth/google/callback`;
-      
-      if (!clientId) {
-        return res.status(500).json({ error: "Google OAuth not configured" });
-      }
-
-      authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${encodeURIComponent(clientId)}&` +
-        `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
-        `response_type=code&` +
-        `scope=${encodeURIComponent("openid email profile")}&` +
-        `state=${state}&` +
-        `access_type=offline&` +
-        `prompt=consent`;
-    } else if (provider === "github") {
-      const clientId = process.env.GITHUB_CLIENT_ID;
-      const redirectUrl = `${process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8080"}/api/auth/oauth/github/callback`;
-      
-      if (!clientId) {
-        return res.status(500).json({ error: "GitHub OAuth not configured" });
-      }
-
-      authUrl = `https://github.com/login/oauth/authorize?` +
-        `client_id=${encodeURIComponent(clientId)}&` +
-        `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
-        `scope=${encodeURIComponent("user:email")}&` +
-        `state=${state}`;
-    }
-
-    res.redirect(authUrl);
-  } catch (error) {
-    console.error("OAuth initiation error:", error);
-    res.status(500).json({ error: "Failed to initiate OAuth" });
-  }
-});
-
 // GET /api/auth/oauth/:provider/callback - Handle OAuth callback
+// MUST be defined BEFORE /:provider route to match correctly
 router.get("/:provider/callback", async (req, res) => {
   try {
     const { provider } = req.params;
@@ -241,6 +182,66 @@ router.get("/:provider/callback", async (req, res) => {
   } catch (error) {
     console.error("OAuth callback error:", error);
     res.redirect("/login?error=oauth_failed");
+  }
+});
+
+// GET /api/auth/oauth/:provider - Initiate OAuth flow
+router.get("/:provider", async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const redirectUri = req.query.redirect_uri || "/dashboard";
+
+    if (!["google", "github"].includes(provider)) {
+      return res.status(400).json({ error: "Invalid OAuth provider" });
+    }
+
+    const state = generateState();
+    stateStore.set(state, { provider, redirectUri, timestamp: Date.now() });
+
+    // Clean up old states (older than 10 minutes)
+    for (const [key, value] of stateStore.entries()) {
+      if (Date.now() - value.timestamp > 10 * 60 * 1000) {
+        stateStore.delete(key);
+      }
+    }
+
+    let authUrl;
+
+    if (provider === "google") {
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      const redirectUrl = `${process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8080"}/api/auth/oauth/google/callback`;
+      
+      if (!clientId) {
+        return res.status(500).json({ error: "Google OAuth not configured" });
+      }
+
+      authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${encodeURIComponent(clientId)}&` +
+        `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent("openid email profile")}&` +
+        `state=${state}&` +
+        `access_type=offline&` +
+        `prompt=consent`;
+    } else if (provider === "github") {
+      const clientId = process.env.GITHUB_CLIENT_ID;
+      const redirectUrl = `${process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8080"}/api/auth/oauth/github/callback`;
+      
+      if (!clientId) {
+        return res.status(500).json({ error: "GitHub OAuth not configured" });
+      }
+
+      authUrl = `https://github.com/login/oauth/authorize?` +
+        `client_id=${encodeURIComponent(clientId)}&` +
+        `redirect_uri=${encodeURIComponent(redirectUrl)}&` +
+        `scope=${encodeURIComponent("user:email")}&` +
+        `state=${state}`;
+    }
+
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error("OAuth initiation error:", error);
+    res.status(500).json({ error: "Failed to initiate OAuth" });
   }
 });
 
