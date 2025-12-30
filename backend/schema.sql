@@ -6,7 +6,10 @@ CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(255) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
+  password VARCHAR(255), -- Nullable for OAuth users
+  google_id VARCHAR(255) UNIQUE,
+  github_id VARCHAR(255) UNIQUE,
+  oauth_provider VARCHAR(50), -- 'google', 'github', or null for email/password
   tier VARCHAR(50) DEFAULT 'free',
   profile_picture TEXT,
   bio TEXT,
@@ -21,6 +24,8 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
+CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id);
 
 -- Projects table
 CREATE TABLE IF NOT EXISTS projects (

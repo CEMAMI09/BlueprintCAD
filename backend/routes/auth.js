@@ -18,6 +18,11 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Password is required for email/password registration
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
+    }
+
     // Check for existing user
     const existingUser = await getOne(
       "SELECT id FROM users WHERE username = $1 OR email = $2",
@@ -89,8 +94,15 @@ router.post("/login", async (req, res) => {
       );
     }
 
-    if (!user || !user.password) {
+    if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Check if user is OAuth-only (no password)
+    if (!user.password) {
+      return res.status(401).json({ 
+        error: "This account was created with OAuth. Please sign in with your OAuth provider." 
+      });
     }
 
     const isValid = await verifyPassword(password, user.password);
