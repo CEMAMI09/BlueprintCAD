@@ -102,7 +102,6 @@ async function handleOAuthCallback(provider, req, res) {
     }
 
     if (!userInfo || !userInfo.email) {
-      const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXT_PUBLIC_API_URL?.replace(':8080', ':3000') || "http://localhost:3000";
       return res.redirect(`${frontendUrl}/login?error=oauth_email_required`);
     }
 
@@ -178,7 +177,6 @@ async function handleOAuthCallback(provider, req, res) {
     });
 
     // Redirect to frontend callback handler with token
-    const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXT_PUBLIC_API_URL?.replace(':8080', ':3000') || "http://localhost:3000";
     res.redirect(`${frontendUrl}/auth/callback?token=${token}&oauth=success&redirect=${encodeURIComponent(redirectUri)}`);
   } catch (error) {
     console.error("OAuth callback error:", error);
