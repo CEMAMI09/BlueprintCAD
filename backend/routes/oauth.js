@@ -14,9 +14,8 @@ function generateState() {
 // Store state temporarily (in production, use Redis or similar)
 const stateStore = new Map();
 
-// GET /api/auth/oauth/:provider/callback - Handle OAuth callback
-// MUST be defined BEFORE /:provider route to match correctly
-router.get("/:provider/callback", async (req, res) => {
+// Helper function to handle OAuth callback
+async function handleOAuthCallback(provider, req, res) {
   try {
     const { provider } = req.params;
     const { code, state, error } = req.query;
@@ -183,7 +182,11 @@ router.get("/:provider/callback", async (req, res) => {
     console.error("OAuth callback error:", error);
     res.redirect("/login?error=oauth_failed");
   }
-});
+}
+
+// Explicit callback routes (must be before /:provider route)
+router.get("/github/callback", (req, res) => handleOAuthCallback("github", req, res));
+router.get("/google/callback", (req, res) => handleOAuthCallback("google", req, res));
 
 // GET /api/auth/oauth/:provider - Initiate OAuth flow
 router.get("/:provider", async (req, res) => {
