@@ -212,12 +212,16 @@ router.get("/:provider", async (req, res) => {
     let authUrl;
 
     if (provider === "google") {
-      const clientId = process.env.GOOGLE_CLIENT_ID;
+      const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
       const redirectUrl = `${process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8080"}/api/auth/oauth/google/callback`;
       
       if (!clientId) {
         return res.status(500).json({ error: "Google OAuth not configured" });
       }
+
+      // Debug logging (remove in production if needed)
+      console.log("[OAuth] Google Client ID:", clientId);
+      console.log("[OAuth] Google Redirect URL:", redirectUrl);
 
       authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${encodeURIComponent(clientId)}&` +
