@@ -17,7 +17,6 @@ const stateStore = new Map();
 // Helper function to handle OAuth callback
 async function handleOAuthCallback(provider, req, res) {
   try {
-    const { provider } = req.params;
     const { code, state, error } = req.query;
 
     if (error) {
