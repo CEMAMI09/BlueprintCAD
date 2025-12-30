@@ -19,18 +19,20 @@ async function handleOAuthCallback(provider, req, res) {
   try {
     const { code, state, error } = req.query;
 
+    const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXT_PUBLIC_API_URL?.replace(':8080', ':3000') || "http://localhost:3000";
+
     if (error) {
-      return res.redirect(`/login?error=${encodeURIComponent(error)}`);
+      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent(error)}`);
     }
 
     if (!code || !state) {
-      return res.redirect("/login?error=missing_oauth_params");
+      return res.redirect(`${frontendUrl}/login?error=missing_oauth_params`);
     }
 
     // Verify state
     const storedState = stateStore.get(state);
     if (!storedState || storedState.provider !== provider) {
-      return res.redirect("/login?error=invalid_state");
+      return res.redirect(`${frontendUrl}/login?error=invalid_state`);
     }
 
     stateStore.delete(state); // Clean up used state
@@ -100,7 +102,8 @@ async function handleOAuthCallback(provider, req, res) {
     }
 
     if (!userInfo || !userInfo.email) {
-      return res.redirect("/login?error=oauth_email_required");
+      const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXT_PUBLIC_API_URL?.replace(':8080', ':3000') || "http://localhost:3000";
+      return res.redirect(`${frontendUrl}/login?error=oauth_email_required`);
     }
 
     // Check if user exists by OAuth ID
@@ -179,7 +182,8 @@ async function handleOAuthCallback(provider, req, res) {
     res.redirect(`${frontendUrl}/auth/callback?token=${token}&oauth=success&redirect=${encodeURIComponent(redirectUri)}`);
   } catch (error) {
     console.error("OAuth callback error:", error);
-    res.redirect("/login?error=oauth_failed");
+    const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXT_PUBLIC_API_URL?.replace(':8080', ':3000') || "http://localhost:3000";
+    res.redirect(`${frontendUrl}/login?error=oauth_failed`);
   }
 }
 
