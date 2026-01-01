@@ -8,9 +8,11 @@ export default function OAuthCallback() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    const error = searchParams.get('error');
-    const oauth = searchParams.get('oauth');
+    if (!searchParams) return;
+    
+    const token = searchParams.get('token');       
+    const error = searchParams.get('error');       
+    const oauth = searchParams.get('oauth');       
     const redirect = searchParams.get('redirect') || '/dashboard';
 
     if (error) {
