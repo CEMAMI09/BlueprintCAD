@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Card } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import { Github } from 'lucide-react';
+import { Github, Eye, EyeOff } from 'lucide-react';
 import { apiFetch } from '@/lib/apiClient';
 
 export default function Register() {
@@ -19,6 +19,8 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -224,44 +226,64 @@ export default function Register() {
               <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border"
-                style={{
-                  backgroundColor: DS.colors.background.panel,
-                  borderColor: DS.colors.border.default,
-                  color: DS.colors.text.primary,
-                }}
-                placeholder="Create a password"
-                autoComplete="new-password"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 pr-10 rounded-lg border"
+                  style={{
+                    backgroundColor: DS.colors.background.panel,
+                    borderColor: DS.colors.border.default,
+                    color: DS.colors.text.primary,
+                  }}
+                  placeholder="Create a password"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: DS.colors.text.secondary }}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
                 Confirm password
               </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border"
-                style={{
-                  backgroundColor: DS.colors.background.panel,
-                  borderColor: DS.colors.border.default,
-                  color: DS.colors.text.primary,
-                }}
-                placeholder="Confirm your password"
-                autoComplete="new-password"
-              />
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 pr-10 rounded-lg border"
+                  style={{
+                    backgroundColor: DS.colors.background.panel,
+                    borderColor: DS.colors.border.default,
+                    color: DS.colors.text.primary,
+                  }}
+                  placeholder="Confirm your password"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: DS.colors.text.secondary }}
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <Button

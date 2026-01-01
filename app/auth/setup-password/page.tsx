@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Card } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import { apiFetch } from '@/lib/apiClient';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function SetupPassword() {
   const router = useRouter();
@@ -14,6 +14,8 @@ export default function SetupPassword() {
     password: '',
     confirmPassword: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -62,22 +64,34 @@ export default function SetupPassword() {
 
     try {
       // Set password via API
-      const data = await apiFetch('/api/auth/setup-password', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${apiUrl}/api/auth/setup-password`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           password: formData.password,
         }),
       });
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to set password');
+      }
+
       // Fetch updated user data
-      const userData = await apiFetch('/api/auth/me', {
+      const userResponse = await fetch(`${apiUrl}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
       });
+
+      const userData = await userResponse.json();
 
       if (userData.user) {
         localStorage.setItem('user', JSON.stringify(userData.user));
@@ -142,44 +156,64 @@ export default function SetupPassword() {
                 <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border"
-                  style={{
-                    backgroundColor: DS.colors.background.panel,
-                    borderColor: DS.colors.border.default,
-                    color: DS.colors.text.primary,
-                  }}
-                  placeholder="Create a password (min 8 characters)"
-                  autoComplete="new-password"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 pr-10 rounded-lg border"
+                    style={{
+                      backgroundColor: DS.colors.background.panel,
+                      borderColor: DS.colors.border.default,
+                      color: DS.colors.text.primary,
+                    }}
+                    placeholder="Create a password (min 8 characters)"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: DS.colors.text.secondary }}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
                   Confirm password
                 </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border"
-                  style={{
-                    backgroundColor: DS.colors.background.panel,
-                    borderColor: DS.colors.border.default,
-                    color: DS.colors.text.primary,
-                  }}
-                  placeholder="Confirm your password"
-                  autoComplete="new-password"
-                />
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 pr-10 rounded-lg border"
+                    style={{
+                      backgroundColor: DS.colors.background.panel,
+                      borderColor: DS.colors.border.default,
+                      color: DS.colors.text.primary,
+                    }}
+                    placeholder="Confirm your password"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: DS.colors.text.secondary }}
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               <Button
@@ -199,11 +233,15 @@ export default function SetupPassword() {
                   if (!token) return;
                   try {
                     // Fetch user data
-                    const userData = await apiFetch('/api/auth/me', {
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+                    const userResponse = await fetch(`${apiUrl}/api/auth/me`, {
                       headers: {
                         'Authorization': `Bearer ${token}`,
                       },
+                      credentials: 'include',
                     });
+
+                    const userData = await userResponse.json();
 
                     if (userData.user) {
                       localStorage.setItem('user', JSON.stringify(userData.user));
