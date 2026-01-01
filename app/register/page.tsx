@@ -71,9 +71,18 @@ export default function Register() {
   };
 
   const handleOAuthSignIn = async (provider: 'google' | 'github') => {
-    // OAuth will be implemented later with Express backend
-    setError(`OAuth sign-in with ${provider} is not yet available. Please use email/password.`);
-    setOauthLoading(null);
+    setOauthLoading(provider);
+    setError('');
+    
+    try {
+      // Redirect to backend OAuth initiation endpoint
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const redirectUri = '/dashboard';
+      window.location.href = `${apiUrl}/api/auth/oauth/${provider}?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    } catch (err: any) {
+      setError(err.message || `Failed to initiate ${provider} sign-in`);
+      setOauthLoading(null);
+    }
   };
 
   return (

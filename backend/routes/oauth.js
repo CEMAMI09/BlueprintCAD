@@ -165,6 +165,9 @@ async function handleOAuthCallback(provider, req, res) {
       };
     }
 
+    // Check if user has a password set
+    const hasPassword = user.password && user.password.trim() !== '';
+
     // Generate JWT token
     const token = generateToken({
       id: user.id,
@@ -179,6 +182,11 @@ async function handleOAuthCallback(provider, req, res) {
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
+
+    // If user doesn't have a password, redirect to password setup page
+    if (!hasPassword) {
+      return res.redirect(`${frontendUrl}/auth/setup-password?token=${token}&redirect=${encodeURIComponent(redirectUri)}`);
+    }
 
     // Redirect to frontend callback handler with token
     res.redirect(`${frontendUrl}/auth/callback?token=${token}&oauth=success&redirect=${encodeURIComponent(redirectUri)}`);

@@ -177,4 +177,39 @@ router.post("/logout", async (req, res) => {
   res.json({ success: true });
 });
 
+// POST /api/auth/setup-password - Set password for OAuth users
+router.post("/setup-password", async (req, res) => {
+  try {
+    const user = getUserFromRequest(req);
+    if (!user || !user.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { password } = req.body || {};
+
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters long" });
+    }
+
+    // Check if user already has a password
+    const existingUser = await getOne("SELECT password FROM users WHERE id = $1", [user.userId]);
+    if (existingUser && existingUser.password) {
+      return res.status(400).json({ error: "Password already set. Use change password instead." });
+    }
+
+    // Hash and set password
+    const hashedPassword = await hashPassword(password);
+    await execute("UPDATE users SET password = $1 WHERE id = $2", [hashedPassword, user.userId]);
+
+    return res.json({ message: "Password set successfully" });
+  } catch (error) {
+    console.error("Setup password error:", error);
+    return res.status(500).json({ error: "Failed to set password" });
+  }
+});
+
 module.exports = router;
