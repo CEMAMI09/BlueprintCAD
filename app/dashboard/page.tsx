@@ -47,6 +47,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [storage, setStorage] = useState<{ used: number; max: number; percentage: number } | null>(null);
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
+  const [showAllActivity, setShowAllActivity] = useState(false);
+  const [showAllTrending, setShowAllTrending] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -94,14 +96,14 @@ export default function DashboardPage() {
         console.error('Error fetching activity:', err);
       }
 
-      // Fetch user's own projects for "trending" (user's most viewed projects)
-      if (user?.id) {
-        try {
-          const userProjects = await apiFetch(`/api/projects?user_id=${user.id}&sort=popular&limit=12`);
-          setTrending(userProjects || []);
-        } catch (err) {
-          console.error('Error fetching user projects:', err);
-        }
+      // Fetch trending designs by views (sorted by backend, we'll show top 6 initially)
+      try {
+        const trendingData = await apiFetch('/api/dashboard/trending');
+        // Sort by views and store all (we'll limit display in UI)
+        const sortedByViews = (trendingData || []).sort((a: any, b: any) => (b.views || 0) - (a.views || 0));
+        setTrending(sortedByViews);
+      } catch (err) {
+        console.error('Error fetching trending:', err);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -230,11 +232,23 @@ export default function DashboardPage() {
               })}
             </div>
 
-                {/* Recent Activity */}
+                {/* Activity */}
                 <div className="mb-8">
-                  <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                    Your Recent Activity
-                  </h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold" style={{ color: DS.colors.text.primary }}>
+                      Activity
+                    </h2>
+                    {recentActivity.length > 3 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowAllActivity(!showAllActivity)}
+                        style={{ color: DS.colors.primary.blue }}
+                      >
+                        {showAllActivity ? 'Hide' : 'Show more'}
+                      </Button>
+                    )}
+                  </div>
                   <Card padding="none">
                     {recentActivity.length === 0 ? (
                       <div className="p-8 text-center" style={{ color: DS.colors.text.secondary }}>
@@ -242,7 +256,7 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="divide-y" style={{ borderColor: DS.colors.border.subtle }}>
-                        {recentActivity.map((activity) => {
+                        {(showAllActivity ? recentActivity : recentActivity.slice(0, 3)).map((activity) => {
                           const formatTime = (timestamp: string) => {
                             if (!timestamp) return 'Recently';
                             const date = new Date(timestamp);
@@ -310,18 +324,30 @@ export default function DashboardPage() {
                   </Card>
                 </div>
 
-                {/* Your Designs */}
+                {/* Trending Designs */}
                 <div>
-                  <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                    Your Designs
-                  </h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold" style={{ color: DS.colors.text.primary }}>
+                      Trending Designs
+                    </h2>
+                    {trending.length > 6 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowAllTrending(!showAllTrending)}
+                        style={{ color: DS.colors.primary.blue }}
+                      >
+                        {showAllTrending ? 'Hide' : 'Show more'}
+                      </Button>
+                    )}
+                  </div>
                   {trending.length === 0 ? (
                     <div className="p-8 text-center" style={{ color: DS.colors.text.secondary }}>
-                      No designs yet. <Link href="/upload" style={{ color: DS.colors.primary.blue }} className="hover:underline">Upload your first design</Link>
+                      No trending designs
                     </div>
                   ) : (
                     <div className="grid grid-cols-3 gap-4">
-                      {trending.map((design) => (
+                      {(showAllTrending ? trending : trending.slice(0, 6)).map((design) => (
                   <Card 
                         key={design.id} 
                         hover 
@@ -331,7 +357,7 @@ export default function DashboardPage() {
                       >
                         {/* Thumbnail */}
                         <div className="aspect-video rounded-t-lg overflow-hidden relative" style={{ backgroundColor: DS.colors.background.panel, minHeight: '180px' }}>
-                          {design.thumbnail ? (
+                          {(design.thumbnail_path || design.thumbnail) ? (
                             <img 
                               src={(() => {
                                 const thumbnailPath = design.thumbnail_path || design.thumbnail;
@@ -383,7 +409,12 @@ export default function DashboardPage() {
                           <h3 className="font-semibold mb-1 truncate" style={{ color: DS.colors.text.primary }}>
                             {design.title || 'Untitled Project'}
                           </h3>
-                          {design.description && (
+                          {design.username && (
+                            <p className="text-sm mb-3" style={{ color: DS.colors.text.secondary }}>
+                              by {design.username}
+                            </p>
+                          )}
+                          {design.description && !design.username && (
                             <p className="text-sm mb-3 line-clamp-2" style={{ color: DS.colors.text.secondary }}>
                               {design.description}
                             </p>

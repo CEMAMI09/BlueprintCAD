@@ -108,7 +108,7 @@ export default function ProjectDetail() {
 
   useEffect(() => {
     if (id) {
-      fetchProject();
+      fetchProject(); // This will increment views if user is not the owner
       fetchLikeState(); // Fetches starred state
       checkPurchaseStatus();
     }
@@ -227,6 +227,8 @@ export default function ProjectDetail() {
           shouldHideDownload: !!(data.shareLinkAccess && data.shareLinkData?.download_blocked)
         });
         setProject(data);
+        // View count is automatically incremented by backend when non-owner views project
+        console.log(`[Project] Loaded project ${data.id} with ${data.views} views`);
           // Debug: log project file info for 3D viewer
           // eslint-disable-next-line no-console
           console.log('[Project] Project loaded:', { 
