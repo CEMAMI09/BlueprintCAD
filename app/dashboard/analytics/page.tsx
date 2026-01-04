@@ -152,8 +152,8 @@ export default function SellerAnalyticsPage() {
               </select>
             }
           />
-          <PanelContent>
-            <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+          <PanelContent className="p-8">
+            <div className="max-w-7xl mx-auto space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card padding="md" hover>
