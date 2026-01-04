@@ -31,28 +31,40 @@ router.get("/seller", async (req, res) => {
     };
 
     // Total Revenue (from orders where user is seller)
-    const totalRevenueResult = await getOne(
-      `SELECT COALESCE(SUM(amount), 0) as total_revenue
-       FROM orders
-       WHERE seller_id = $1 
-       AND payment_status = 'succeeded'
-       AND status != 'refunded'
-       AND created_at >= NOW() - INTERVAL '${period} days'`,
-      [userId]
-    );
-    const totalRevenue = parseFloat(totalRevenueResult?.total_revenue || 0);
+    let totalRevenue = 0;
+    try {
+      const totalRevenueResult = await getOne(
+        `SELECT COALESCE(SUM(amount), 0) as total_revenue
+         FROM orders
+         WHERE seller_id = $1 
+         AND payment_status = 'succeeded'
+         AND status != 'refunded'
+         AND created_at >= NOW() - INTERVAL '${period} days'`,
+        [userId]
+      );
+      totalRevenue = parseFloat(totalRevenueResult?.total_revenue || 0);
+    } catch (err) {
+      console.warn("Orders table may not exist, returning 0 for revenue:", err.message);
+      totalRevenue = 0;
+    }
 
     // Total Downloads (sum of download_count from orders)
-    const totalDownloadsResult = await getOne(
-      `SELECT COALESCE(SUM(download_count), 0) as total_downloads
-       FROM orders
-       WHERE seller_id = $1 
-       AND payment_status = 'succeeded'
-       AND status != 'refunded'
-       AND created_at >= NOW() - INTERVAL '${period} days'`,
-      [userId]
-    );
-    const totalDownloads = parseInt(totalDownloadsResult?.total_downloads || 0);
+    let totalDownloads = 0;
+    try {
+      const totalDownloadsResult = await getOne(
+        `SELECT COALESCE(SUM(download_count), 0) as total_downloads
+         FROM orders
+         WHERE seller_id = $1 
+         AND payment_status = 'succeeded'
+         AND status != 'refunded'
+         AND created_at >= NOW() - INTERVAL '${period} days'`,
+        [userId]
+      );
+      totalDownloads = parseInt(totalDownloadsResult?.total_downloads || 0);
+    } catch (err) {
+      console.warn("Orders table may not exist, returning 0 for downloads:", err.message);
+      totalDownloads = 0;
+    }
 
     // Total Views (sum of views from user's projects)
     const totalViewsResult = await getOne(
@@ -79,51 +91,70 @@ router.get("/seller", async (req, res) => {
       );
       const forSaleCount = parseInt(forSaleProjects?.count || 0);
       if (forSaleCount > 0) {
-        const totalSales = await getOne(
-          `SELECT COUNT(*)::int as count 
-           FROM orders 
-           WHERE seller_id = $1 
-           AND payment_status = 'succeeded' 
-           AND status != 'refunded'
-           AND created_at >= NOW() - INTERVAL '${period} days'`,
-          [userId]
-        );
-        const salesCount = parseInt(totalSales?.count || 0);
-        // Rough conversion: sales / (views of for-sale projects)
-        // We'll use a simplified calculation
-        conversionRate = salesCount > 0 ? (salesCount / Math.max(totalViews, 1)) * 100 : 0;
+        try {
+          const totalSales = await getOne(
+            `SELECT COUNT(*)::int as count 
+             FROM orders 
+             WHERE seller_id = $1 
+             AND payment_status = 'succeeded' 
+             AND status != 'refunded'
+             AND created_at >= NOW() - INTERVAL '${period} days'`,
+            [userId]
+          );
+          const salesCount = parseInt(totalSales?.count || 0);
+          // Rough conversion: sales / (views of for-sale projects)
+          // We'll use a simplified calculation
+          conversionRate = salesCount > 0 ? (salesCount / Math.max(totalViews, 1)) * 100 : 0;
+        } catch (err) {
+          console.warn("Orders table may not exist, conversion rate will be 0:", err.message);
+          conversionRate = 0;
+        }
       }
     }
 
     // Revenue by Month (last 12 months)
     const revenueByMonth = [];
-    for (let i = 11; i >= 0; i--) {
-      const monthStart = new Date();
-      monthStart.setMonth(monthStart.getMonth() - i);
-      monthStart.setDate(1);
-      monthStart.setHours(0, 0, 0, 0);
-      
-      const monthEnd = new Date(monthStart);
-      monthEnd.setMonth(monthEnd.getMonth() + 1);
+    try {
+      for (let i = 11; i >= 0; i--) {
+        const monthStart = new Date();
+        monthStart.setMonth(monthStart.getMonth() - i);
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+        
+        const monthEnd = new Date(monthStart);
+        monthEnd.setMonth(monthEnd.getMonth() + 1);
 
-      const monthResult = await getOne(
-        `SELECT 
-          COALESCE(SUM(amount), 0) as revenue,
-          COUNT(*)::int as order_count
-         FROM orders
-         WHERE seller_id = $1
-         AND payment_status = 'succeeded'
-         AND status != 'refunded'
-         AND created_at >= $2
-         AND created_at < $3`,
-        [userId, monthStart.toISOString(), monthEnd.toISOString()]
-      );
+        const monthResult = await getOne(
+          `SELECT 
+            COALESCE(SUM(amount), 0) as revenue,
+            COUNT(*)::int as order_count
+           FROM orders
+           WHERE seller_id = $1
+           AND payment_status = 'succeeded'
+           AND status != 'refunded'
+           AND created_at >= $2
+           AND created_at < $3`,
+          [userId, monthStart.toISOString(), monthEnd.toISOString()]
+        );
 
-      revenueByMonth.push({
-        month: monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        revenue: parseFloat(monthResult?.revenue || 0),
-        order_count: parseInt(monthResult?.order_count || 0),
-      });
+        revenueByMonth.push({
+          month: monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          revenue: parseFloat(monthResult?.revenue || 0),
+          order_count: parseInt(monthResult?.order_count || 0),
+        });
+      }
+    } catch (err) {
+      console.warn("Orders table may not exist, returning empty revenue by month:", err.message);
+      // Fill with zeros for last 12 months
+      for (let i = 11; i >= 0; i--) {
+        const monthStart = new Date();
+        monthStart.setMonth(monthStart.getMonth() - i);
+        revenueByMonth.push({
+          month: monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          revenue: 0,
+          order_count: 0,
+        });
+      }
     }
 
     // Trends (daily data for the selected period)
@@ -134,104 +165,130 @@ router.get("/seller", async (req, res) => {
     };
 
     // Generate daily data points
-    for (let i = period - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      date.setHours(0, 0, 0, 0);
-      const nextDate = new Date(date);
-      nextDate.setDate(nextDate.getDate() + 1);
+    try {
+      for (let i = period - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+        const nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
 
-      const dateStr = date.toISOString().split('T')[0];
+        const dateStr = date.toISOString().split('T')[0];
 
-      // Revenue for this day
-      const dayRevenue = await getOne(
-        `SELECT 
-          COALESCE(SUM(amount), 0) as revenue,
-          COUNT(*)::int as order_count
-         FROM orders
-         WHERE seller_id = $1
-         AND payment_status = 'succeeded'
-         AND status != 'refunded'
-         AND created_at >= $2
-         AND created_at < $3`,
-        [userId, date.toISOString(), nextDate.toISOString()]
-      );
+        // Revenue for this day
+        let dayRevenue = { revenue: 0, order_count: 0 };
+        try {
+          dayRevenue = await getOne(
+            `SELECT 
+              COALESCE(SUM(amount), 0) as revenue,
+              COUNT(*)::int as order_count
+             FROM orders
+             WHERE seller_id = $1
+             AND payment_status = 'succeeded'
+             AND status != 'refunded'
+             AND created_at >= $2
+             AND created_at < $3`,
+            [userId, date.toISOString(), nextDate.toISOString()]
+          ) || { revenue: 0, order_count: 0 };
+        } catch (err) {
+          // Orders table doesn't exist, use zeros
+        }
 
-      // Downloads for this day
-      const dayDownloads = await getOne(
-        `SELECT COALESCE(SUM(download_count), 0) as downloads
-         FROM orders
-         WHERE seller_id = $1
-         AND payment_status = 'succeeded'
-         AND status != 'refunded'
-         AND created_at >= $2
-         AND created_at < $3`,
-        [userId, date.toISOString(), nextDate.toISOString()]
-      );
+        // Downloads for this day
+        let dayDownloads = { downloads: 0 };
+        try {
+          dayDownloads = await getOne(
+            `SELECT COALESCE(SUM(download_count), 0)::int as downloads
+             FROM orders
+             WHERE seller_id = $1
+             AND payment_status = 'succeeded'
+             AND status != 'refunded'
+             AND created_at >= $2
+             AND created_at < $3`,
+            [userId, date.toISOString(), nextDate.toISOString()]
+          ) || { downloads: 0 };
+        } catch (err) {
+          // Orders table doesn't exist, use zeros
+        }
 
-      trends.revenue.push({
-        date: dateStr,
-        revenue: parseFloat(dayRevenue?.revenue || 0),
-        order_count: parseInt(dayRevenue?.order_count || 0),
-      });
+        trends.revenue.push({
+          date: dateStr,
+          revenue: parseFloat(dayRevenue?.revenue || 0),
+          order_count: parseInt(dayRevenue?.order_count || 0),
+        });
 
-      trends.downloads.push({
-        date: dateStr,
-        download_count: parseInt(dayDownloads?.downloads || 0),
-      });
+        trends.downloads.push({
+          date: dateStr,
+          download_count: parseInt(dayDownloads?.downloads || 0),
+        });
 
-      // Views are cumulative, so we'll get the total views up to this date
-      // For simplicity, we'll use a simplified approach
-      trends.views.push({
-        date: dateStr,
-        view_count: 0, // Views are tracked per project, not per day, so we'll leave this as 0 for now
-      });
+        // Views are cumulative, so we'll get the total views up to this date
+        // For simplicity, we'll use a simplified approach
+        trends.views.push({
+          date: dateStr,
+          view_count: 0, // Views are tracked per project, not per day, so we'll leave this as 0 for now
+        });
+      }
+    } catch (err) {
+      console.warn("Error generating trends, using empty arrays:", err.message);
     }
 
     // Top Selling Items
-    const topSellingItems = await getAll(
-      `SELECT 
-        p.id,
-        p.title,
-        p.thumbnail_path,
-        p.price,
-        COALESCE(SUM(o.download_count), 0)::int as download_count,
-        COALESCE(SUM(o.amount), 0) as revenue,
-        COUNT(o.id)::int as order_count
-       FROM projects p
-       LEFT JOIN orders o ON p.id = o.project_id 
-         AND o.seller_id = $1
-         AND o.payment_status = 'succeeded'
-         AND o.status != 'refunded'
-         AND o.created_at >= NOW() - INTERVAL '${period} days'
-       WHERE p.user_id = $1 AND p.for_sale = 1
-       GROUP BY p.id, p.title, p.thumbnail_path, p.price
-       HAVING order_count > 0
-       ORDER BY revenue DESC, download_count DESC
-       LIMIT 10`,
-      [userId]
-    );
+    let topSellingItems = [];
+    try {
+      topSellingItems = await getAll(
+        `SELECT 
+          p.id,
+          p.title,
+          p.thumbnail_path,
+          p.price,
+          COALESCE(SUM(o.download_count), 0)::int as download_count,
+          COALESCE(SUM(o.amount), 0) as revenue,
+          COUNT(o.id)::int as order_count
+         FROM projects p
+         LEFT JOIN orders o ON p.id = o.project_id 
+           AND o.seller_id = $1
+           AND o.payment_status = 'succeeded'
+           AND o.status != 'refunded'
+           AND o.created_at >= NOW() - INTERVAL '${period} days'
+         WHERE p.user_id = $1 AND p.for_sale = 1
+         GROUP BY p.id, p.title, p.thumbnail_path, p.price
+         HAVING order_count > 0
+         ORDER BY revenue DESC, download_count DESC
+         LIMIT 10`,
+        [userId]
+      ) || [];
+    } catch (err) {
+      console.warn("Orders table may not exist, returning empty top selling items:", err.message);
+      topSellingItems = [];
+    }
 
     // Downloads by File
-    const downloadsByFile = await getAll(
-      `SELECT 
-        p.id,
-        p.title,
-        COALESCE(SUM(o.download_count), 0)::int as download_count,
-        COALESCE(SUM(o.amount), 0) as revenue
-       FROM projects p
-       LEFT JOIN orders o ON p.id = o.project_id 
-         AND o.seller_id = $1
-         AND o.payment_status = 'succeeded'
-         AND o.status != 'refunded'
-         AND o.created_at >= NOW() - INTERVAL '${period} days'
-       WHERE p.user_id = $1
-       GROUP BY p.id, p.title
-       HAVING download_count > 0
-       ORDER BY download_count DESC
-       LIMIT 20`,
-      [userId]
-    );
+    let downloadsByFile = [];
+    try {
+      downloadsByFile = await getAll(
+        `SELECT 
+          p.id,
+          p.title,
+          COALESCE(SUM(o.download_count), 0)::int as download_count,
+          COALESCE(SUM(o.amount), 0) as revenue
+         FROM projects p
+         LEFT JOIN orders o ON p.id = o.project_id 
+           AND o.seller_id = $1
+           AND o.payment_status = 'succeeded'
+           AND o.status != 'refunded'
+           AND o.created_at >= NOW() - INTERVAL '${period} days'
+         WHERE p.user_id = $1
+         GROUP BY p.id, p.title
+         HAVING download_count > 0
+         ORDER BY download_count DESC
+         LIMIT 20`,
+        [userId]
+      ) || [];
+    } catch (err) {
+      console.warn("Orders table may not exist, returning empty downloads by file:", err.message);
+      downloadsByFile = [];
+    }
 
     // Views by File
     const viewsByFile = await getAll(
