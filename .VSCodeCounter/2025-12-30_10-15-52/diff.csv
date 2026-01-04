@@ -1,0 +1,45 @@
+"filename", "language", "TypeScript", "JSON", "JavaScript", "MS SQL", "TypeScript JSX", "Markdown", "comment", "blank", "total"
+"/Users/user/Documents/BlueprintCAD/AUTHENTICATION_FIX_COMPLETE.md", "Markdown", 0, 0, 0, 0, 0, -131, 0, -35, -166
+"/Users/user/Documents/BlueprintCAD/AUTH_FIX_SUMMARY.md", "Markdown", 0, 0, 0, 0, 0, -109, 0, -28, -137
+"/Users/user/Documents/BlueprintCAD/BACKEND_CLEANUP_SUMMARY.md", "Markdown", 0, 0, 0, 0, 0, -198, 0, -26, -224
+"/Users/user/Documents/BlueprintCAD/BACKEND_CONVERSION_GUIDE.md", "Markdown", 0, 0, 0, 0, 0, -66, 0, -20, -86
+"/Users/user/Documents/BlueprintCAD/FRONTEND_AUTH_REFACTOR_SUMMARY.md", "Markdown", 0, 0, 0, 0, 0, -113, 0, -28, -141
+"/Users/user/Documents/BlueprintCAD/SUBSCRIPTION_IMPLEMENTATION_GUIDE.md", "Markdown", 0, 0, 0, 0, 0, -376, 0, -70, -446
+"/Users/user/Documents/BlueprintCAD/SUBSCRIPTION_SYSTEM_DESIGN.md", "Markdown", 0, 0, 0, 0, 0, -287, 0, -61, -348
+"/Users/user/Documents/BlueprintCAD/SUBSCRIPTION_SYSTEM_SUMMARY.md", "Markdown", 0, 0, 0, 0, 0, -255, 0, -59, -314
+"/Users/user/Documents/BlueprintCAD/TEST_SCENARIOS.md", "Markdown", 0, 0, 0, 0, 0, -323, 0, -84, -407
+"/Users/user/Documents/BlueprintCAD/app/[username]/store/page.tsx", "TypeScript JSX", 0, 0, 0, 0, 8, 0, 0, 0, 8
+"/Users/user/Documents/BlueprintCAD/app/auth/callback/page.tsx", "TypeScript JSX", 0, 0, 0, 0, 2, 0, 3, 3, 8
+"/Users/user/Documents/BlueprintCAD/app/buy/page.tsx", "TypeScript JSX", 0, 0, 0, 0, -2, 0, 0, 0, -2
+"/Users/user/Documents/BlueprintCAD/app/dashboard/page.tsx", "TypeScript JSX", 0, 0, 0, 0, 4, 0, 1, -1, 4
+"/Users/user/Documents/BlueprintCAD/app/explore/page.tsx", "TypeScript JSX", 0, 0, 0, 0, 8, 0, 3, 1, 12
+"/Users/user/Documents/BlueprintCAD/app/login/page.tsx", "TypeScript JSX", 0, 0, 0, 0, 8, 0, 0, 1, 9
+"/Users/user/Documents/BlueprintCAD/app/marketplace/page.tsx", "TypeScript JSX", 0, 0, 0, 0, -2, 0, 0, 0, -2
+"/Users/user/Documents/BlueprintCAD/app/profile/[username]/page.tsx", "TypeScript JSX", 0, 0, 0, 0, 8, 0, 1, 1, 10
+"/Users/user/Documents/BlueprintCAD/app/project/[id]/page.tsx", "TypeScript JSX", 0, 0, 0, 0, -3, 0, 1, 0, -2
+"/Users/user/Documents/BlueprintCAD/app/purchase/page.tsx", "TypeScript JSX", 0, 0, 0, 0, -2, 0, 0, 0, -2
+"/Users/user/Documents/BlueprintCAD/app/settings/page.tsx", "TypeScript JSX", 0, 0, 0, 0, 134, 0, 6, 12, 152
+"/Users/user/Documents/BlueprintCAD/backend/lib/db.js", "JavaScript", 0, 0, 61, 0, 0, 0, 8, 13, 82
+"/Users/user/Documents/BlueprintCAD/backend/lib/generateThumbnailR2.js", "JavaScript", 0, 0, 118, 0, 0, 0, 25, 22, 165
+"/Users/user/Documents/BlueprintCAD/backend/lib/generateThumbnailSimple.js", "JavaScript", 0, 0, 72, 0, 0, 0, 19, 18, 109
+"/Users/user/Documents/BlueprintCAD/backend/lib/r2.js", "JavaScript", 0, 0, 52, 0, 0, 0, 11, 15, 78
+"/Users/user/Documents/BlueprintCAD/backend/migrations/add_oauth_fields.sql", "MS SQL", 0, 0, 0, 6, 0, 0, 5, 5, 16
+"/Users/user/Documents/BlueprintCAD/backend/routes/auth.js", "JavaScript", 0, 0, 14, 0, 0, 0, 6, 2, 22
+"/Users/user/Documents/BlueprintCAD/backend/routes/cad.js", "JavaScript", 0, 0, 117, 0, 0, 0, 7, 15, 139
+"/Users/user/Documents/BlueprintCAD/backend/routes/dashboard.js", "JavaScript", 0, 0, 107, 0, 0, 0, 7, 13, 127
+"/Users/user/Documents/BlueprintCAD/backend/routes/files.js", "JavaScript", 0, 0, 64, 0, 0, 0, 10, 17, 91
+"/Users/user/Documents/BlueprintCAD/backend/routes/folders.js", "JavaScript", 0, 0, 156, 0, 0, 0, 16, 21, 193
+"/Users/user/Documents/BlueprintCAD/backend/routes/oauth.js", "JavaScript", 0, 0, 194, 0, 0, 0, 23, 45, 262
+"/Users/user/Documents/BlueprintCAD/backend/routes/projects.js", "JavaScript", 0, 0, 353, 0, 0, 0, 47, 59, 459
+"/Users/user/Documents/BlueprintCAD/backend/routes/stats.js", "JavaScript", 0, 0, 50, 0, 0, 0, 7, 12, 69
+"/Users/user/Documents/BlueprintCAD/backend/routes/subscriptions.js", "JavaScript", 0, 0, 28, 0, 0, 0, 6, 8, 42
+"/Users/user/Documents/BlueprintCAD/backend/routes/thumbnails.js", "JavaScript", 0, 0, 49, 0, 0, 0, 14, 15, 78
+"/Users/user/Documents/BlueprintCAD/backend/routes/upload.js", "JavaScript", 0, 0, 88, 0, 0, 0, 9, 18, 115
+"/Users/user/Documents/BlueprintCAD/backend/routes/users.js", "JavaScript", 0, 0, 374, 0, 0, 0, 28, 34, 436
+"/Users/user/Documents/BlueprintCAD/backend/schema.sql", "MS SQL", 0, 0, 0, 60, 0, 0, 5, 8, 73
+"/Users/user/Documents/BlueprintCAD/backend/server.js", "JavaScript", 0, 0, 22, 0, 0, 0, -1, 1, 22
+"/Users/user/Documents/BlueprintCAD/frontend/components/CADViewer.tsx", "TypeScript JSX", 0, 0, 0, 0, 95, 0, 8, 18, 121
+"/Users/user/Documents/BlueprintCAD/lib/apiClient.ts", "TypeScript", 11, 0, 0, 0, 0, 0, 2, 2, 15
+"/Users/user/Documents/BlueprintCAD/package-lock.json", "JSON", 0, 1490, 0, 0, 0, 0, 0, 0, 1490
+"/Users/user/Documents/BlueprintCAD/package.json", "JSON", 0, 4, 0, 0, 0, 0, 0, 0, 4
+"Total", "-", 11, 1494, 1919, 66, 258, -1858, 277, -33, 2134

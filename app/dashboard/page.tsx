@@ -94,12 +94,14 @@ export default function DashboardPage() {
         console.error('Error fetching activity:', err);
       }
 
-      // Fetch trending designs
-      try {
-        const trendingData = await apiFetch('/api/dashboard/trending');
-        setTrending(trendingData);
-      } catch (err) {
-        console.error('Error fetching trending:', err);
+      // Fetch user's own projects for "trending" (user's most viewed projects)
+      if (user?.id) {
+        try {
+          const userProjects = await apiFetch(`/api/projects?user_id=${user.id}&sort=popular&limit=12`);
+          setTrending(userProjects || []);
+        } catch (err) {
+          console.error('Error fetching user projects:', err);
+        }
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -231,7 +233,7 @@ export default function DashboardPage() {
                 {/* Recent Activity */}
                 <div className="mb-8">
                   <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                    Recent Activity
+                    Your Recent Activity
                   </h2>
                   <Card padding="none">
                     {recentActivity.length === 0 ? (
@@ -240,49 +242,82 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="divide-y" style={{ borderColor: DS.colors.border.subtle }}>
-                        {recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="p-4 hover:bg-opacity-50 cursor-pointer transition-colors"
-                      onClick={() => setSelectedActivity(activity)}
-                      style={{
-                        backgroundColor: selectedActivity?.id === activity.id ? DS.colors.background.panelHover : 'transparent',
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium" style={{ color: DS.colors.text.primary }}>
-                            {activity.project}
-                          </p>
-                          <p className="text-sm mt-1" style={{ color: DS.colors.text.secondary }}>
-                            {activity.action}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Clock size={14} style={{ color: DS.colors.text.tertiary }} />
-                            <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
-                              {activity.time}
-                            </span>
-                          </div>
-                        </div>
-                        {activity.amount && (
-                          <Badge variant="success">{activity.amount}</Badge>
-                        )}
-                      </div>
-                        </div>
-                      ))}
+                        {recentActivity.map((activity) => {
+                          const formatTime = (timestamp: string) => {
+                            if (!timestamp) return 'Recently';
+                            const date = new Date(timestamp);
+                            const now = new Date();
+                            const diffMs = now.getTime() - date.getTime();
+                            const diffMins = Math.floor(diffMs / 60000);
+                            const diffHours = Math.floor(diffMs / 3600000);
+                            const diffDays = Math.floor(diffMs / 86400000);
+                            
+                            if (diffMins < 1) return 'Just now';
+                            if (diffMins < 60) return `${diffMins}m ago`;
+                            if (diffHours < 24) return `${diffHours}h ago`;
+                            if (diffDays < 7) return `${diffDays}d ago`;
+                            return date.toLocaleDateString();
+                          };
+
+                          return (
+                            <div
+                              key={activity.id}
+                              className="p-4 hover:bg-opacity-50 cursor-pointer transition-colors"
+                              onClick={() => router.push(`/project/${activity.project_id || activity.id}`)}
+                              style={{
+                                backgroundColor: selectedActivity?.id === activity.id ? DS.colors.background.panelHover : 'transparent',
+                              }}
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate" style={{ color: DS.colors.text.primary }}>
+                                    {activity.title || activity.project_title || 'Untitled Project'}
+                                  </p>
+                                  <p className="text-sm mt-1" style={{ color: DS.colors.text.secondary }}>
+                                    {activity.description || `Created project "${activity.title || activity.project_title || 'Untitled'}"`}
+                                  </p>
+                                  <div className="flex items-center gap-4 mt-2">
+                                    <div className="flex items-center gap-2">
+                                      <Clock size={14} style={{ color: DS.colors.text.tertiary }} />
+                                      <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
+                                        {formatTime(activity.timestamp || activity.created_at)}
+                                      </span>
+                                    </div>
+                                    {activity.views !== undefined && (
+                                      <div className="flex items-center gap-1">
+                                        <Eye size={14} style={{ color: DS.colors.text.tertiary }} />
+                                        <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
+                                          {formatNumber(activity.views)}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {activity.likes !== undefined && (
+                                      <div className="flex items-center gap-1">
+                                        <Star size={14} style={{ color: DS.colors.text.tertiary }} />
+                                        <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
+                                          {formatNumber(activity.likes)}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </Card>
                 </div>
 
-                {/* Trending Designs */}
+                {/* Your Designs */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                    Trending Designs
+                    Your Designs
                   </h2>
                   {trending.length === 0 ? (
                     <div className="p-8 text-center" style={{ color: DS.colors.text.secondary }}>
-                      No trending designs
+                      No designs yet. <Link href="/upload" style={{ color: DS.colors.primary.blue }} className="hover:underline">Upload your first design</Link>
                     </div>
                   ) : (
                     <div className="grid grid-cols-3 gap-4">
@@ -299,10 +334,11 @@ export default function DashboardPage() {
                           {design.thumbnail ? (
                             <img 
                               src={(() => {
-                                const thumbnailPath = String(design.thumbnail);
+                                const thumbnailPath = design.thumbnail_path || design.thumbnail;
+                                if (!thumbnailPath) return '';
                                 const base = process.env.NEXT_PUBLIC_API_URL || '';
                                 // Use full R2 key via thumbnails proxy with cache-busting
-                                const url = `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}?t=${Date.now()}`;
+                                const url = `${base}/api/thumbnails/${encodeURIComponent(String(thumbnailPath))}?t=${Date.now()}`;
                                 console.log(`[Dashboard] Loading thumbnail for ${design.id}: ${url}`);
                                 return url;
                               })()}
@@ -344,16 +380,18 @@ export default function DashboardPage() {
                         </div>
                         {/* Content */}
                         <div className="p-4">
-                          <h3 className="font-semibold mb-1" style={{ color: DS.colors.text.primary }}>
-                            {design.title}
+                          <h3 className="font-semibold mb-1 truncate" style={{ color: DS.colors.text.primary }}>
+                            {design.title || 'Untitled Project'}
                           </h3>
-                          <p className="text-sm mb-3" style={{ color: DS.colors.text.secondary }}>
-                            by {design.author}
-                          </p>
+                          {design.description && (
+                            <p className="text-sm mb-3 line-clamp-2" style={{ color: DS.colors.text.secondary }}>
+                              {design.description}
+                            </p>
+                          )}
                           <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.tertiary }}>
                             <div className="flex items-center gap-1">
                               <Star size={14} />
-                              {design.stars}
+                              {formatNumber(design.likes || design.stars || 0)}
                             </div>
                             <div className="flex items-center gap-1">
                               <Eye size={14} />

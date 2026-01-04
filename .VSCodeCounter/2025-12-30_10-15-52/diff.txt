@@ -1,0 +1,97 @@
+Date : 2025-12-30 10:15:52
+Directory : /Users/user/Documents/BlueprintCAD
+Total : 43 files,  1890 codes, 277 comments, -33 blanks, all 2134 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| JavaScript     |         17 |      1,919 |        242 |        328 |      2,489 |
+| JSON           |          2 |      1,494 |          0 |          0 |      1,494 |
+| TypeScript JSX |         12 |        258 |         23 |         35 |        316 |
+| MS SQL         |          2 |         66 |         10 |         13 |         89 |
+| TypeScript     |          1 |         11 |          2 |          2 |         15 |
+| Markdown       |          9 |     -1,858 |          0 |       -411 |     -2,269 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                       | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                          |         43 |      1,890 |        277 |        -33 |      2,134 |
+| . (Files)                                                                  |         11 |       -364 |          0 |       -411 |       -775 |
+| app                                                                        |         11 |        163 |         15 |         17 |        195 |
+| app/[username]                                                             |          1 |          8 |          0 |          0 |          8 |
+| app/[username]/store                                                       |          1 |          8 |          0 |          0 |          8 |
+| app/auth                                                                   |          1 |          2 |          3 |          3 |          8 |
+| app/auth/callback                                                          |          1 |          2 |          3 |          3 |          8 |
+| app/buy                                                                    |          1 |         -2 |          0 |          0 |         -2 |
+| app/dashboard                                                              |          1 |          4 |          1 |         -1 |          4 |
+| app/explore                                                                |          1 |          8 |          3 |          1 |         12 |
+| app/login                                                                  |          1 |          8 |          0 |          1 |          9 |
+| app/marketplace                                                            |          1 |         -2 |          0 |          0 |         -2 |
+| app/profile                                                                |          1 |          8 |          1 |          1 |         10 |
+| app/profile/[username]                                                     |          1 |          8 |          1 |          1 |         10 |
+| app/project                                                                |          1 |         -3 |          1 |          0 |         -2 |
+| app/project/[id]                                                           |          1 |         -3 |          1 |          0 |         -2 |
+| app/purchase                                                               |          1 |         -2 |          0 |          0 |         -2 |
+| app/settings                                                               |          1 |        134 |          6 |         12 |        152 |
+| backend                                                                    |         19 |      1,985 |        252 |        341 |      2,578 |
+| backend (Files)                                                            |          2 |         82 |          4 |          9 |         95 |
+| backend/lib                                                                |          4 |        303 |         63 |         68 |        434 |
+| backend/migrations                                                         |          1 |          6 |          5 |          5 |         16 |
+| backend/routes                                                             |         12 |      1,594 |        180 |        259 |      2,033 |
+| frontend                                                                   |          1 |         95 |          8 |         18 |        121 |
+| frontend/components                                                        |          1 |         95 |          8 |         18 |        121 |
+| lib                                                                        |          1 |         11 |          2 |          2 |         15 |
++----------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                                   | language       | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| /Users/user/Documents/BlueprintCAD/AUTHENTICATION_FIX_COMPLETE.md          | Markdown       |       -131 |          0 |        -35 |       -166 |
+| /Users/user/Documents/BlueprintCAD/AUTH_FIX_SUMMARY.md                     | Markdown       |       -109 |          0 |        -28 |       -137 |
+| /Users/user/Documents/BlueprintCAD/BACKEND_CLEANUP_SUMMARY.md              | Markdown       |       -198 |          0 |        -26 |       -224 |
+| /Users/user/Documents/BlueprintCAD/BACKEND_CONVERSION_GUIDE.md             | Markdown       |        -66 |          0 |        -20 |        -86 |
+| /Users/user/Documents/BlueprintCAD/FRONTEND_AUTH_REFACTOR_SUMMARY.md       | Markdown       |       -113 |          0 |        -28 |       -141 |
+| /Users/user/Documents/BlueprintCAD/SUBSCRIPTION_IMPLEMENTATION_GUIDE.md    | Markdown       |       -376 |          0 |        -70 |       -446 |
+| /Users/user/Documents/BlueprintCAD/SUBSCRIPTION_SYSTEM_DESIGN.md           | Markdown       |       -287 |          0 |        -61 |       -348 |
+| /Users/user/Documents/BlueprintCAD/SUBSCRIPTION_SYSTEM_SUMMARY.md          | Markdown       |       -255 |          0 |        -59 |       -314 |
+| /Users/user/Documents/BlueprintCAD/TEST_SCENARIOS.md                       | Markdown       |       -323 |          0 |        -84 |       -407 |
+| /Users/user/Documents/BlueprintCAD/app/[username]/store/page.tsx           | TypeScript JSX |          8 |          0 |          0 |          8 |
+| /Users/user/Documents/BlueprintCAD/app/auth/callback/page.tsx              | TypeScript JSX |          2 |          3 |          3 |          8 |
+| /Users/user/Documents/BlueprintCAD/app/buy/page.tsx                        | TypeScript JSX |         -2 |          0 |          0 |         -2 |
+| /Users/user/Documents/BlueprintCAD/app/dashboard/page.tsx                  | TypeScript JSX |          4 |          1 |         -1 |          4 |
+| /Users/user/Documents/BlueprintCAD/app/explore/page.tsx                    | TypeScript JSX |          8 |          3 |          1 |         12 |
+| /Users/user/Documents/BlueprintCAD/app/login/page.tsx                      | TypeScript JSX |          8 |          0 |          1 |          9 |
+| /Users/user/Documents/BlueprintCAD/app/marketplace/page.tsx                | TypeScript JSX |         -2 |          0 |          0 |         -2 |
+| /Users/user/Documents/BlueprintCAD/app/profile/[username]/page.tsx         | TypeScript JSX |          8 |          1 |          1 |         10 |
+| /Users/user/Documents/BlueprintCAD/app/project/[id]/page.tsx               | TypeScript JSX |         -3 |          1 |          0 |         -2 |
+| /Users/user/Documents/BlueprintCAD/app/purchase/page.tsx                   | TypeScript JSX |         -2 |          0 |          0 |         -2 |
+| /Users/user/Documents/BlueprintCAD/app/settings/page.tsx                   | TypeScript JSX |        134 |          6 |         12 |        152 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/db.js                       | JavaScript     |         61 |          8 |         13 |         82 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/generateThumbnailR2.js      | JavaScript     |        118 |         25 |         22 |        165 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/generateThumbnailSimple.js  | JavaScript     |         72 |         19 |         18 |        109 |
+| /Users/user/Documents/BlueprintCAD/backend/lib/r2.js                       | JavaScript     |         52 |         11 |         15 |         78 |
+| /Users/user/Documents/BlueprintCAD/backend/migrations/add_oauth_fields.sql | MS SQL         |          6 |          5 |          5 |         16 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/auth.js                  | JavaScript     |         14 |          6 |          2 |         22 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/cad.js                   | JavaScript     |        117 |          7 |         15 |        139 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/dashboard.js             | JavaScript     |        107 |          7 |         13 |        127 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/files.js                 | JavaScript     |         64 |         10 |         17 |         91 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/folders.js               | JavaScript     |        156 |         16 |         21 |        193 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/oauth.js                 | JavaScript     |        194 |         23 |         45 |        262 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/projects.js              | JavaScript     |        353 |         47 |         59 |        459 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/stats.js                 | JavaScript     |         50 |          7 |         12 |         69 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/subscriptions.js         | JavaScript     |         28 |          6 |          8 |         42 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/thumbnails.js            | JavaScript     |         49 |         14 |         15 |         78 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/upload.js                | JavaScript     |         88 |          9 |         18 |        115 |
+| /Users/user/Documents/BlueprintCAD/backend/routes/users.js                 | JavaScript     |        374 |         28 |         34 |        436 |
+| /Users/user/Documents/BlueprintCAD/backend/schema.sql                      | MS SQL         |         60 |          5 |          8 |         73 |
+| /Users/user/Documents/BlueprintCAD/backend/server.js                       | JavaScript     |         22 |         -1 |          1 |         22 |
+| /Users/user/Documents/BlueprintCAD/frontend/components/CADViewer.tsx       | TypeScript JSX |         95 |          8 |         18 |        121 |
+| /Users/user/Documents/BlueprintCAD/lib/apiClient.ts                        | TypeScript     |         11 |          2 |          2 |         15 |
+| /Users/user/Documents/BlueprintCAD/package-lock.json                       | JSON           |      1,490 |          0 |          0 |      1,490 |
+| /Users/user/Documents/BlueprintCAD/package.json                            | JSON           |          4 |          0 |          0 |          4 |
+| Total                                                                      |                |      1,890 |        277 |        -33 |      2,134 |
++----------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
