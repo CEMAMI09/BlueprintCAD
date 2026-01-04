@@ -61,6 +61,20 @@ export default function SellerAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30');
 
+  // Initialize with empty data structure
+  const getEmptyAnalytics = (): AnalyticsData => ({
+    totalRevenue: 0,
+    revenueByMonth: [],
+    totalDownloads: 0,
+    downloadsByFile: [],
+    totalViews: 0,
+    viewsByFile: [],
+    conversionRate: 0,
+    topSellingItems: [],
+    trends: { revenue: [], downloads: [], views: [] },
+    period: parseInt(period),
+  });
+
   useEffect(() => {
     fetchAnalytics();
   }, [period]);
