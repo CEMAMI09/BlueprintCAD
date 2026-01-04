@@ -4,15 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ThreePanelLayout,
-  LeftPanel,
   CenterPanel,
-  RightPanel,
   PanelHeader,
   PanelContent,
 } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Card } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import { apiFetch } from '@/lib/apiClient';
 import {
   LineChart,
   Line,
@@ -24,9 +23,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
 import {
   DollarSign,
@@ -35,6 +31,9 @@ import {
   TrendingUp,
   FileText,
   Calendar,
+  Package,
+  Users,
+  Star,
 } from 'lucide-react';
 
 interface AnalyticsData {
@@ -69,24 +68,13 @@ export default function SellerAnalyticsPage() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/analytics/seller?period=${period}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setAnalytics(data);
-      } else if (res.status === 401) {
-        router.push('/login');
-      }
-    } catch (error) {
+      const data = await apiFetch(`/api/analytics/seller?period=${period}`);
+      setAnalytics(data);
+    } catch (error: any) {
       console.error('Error fetching analytics:', error);
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }
@@ -168,51 +156,63 @@ export default function SellerAnalyticsPage() {
             <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card padding="md">
+                <Card padding="md" hover>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm" style={{ color: DS.colors.text.secondary }}>Total Revenue</p>
                       <p className="text-2xl font-bold mt-1" style={{ color: DS.colors.text.primary }}>
-                        {formatCurrency(analytics.totalRevenue)}
+                        {analytics.totalRevenue > 0 ? formatCurrency(analytics.totalRevenue) : '$0.00'}
                       </p>
+                      {analytics.totalRevenue === 0 && (
+                        <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>No sales yet</p>
+                      )}
                     </div>
                     <DollarSign size={32} style={{ color: DS.colors.primary.blue }} />
                   </div>
                 </Card>
 
-                <Card padding="md">
+                <Card padding="md" hover>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm" style={{ color: DS.colors.text.secondary }}>Total Downloads</p>
                       <p className="text-2xl font-bold mt-1" style={{ color: DS.colors.text.primary }}>
                         {formatNumber(analytics.totalDownloads)}
                       </p>
+                      {analytics.totalDownloads === 0 && (
+                        <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>No downloads yet</p>
+                      )}
                     </div>
-                    <Download size={32} style={{ color: DS.colors.primary.blue }} />
+                    <Download size={32} style={{ color: DS.colors.accent.success }} />
                   </div>
                 </Card>
 
-                <Card padding="md">
+                <Card padding="md" hover>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm" style={{ color: DS.colors.text.secondary }}>Total Views</p>
                       <p className="text-2xl font-bold mt-1" style={{ color: DS.colors.text.primary }}>
                         {formatNumber(analytics.totalViews)}
                       </p>
+                      {analytics.totalViews === 0 && (
+                        <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>No views yet</p>
+                      )}
                     </div>
-                    <Eye size={32} style={{ color: DS.colors.primary.blue }} />
+                    <Eye size={32} style={{ color: DS.colors.accent.purple }} />
                   </div>
                 </Card>
 
-                <Card padding="md">
+                <Card padding="md" hover>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm" style={{ color: DS.colors.text.secondary }}>Conversion Rate</p>
                       <p className="text-2xl font-bold mt-1" style={{ color: DS.colors.text.primary }}>
                         {analytics.conversionRate ? analytics.conversionRate.toFixed(2) : '0.00'}%
                       </p>
+                      {analytics.conversionRate === 0 && (
+                        <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>No conversions yet</p>
+                      )}
                     </div>
-                    <TrendingUp size={32} style={{ color: DS.colors.primary.blue }} />
+                    <TrendingUp size={32} style={{ color: DS.colors.accent.cyan }} />
                   </div>
                 </Card>
               </div>
@@ -223,9 +223,11 @@ export default function SellerAnalyticsPage() {
                   <Calendar size={20} />
                   Revenue by Month (Last 12 Months)
                 </h3>
-                {analytics.revenueByMonth.length === 0 ? (
+                {analytics.revenueByMonth.length === 0 || analytics.revenueByMonth.every(m => m.revenue === 0) ? (
                   <div className="text-center py-12">
-                    <p className="text-sm" style={{ color: DS.colors.text.tertiary }}>No revenue data yet</p>
+                    <DollarSign size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
+                    <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No revenue data yet</p>
+                    <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>Start selling your designs to see revenue trends</p>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
@@ -254,9 +256,11 @@ export default function SellerAnalyticsPage() {
                   <h3 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
                     Revenue Trend
                   </h3>
-                  {analytics.trends.revenue.length === 0 ? (
+                  {analytics.trends.revenue.length === 0 || analytics.trends.revenue.every(t => t.revenue === 0) ? (
                     <div className="text-center py-12">
-                      <p className="text-sm" style={{ color: DS.colors.text.tertiary }}>No revenue data for this period</p>
+                      <TrendingUp size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
+                      <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No revenue data for this period</p>
+                      <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>Try selecting a different time period</p>
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={250}>
@@ -283,9 +287,12 @@ export default function SellerAnalyticsPage() {
                   <h3 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
                     Downloads & Views Trend
                   </h3>
-                  {analytics.trends.downloads.length === 0 && analytics.trends.views.length === 0 ? (
+                  {(analytics.trends.downloads.length === 0 || analytics.trends.downloads.every(d => d.download_count === 0)) && 
+                   (analytics.trends.views.length === 0 || analytics.trends.views.every(v => v.view_count === 0)) ? (
                     <div className="text-center py-12">
-                      <p className="text-sm" style={{ color: DS.colors.text.tertiary }}>No activity data for this period</p>
+                      <Download size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
+                      <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No activity data for this period</p>
+                      <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>Your designs will appear here once they get views or downloads</p>
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={250}>
@@ -327,9 +334,11 @@ export default function SellerAnalyticsPage() {
                 </h3>
                 <div className="space-y-3">
                   {analytics.topSellingItems.length === 0 ? (
-                    <p className="text-sm text-center py-4" style={{ color: DS.colors.text.tertiary }}>
-                      No sales yet
-                    </p>
+                    <div className="text-center py-12">
+                      <Package size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
+                      <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No sales yet</p>
+                      <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>Make your designs available for purchase to start earning</p>
+                    </div>
                   ) : (
                     analytics.topSellingItems.map((item, index) => (
                       <div
@@ -341,12 +350,19 @@ export default function SellerAnalyticsPage() {
                           <span className="text-sm font-semibold" style={{ color: DS.colors.text.secondary }}>
                             #{index + 1}
                           </span>
-                          {item.thumbnail_path && (
+                          {item.thumbnail_path ? (
                             <img
-                              src={`/api/files/${item.thumbnail_path}`}
+                              src={`${process.env.NEXT_PUBLIC_API_URL}/api/thumbnails/${encodeURIComponent(item.thumbnail_path)}`}
                               alt={item.title}
                               className="w-12 h-12 rounded object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
                             />
+                          ) : (
+                            <div className="w-12 h-12 rounded flex items-center justify-center" style={{ backgroundColor: DS.colors.background.elevated }}>
+                              <Package size={20} style={{ color: DS.colors.text.tertiary }} />
+                            </div>
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate" style={{ color: DS.colors.text.primary }}>
@@ -378,9 +394,11 @@ export default function SellerAnalyticsPage() {
                 </h3>
                 <div className="space-y-2">
                   {analytics.downloadsByFile.length === 0 ? (
-                    <p className="text-sm text-center py-4" style={{ color: DS.colors.text.tertiary }}>
-                      No downloads yet
-                    </p>
+                    <div className="text-center py-12">
+                      <Download size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
+                      <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No downloads yet</p>
+                      <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>Downloads will appear here once customers purchase your designs</p>
+                    </div>
                   ) : (
                     analytics.downloadsByFile.slice(0, 10).map((file) => (
                       <div
@@ -413,10 +431,12 @@ export default function SellerAnalyticsPage() {
                   Views by File
                 </h3>
                 <div className="space-y-2">
-                  {analytics.viewsByFile.length === 0 ? (
-                    <p className="text-sm text-center py-4" style={{ color: DS.colors.text.tertiary }}>
-                      No views yet
-                    </p>
+                  {analytics.viewsByFile.length === 0 || analytics.viewsByFile.every(f => (f.view_count || f.total_views || 0) === 0) ? (
+                    <div className="text-center py-12">
+                      <Eye size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
+                      <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No views yet</p>
+                      <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>Share your designs to start getting views</p>
+                    </div>
                   ) : (
                     analytics.viewsByFile.slice(0, 10).map((file) => (
                       <div
