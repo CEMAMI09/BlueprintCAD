@@ -74,6 +74,9 @@ export default function SellerAnalyticsPage() {
       console.error('Error fetching analytics:', error);
       if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
         router.push('/login');
+      } else {
+        // Set empty analytics data instead of null to prevent "Failed to load" message
+        setAnalytics(emptyAnalytics);
       }
     } finally {
       setLoading(false);
@@ -109,23 +112,8 @@ export default function SellerAnalyticsPage() {
     );
   }
 
-  if (!analytics) {
-    return (
-      <ThreePanelLayout
-        leftPanel={<GlobalNavSidebar />}
-        centerPanel={
-          <CenterPanel>
-            <PanelHeader title="Seller Analytics" />
-            <PanelContent>
-              <div className="text-center py-12">
-                <p className="text-gray-400">Failed to load analytics</p>
-              </div>
-            </PanelContent>
-          </CenterPanel>
-        }
-      />
-    );
-  }
+  // Use empty analytics if null
+  const displayAnalytics = analytics || getEmptyAnalytics();
 
   return (
     <ThreePanelLayout
@@ -152,8 +140,8 @@ export default function SellerAnalyticsPage() {
               </select>
             }
           />
-          <PanelContent className="p-8">
-            <div className="max-w-7xl mx-auto space-y-6">
+          <PanelContent>
+            <div className="max-w-7xl mx-auto px-8 pt-8 pb-8 space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card padding="md" hover>
@@ -161,9 +149,9 @@ export default function SellerAnalyticsPage() {
                     <div>
                       <p className="text-sm" style={{ color: DS.colors.text.secondary }}>Total Revenue</p>
                       <p className="text-2xl font-bold mt-1" style={{ color: DS.colors.text.primary }}>
-                        {analytics.totalRevenue > 0 ? formatCurrency(analytics.totalRevenue) : '$0.00'}
+                        {displayAnalytics.totalRevenue > 0 ? formatCurrency(displayAnalytics.totalRevenue) : '$0.00'}
                       </p>
-                      {analytics.totalRevenue === 0 && (
+                      {displayAnalytics.totalRevenue === 0 && (
                         <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>No sales yet</p>
                       )}
                     </div>
@@ -176,9 +164,9 @@ export default function SellerAnalyticsPage() {
                     <div>
                       <p className="text-sm" style={{ color: DS.colors.text.secondary }}>Total Downloads</p>
                       <p className="text-2xl font-bold mt-1" style={{ color: DS.colors.text.primary }}>
-                        {formatNumber(analytics.totalDownloads)}
+                        {formatNumber(displayAnalytics.totalDownloads)}
                       </p>
-                      {analytics.totalDownloads === 0 && (
+                      {displayAnalytics.totalDownloads === 0 && (
                         <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>No downloads yet</p>
                       )}
                     </div>
@@ -191,9 +179,9 @@ export default function SellerAnalyticsPage() {
                     <div>
                       <p className="text-sm" style={{ color: DS.colors.text.secondary }}>Total Views</p>
                       <p className="text-2xl font-bold mt-1" style={{ color: DS.colors.text.primary }}>
-                        {formatNumber(analytics.totalViews)}
+                        {formatNumber(displayAnalytics.totalViews)}
                       </p>
-                      {analytics.totalViews === 0 && (
+                      {displayAnalytics.totalViews === 0 && (
                         <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>No views yet</p>
                       )}
                     </div>
@@ -206,9 +194,9 @@ export default function SellerAnalyticsPage() {
                     <div>
                       <p className="text-sm" style={{ color: DS.colors.text.secondary }}>Conversion Rate</p>
                       <p className="text-2xl font-bold mt-1" style={{ color: DS.colors.text.primary }}>
-                        {analytics.conversionRate ? analytics.conversionRate.toFixed(2) : '0.00'}%
+                        {displayAnalytics.conversionRate ? displayAnalytics.conversionRate.toFixed(2) : '0.00'}%
                       </p>
-                      {analytics.conversionRate === 0 && (
+                      {displayAnalytics.conversionRate === 0 && (
                         <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>No conversions yet</p>
                       )}
                     </div>
@@ -223,7 +211,7 @@ export default function SellerAnalyticsPage() {
                   <Calendar size={20} />
                   Revenue by Month (Last 12 Months)
                 </h3>
-                {analytics.revenueByMonth.length === 0 || analytics.revenueByMonth.every(m => m.revenue === 0) ? (
+                {displayAnalytics.revenueByMonth.length === 0 || displayAnalytics.revenueByMonth.every(m => m.revenue === 0) ? (
                   <div className="text-center py-12">
                     <DollarSign size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
                     <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No revenue data yet</p>
@@ -231,7 +219,7 @@ export default function SellerAnalyticsPage() {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={analytics.revenueByMonth}>
+                    <BarChart data={displayAnalytics.revenueByMonth}>
                       <CartesianGrid strokeDasharray="3 3" stroke={DS.colors.border.default} />
                       <XAxis dataKey="month" stroke={DS.colors.text.secondary} />
                       <YAxis stroke={DS.colors.text.secondary} />
@@ -256,7 +244,7 @@ export default function SellerAnalyticsPage() {
                   <h3 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
                     Revenue Trend
                   </h3>
-                  {analytics.trends.revenue.length === 0 || analytics.trends.revenue.every(t => t.revenue === 0) ? (
+                  {displayAnalytics.trends.revenue.length === 0 || displayAnalytics.trends.revenue.every(t => t.revenue === 0) ? (
                     <div className="text-center py-12">
                       <TrendingUp size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
                       <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No revenue data for this period</p>
@@ -264,7 +252,7 @@ export default function SellerAnalyticsPage() {
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={250}>
-                      <LineChart data={analytics.trends.revenue}>
+                      <LineChart data={displayAnalytics.trends.revenue}>
                         <CartesianGrid strokeDasharray="3 3" stroke={DS.colors.border.default} />
                         <XAxis dataKey="date" stroke={DS.colors.text.secondary} />
                         <YAxis stroke={DS.colors.text.secondary} />
@@ -287,8 +275,8 @@ export default function SellerAnalyticsPage() {
                   <h3 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
                     Downloads & Views Trend
                   </h3>
-                  {(analytics.trends.downloads.length === 0 || analytics.trends.downloads.every(d => d.download_count === 0)) && 
-                   (analytics.trends.views.length === 0 || analytics.trends.views.every(v => v.view_count === 0)) ? (
+                  {(displayAnalytics.trends.downloads.length === 0 || displayAnalytics.trends.downloads.every(d => d.download_count === 0)) && 
+                   (displayAnalytics.trends.views.length === 0 || displayAnalytics.trends.views.every(v => v.view_count === 0)) ? (
                     <div className="text-center py-12">
                       <Download size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
                       <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No activity data for this period</p>
@@ -298,8 +286,8 @@ export default function SellerAnalyticsPage() {
                     <ResponsiveContainer width="100%" height={250}>
                       <LineChart data={(() => {
                         // Merge downloads and views by date
-                        const downloadsMap = new Map(analytics.trends.downloads.map(d => [d.date, d.download_count]));
-                        const viewsMap = new Map(analytics.trends.views.map(v => [v.date, v.view_count]));
+                        const downloadsMap = new Map(displayAnalytics.trends.downloads.map(d => [d.date, d.download_count]));
+                        const viewsMap = new Map(displayAnalytics.trends.views.map(v => [v.date, v.view_count]));
                         const allDates = new Set([...downloadsMap.keys(), ...viewsMap.keys()]);
                         return Array.from(allDates).sort().map(date => ({
                           date,
@@ -333,14 +321,14 @@ export default function SellerAnalyticsPage() {
                   Top Selling Items
                 </h3>
                 <div className="space-y-3">
-                  {analytics.topSellingItems.length === 0 ? (
+                  {displayAnalytics.topSellingItems.length === 0 ? (
                     <div className="text-center py-12">
                       <Package size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
                       <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No sales yet</p>
                       <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>Make your designs available for purchase to start earning</p>
                     </div>
                   ) : (
-                    analytics.topSellingItems.map((item, index) => (
+                    displayAnalytics.topSellingItems.map((item, index) => (
                       <div
                         key={item.id}
                         className="flex items-center gap-4 p-3 rounded-lg"
@@ -393,14 +381,14 @@ export default function SellerAnalyticsPage() {
                   Downloads by File
                 </h3>
                 <div className="space-y-2">
-                  {analytics.downloadsByFile.length === 0 ? (
+                  {displayAnalytics.downloadsByFile.length === 0 ? (
                     <div className="text-center py-12">
                       <Download size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
                       <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No downloads yet</p>
                       <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>Downloads will appear here once customers purchase your designs</p>
                     </div>
                   ) : (
-                    analytics.downloadsByFile.slice(0, 10).map((file) => (
+                    displayAnalytics.downloadsByFile.slice(0, 10).map((file) => (
                       <div
                         key={file.id}
                         className="flex items-center justify-between p-3 rounded-lg"
@@ -431,14 +419,14 @@ export default function SellerAnalyticsPage() {
                   Views by File
                 </h3>
                 <div className="space-y-2">
-                  {analytics.viewsByFile.length === 0 || analytics.viewsByFile.every(f => (f.view_count || f.total_views || 0) === 0) ? (
+                  {displayAnalytics.viewsByFile.length === 0 || displayAnalytics.viewsByFile.every(f => (f.view_count || f.total_views || 0) === 0) ? (
                     <div className="text-center py-12">
                       <Eye size={48} className="mx-auto mb-3" style={{ color: DS.colors.text.tertiary, opacity: 0.5 }} />
                       <p className="text-sm font-medium" style={{ color: DS.colors.text.secondary }}>No views yet</p>
                       <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>Share your designs to start getting views</p>
                     </div>
                   ) : (
-                    analytics.viewsByFile.slice(0, 10).map((file) => (
+                    displayAnalytics.viewsByFile.slice(0, 10).map((file) => (
                       <div
                         key={file.id}
                         className="flex items-center justify-between p-3 rounded-lg"

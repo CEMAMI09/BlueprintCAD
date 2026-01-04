@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
                 }
               />
               <PanelContent>
-                <div className="space-y-6">
+                <div className="px-8 pt-8 pb-8 space-y-6">
                   {/* Overview Stats */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card padding="lg">
