@@ -76,7 +76,7 @@ export default function SellerAnalyticsPage() {
         router.push('/login');
       } else {
         // Set empty analytics data instead of null to prevent "Failed to load" message
-        setAnalytics(emptyAnalytics);
+        setAnalytics(getEmptyAnalytics());
       }
     } finally {
       setLoading(false);
