@@ -23,19 +23,27 @@ router.get("/", async (req, res) => {
       return res.status(403).json({ error: "Admin access required" });
     }
 
-    // Test configuration
-    const testResult = await testEmailConfig();
-    
-    // Also try to get transporter to check config
-    const transport = getTransporter();
+    // Check both SendGrid API and SMTP
     const config = {
-      hasTransporter: !!transport,
+      sendgridApiKey: process.env.SENDGRID_API_KEY ? '***set***' : 'not set',
       smtpHost: process.env.SMTP_HOST || 'not set',
       smtpPort: process.env.SMTP_PORT || 'not set',
       smtpUser: process.env.SMTP_USER ? '***set***' : 'not set',
       smtpPass: process.env.SMTP_PASS ? '***set***' : 'not set',
-      smtpFrom: process.env.SMTP_FROM || process.env.SMTP_USER || 'not set',
+      smtpFrom: process.env.SMTP_FROM || process.env.SENDGRID_FROM || 'not set',
+      preferredMethod: process.env.SENDGRID_API_KEY ? 'SendGrid API' : 'SMTP',
     };
+
+    // Test SMTP if no API key
+    let testResult = null;
+    if (!process.env.SENDGRID_API_KEY) {
+      testResult = await testEmailConfig();
+    } else {
+      testResult = { 
+        success: true, 
+        message: 'SendGrid API key configured (will use API instead of SMTP)' 
+      };
+    }
 
     return res.json({
       testResult,

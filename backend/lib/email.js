@@ -388,16 +388,34 @@ function textToHtml(text) {
 
 /**
  * Send mass email (for campaigns)
+ * Uses SendGrid API if available, falls back to SMTP
  * @param {string} email - Recipient email address
  * @param {string} subject - Email subject
  * @param {string} htmlContent - HTML email content (optional)
  * @param {string} textContent - Plain text email content (will auto-generate HTML if htmlContent not provided)
  */
 async function sendMassEmail(email, subject, htmlContent, textContent) {
+  // Try SendGrid API first (more reliable, avoids SMTP port blocking)
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      const { sendEmailViaAPI } = require('./sendgrid-api');
+      const finalHtml = htmlContent || (textContent ? textToHtml(textContent) : null);
+      const finalText = textContent || (htmlContent ? stripHtml(htmlContent) : null);
+      
+      await sendEmailViaAPI(email, subject, finalHtml, finalText);
+      console.log(`[Email] Mass email sent via SendGrid API to: ${email}`);
+      return;
+    } catch (apiError) {
+      console.warn(`[Email] SendGrid API failed, falling back to SMTP:`, apiError.message);
+      // Fall through to SMTP
+    }
+  }
+
+  // Fallback to SMTP
   const transport = getTransporter();
   
   if (!transport) {
-    console.error('Email not configured. Set SMTP_USER and SMTP_PASS environment variables.');
+    console.error('Email not configured. Set SENDGRID_API_KEY or SMTP_USER and SMTP_PASS environment variables.');
     throw new Error('Email service not configured');
   }
 
@@ -415,9 +433,9 @@ async function sendMassEmail(email, subject, htmlContent, textContent) {
 
   try {
     await transport.sendMail(mailOptions);
-    console.log(`Mass email sent to: ${email}`);
+    console.log(`[Email] Mass email sent via SMTP to: ${email}`);
   } catch (error) {
-    console.error(`Error sending mass email to ${email}:`, error);
+    console.error(`[Email] Error sending mass email to ${email}:`, error);
     throw error;
   }
 }
