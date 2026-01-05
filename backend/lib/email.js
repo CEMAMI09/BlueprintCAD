@@ -464,4 +464,5 @@ module.exports = {
   sendVerificationEmail,
   sendMassEmail,
   testEmailConfig,
+  getTransporter, // Export for checking email config
 };

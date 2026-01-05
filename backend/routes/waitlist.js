@@ -230,13 +230,13 @@ router.post("/send-email", async (req, res) => {
 
     const campaignId = campaignResult.rows[0].id;
 
-    // Check if email service is configured
-    const { getTransporter } = require("../lib/email");
-    const transport = getTransporter();
-    if (!transport) {
+    // Check if email service is configured (SendGrid API or SMTP)
+    const hasSendGrid = !!process.env.SENDGRID_API_KEY;
+    const hasSMTP = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+    if (!hasSendGrid && !hasSMTP) {
       return res.status(500).json({
         error: "Email service not configured",
-        message: "Please configure SMTP settings (SMTP_USER, SMTP_PASS) in Railway environment variables",
+        message: "Please configure SENDGRID_API_KEY or SMTP settings (SMTP_USER, SMTP_PASS) in Railway environment variables",
       });
     }
 
