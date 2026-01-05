@@ -197,7 +197,7 @@ router.post("/send-email", async (req, res) => {
 
     if (!subject || (!htmlContent && !textContent)) {
       return res.status(400).json({
-        error: "Subject and content (HTML or text) are required",
+        error: "Subject and message content are required",
       });
     }
 
@@ -230,6 +230,16 @@ router.post("/send-email", async (req, res) => {
 
     const campaignId = campaignResult.rows[0].id;
 
+    // Check if email service is configured
+    const { getTransporter } = require("../lib/email");
+    const transport = getTransporter();
+    if (!transport) {
+      return res.status(500).json({
+        error: "Email service not configured",
+        message: "Please configure SMTP settings (SMTP_USER, SMTP_PASS) in Railway environment variables",
+      });
+    }
+
     // Send emails asynchronously (don't block response)
     sendMassEmailToWaitlist(
       campaignId,
@@ -239,6 +249,11 @@ router.post("/send-email", async (req, res) => {
       textContent
     ).catch((error) => {
       console.error("Error sending mass email:", error);
+      // Update campaign status to failed
+      execute(
+        `UPDATE email_campaigns SET status = 'failed' WHERE id = $1`,
+        [campaignId]
+      ).catch(console.error);
     });
 
     return res.json({
@@ -260,11 +275,16 @@ async function sendMassEmailToWaitlist(
   htmlContent,
   textContent
 ) {
+  const { execute } = require("../lib/db");
   let sentCount = 0;
   let failedCount = 0;
 
+  console.log(`[Campaign ${campaignId}] Starting to send ${recipients.length} emails...`);
+
   for (const recipient of recipients) {
     try {
+      console.log(`[Campaign ${campaignId}] Sending to ${recipient.email}...`);
+      
       // Replace placeholders in content
       const personalizedHtml = htmlContent
         ? htmlContent
@@ -284,6 +304,8 @@ async function sendMassEmailToWaitlist(
         personalizedText
       );
 
+      console.log(`[Campaign ${campaignId}] ✅ Successfully sent to ${recipient.email}`);
+
       // Mark as notified in waiting list
       await execute(
         "UPDATE waiting_list SET notified = true WHERE email = $1",
@@ -299,13 +321,20 @@ async function sendMassEmailToWaitlist(
 
       sentCount++;
     } catch (error) {
-      console.error(`Failed to send email to ${recipient.email}:`, error);
+      console.error(`[Campaign ${campaignId}] ❌ Failed to send email to ${recipient.email}:`, error);
+      console.error(`[Campaign ${campaignId}] Error details:`, {
+        message: error.message,
+        code: error.code,
+        response: error.response,
+        stack: error.stack?.split('\n').slice(0, 5).join('\n'),
+      });
 
       // Record failed send
+      const errorMessage = error.message || String(error).substring(0, 500);
       await execute(
         `INSERT INTO email_campaign_recipients (campaign_id, email, status, error_message)
          VALUES ($1, $2, 'failed', $3)`,
-        [campaignId, recipient.email, error.message]
+        [campaignId, recipient.email, errorMessage]
       );
 
       failedCount++;
@@ -316,16 +345,20 @@ async function sendMassEmailToWaitlist(
   }
 
   // Update campaign status
-  await execute(
-    `UPDATE email_campaigns 
-     SET status = 'completed', sent_count = $1, failed_count = $2, sent_at = NOW()
-     WHERE id = $3`,
-    [sentCount, failedCount, campaignId]
-  );
+  try {
+    await execute(
+      `UPDATE email_campaigns 
+       SET status = 'completed', sent_count = $1, failed_count = $2, sent_at = NOW()
+       WHERE id = $3`,
+      [sentCount, failedCount, campaignId]
+    );
 
-  console.log(
-    `Campaign ${campaignId} completed: ${sentCount} sent, ${failedCount} failed`
-  );
+    console.log(
+      `[Campaign ${campaignId}] ✅ Completed: ${sentCount} sent, ${failedCount} failed`
+    );
+  } catch (updateError) {
+    console.error(`[Campaign ${campaignId}] Failed to update campaign status:`, updateError);
+  }
 }
 
 module.exports = router;

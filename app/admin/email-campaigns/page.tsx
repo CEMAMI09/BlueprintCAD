@@ -43,8 +43,7 @@ export default function EmailCampaignsPage() {
   // Email form state
   const [emailForm, setEmailForm] = useState({
     subject: '',
-    htmlContent: '',
-    textContent: '',
+    textContent: '', // Plain text - HTML will be auto-generated
     onlyNotNotified: false,
     userFilter: {
       tier: '',
@@ -106,8 +105,8 @@ export default function EmailCampaignsPage() {
   };
 
   const handleSendEmail = async () => {
-    if (!emailForm.subject || (!emailForm.htmlContent && !emailForm.textContent)) {
-      alert('Please fill in subject and content');
+    if (!emailForm.subject || !emailForm.textContent) {
+      alert('Please fill in subject and message content');
       return;
     }
 
@@ -120,14 +119,12 @@ export default function EmailCampaignsPage() {
       const payload = activeTab === 'waitlist'
         ? {
             subject: emailForm.subject,
-            htmlContent: emailForm.htmlContent,
-            textContent: emailForm.textContent,
+            textContent: emailForm.textContent, // Plain text - HTML auto-generated on backend
             onlyNotNotified: emailForm.onlyNotNotified,
           }
         : {
             subject: emailForm.subject,
-            htmlContent: emailForm.htmlContent,
-            textContent: emailForm.textContent,
+            textContent: emailForm.textContent, // Plain text - HTML auto-generated on backend
             userFilter: emailForm.userFilter.tier ? {
               tier: emailForm.userFilter.tier,
               emailVerified: emailForm.userFilter.emailVerified,
@@ -143,7 +140,6 @@ export default function EmailCampaignsPage() {
       setShowEmailForm(false);
       setEmailForm({
         subject: '',
-        htmlContent: '',
         textContent: '',
         onlyNotNotified: false,
         userFilter: { tier: '', emailVerified: undefined },
@@ -238,13 +234,27 @@ export default function EmailCampaignsPage() {
             )}
 
             {/* Send Email Button */}
-            <div className="mb-6">
+            <div className="mb-6 flex gap-3">
               <Button
                 variant="primary"
                 icon={<Send size={18} />}
                 onClick={() => setShowEmailForm(!showEmailForm)}
               >
                 {showEmailForm ? 'Cancel' : 'Send Mass Email'}
+              </Button>
+              <Button
+                variant="secondary"
+                icon={<Mail size={18} />}
+                onClick={async () => {
+                  try {
+                    const result = await apiFetch('/api/test-email/send', { method: 'POST' });
+                    alert(`Test email sent! Check your inbox (${user?.email || 'your email'})`);
+                  } catch (error: any) {
+                    alert(`Test failed: ${error.message || 'Check Railway logs for details'}`);
+                  }
+                }}
+              >
+                Test Email Config
               </Button>
             </div>
 
@@ -275,41 +285,35 @@ export default function EmailCampaignsPage() {
 
                   <div>
                     <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
-                      HTML Content *
-                    </label>
-                    <textarea
-                      value={emailForm.htmlContent}
-                      onChange={(e) => setEmailForm({ ...emailForm, htmlContent: e.target.value })}
-                      rows={10}
-                      className="w-full px-4 py-2 rounded-lg border font-mono text-sm"
-                      style={{
-                        backgroundColor: DS.colors.background.card,
-                        borderColor: DS.colors.border.default,
-                        color: DS.colors.text.primary,
-                      }}
-                      placeholder="<html>...</html>"
-                    />
-                    <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
-                      Use {'{name}'} or {'{username}'} for personalization, {'{email}'} for email address
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
-                      Plain Text Content (optional)
+                      Message Content *
                     </label>
                     <textarea
                       value={emailForm.textContent}
                       onChange={(e) => setEmailForm({ ...emailForm, textContent: e.target.value })}
-                      rows={5}
-                      className="w-full px-4 py-2 rounded-lg border font-mono text-sm"
+                      rows={12}
+                      className="w-full px-4 py-2 rounded-lg border"
                       style={{
                         backgroundColor: DS.colors.background.card,
                         borderColor: DS.colors.border.default,
                         color: DS.colors.text.primary,
                       }}
-                      placeholder="Plain text version..."
+                      placeholder="Just type your message here in plain text. HTML will be automatically generated for you.
+
+Example:
+Hi {name},
+
+Thank you for joining the BlueprintCAD waiting list! We're excited to announce that we'll be launching very soon.
+
+Visit: https://www.blueprintcad.io
+
+Best regards,
+The BlueprintCAD Team"
                     />
+                    <p className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
+                      💡 Just type your message in plain text. HTML formatting will be automatically generated.
+                      <br />
+                      Use {'{name}'} or {'{username}'} for personalization, {'{email}'} for email address
+                    </p>
                   </div>
 
                   {activeTab === 'waitlist' && (
@@ -356,7 +360,7 @@ export default function EmailCampaignsPage() {
                   <Button
                     variant="primary"
                     onClick={handleSendEmail}
-                    disabled={sending || !emailForm.subject || !emailForm.htmlContent}
+                    disabled={sending || !emailForm.subject || !emailForm.textContent}
                     icon={sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                   >
                     {sending ? 'Sending...' : 'Send Email'}

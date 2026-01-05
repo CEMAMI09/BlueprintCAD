@@ -38,7 +38,7 @@ router.post("/send-to-all", async (req, res) => {
 
     if (!subject || (!htmlContent && !textContent)) {
       return res.status(400).json({
-        error: "Subject and content (HTML or text) are required",
+        error: "Subject and message content are required",
       });
     }
 

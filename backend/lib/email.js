@@ -10,6 +10,14 @@ const EMAIL_CONFIG = {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  // Connection timeout settings
+  connectionTimeout: 60000, // 60 seconds
+  greetingTimeout: 30000, // 30 seconds
+  socketTimeout: 60000, // 60 seconds
+  // For SendGrid specifically
+  tls: {
+    rejectUnauthorized: false, // Allow self-signed certificates if needed
+  },
 };
 
 const FROM_EMAIL = process.env.SMTP_FROM || process.env.SMTP_USER;
@@ -321,11 +329,69 @@ This is an automated message from Blueprint. Please do not reply to this email.
 }
 
 /**
+ * Convert plain text to simple HTML
+ * @param {string} text - Plain text content
+ * @returns {string} HTML content
+ */
+function textToHtml(text) {
+  if (!text) return '';
+  
+  // Escape HTML characters
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // Convert line breaks to <br> and paragraphs
+  const paragraphs = escaped.split(/\n\s*\n/).filter(p => p.trim());
+  const htmlParagraphs = paragraphs.map(p => {
+    const lines = p.split('\n').filter(l => l.trim());
+    return `<p>${lines.join('<br>')}</p>`;
+  }).join('');
+  
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      line-height: 1.6; 
+      color: #333; 
+      max-width: 600px; 
+      margin: 0 auto; 
+      padding: 20px; 
+      background-color: #f9f9f9;
+    }
+    .container {
+      background-color: #ffffff;
+      padding: 30px;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    p { margin: 0 0 16px 0; }
+    a { color: #3b82f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    ${htmlParagraphs}
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
  * Send mass email (for campaigns)
  * @param {string} email - Recipient email address
  * @param {string} subject - Email subject
- * @param {string} htmlContent - HTML email content
- * @param {string} textContent - Plain text email content (optional)
+ * @param {string} htmlContent - HTML email content (optional)
+ * @param {string} textContent - Plain text email content (will auto-generate HTML if htmlContent not provided)
  */
 async function sendMassEmail(email, subject, htmlContent, textContent) {
   const transport = getTransporter();
@@ -335,12 +401,16 @@ async function sendMassEmail(email, subject, htmlContent, textContent) {
     throw new Error('Email service not configured');
   }
 
+  // If no HTML provided but text is provided, auto-generate HTML
+  const finalHtml = htmlContent || (textContent ? textToHtml(textContent) : null);
+  const finalText = textContent || (htmlContent ? stripHtml(htmlContent) : null);
+
   const mailOptions = {
     from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
     to: email,
     subject: subject,
-    html: htmlContent || undefined,
-    text: textContent || undefined,
+    html: finalHtml || undefined,
+    text: finalText || undefined,
   };
 
   try {
@@ -350,6 +420,24 @@ async function sendMassEmail(email, subject, htmlContent, textContent) {
     console.error(`Error sending mass email to ${email}:`, error);
     throw error;
   }
+}
+
+/**
+ * Strip HTML tags to get plain text
+ * @param {string} html - HTML content
+ * @returns {string} Plain text
+ */
+function stripHtml(html) {
+  if (!html) return '';
+  return html
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim();
 }
 
 module.exports = {
