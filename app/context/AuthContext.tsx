@@ -10,6 +10,7 @@ interface User {
   tier?: string;
   created_at?: string;
   profile_picture?: string | null;
+  email_verified?: boolean;
 }
 
 interface AuthContextType {

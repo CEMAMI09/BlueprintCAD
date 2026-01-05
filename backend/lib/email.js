@@ -229,8 +229,133 @@ async function testEmailConfig() {
   }
 }
 
+/**
+ * Send email verification email
+ * @param {string} email - User's email address
+ * @param {string} username - User's username
+ * @param {string} token - Verification token
+ */
+async function sendVerificationEmail(email, username, token) {
+  const transport = getTransporter();
+  
+  if (!transport) {
+    console.error('Email not configured. Set SMTP_USER and SMTP_PASS environment variables.');
+    throw new Error('Email service not configured');
+  }
+
+  const verificationUrl = `${APP_URL}/verify-email?token=${token}`;
+  
+  const mailOptions = {
+    from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
+    to: email,
+    subject: 'Verify Your Email - Blueprint',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+            .button { display: inline-block; padding: 12px 30px; background: #3b82f6; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
+            .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Verify Your Email</h1>
+            </div>
+            <div class="content">
+              <p>Hi <strong>${username}</strong>,</p>
+              
+              <p>Thanks for signing up for Blueprint! To get started, please verify your email address by clicking the button below:</p>
+              
+              <div style="text-align: center;">
+                <a href="${verificationUrl}" class="button">Verify Email Address</a>
+              </div>
+              
+              <p>Or copy and paste this link into your browser:</p>
+              <p style="word-break: break-all; color: #3b82f6;">${verificationUrl}</p>
+              
+              <div class="warning">
+                <strong>⏱️ This link expires in 24 hours</strong><br>
+                If you didn't create an account with Blueprint, you can safely ignore this email.
+              </div>
+            </div>
+            <div class="footer">
+              <p>This is an automated message from Blueprint. Please do not reply to this email.</p>
+              <p>&copy; ${new Date().getFullYear()} Blueprint. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `
+Hi ${username},
+
+Thanks for signing up for Blueprint! To get started, please verify your email address.
+
+Verify your email by clicking this link:
+${verificationUrl}
+
+This link expires in 24 hours.
+
+If you didn't create an account with Blueprint, you can safely ignore this email.
+
+---
+This is an automated message from Blueprint. Please do not reply to this email.
+© ${new Date().getFullYear()} Blueprint. All rights reserved.
+    `.trim(),
+  };
+
+  try {
+    await transport.sendMail(mailOptions);
+    console.log('Verification email sent to:', email);
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send mass email (for campaigns)
+ * @param {string} email - Recipient email address
+ * @param {string} subject - Email subject
+ * @param {string} htmlContent - HTML email content
+ * @param {string} textContent - Plain text email content (optional)
+ */
+async function sendMassEmail(email, subject, htmlContent, textContent) {
+  const transport = getTransporter();
+  
+  if (!transport) {
+    console.error('Email not configured. Set SMTP_USER and SMTP_PASS environment variables.');
+    throw new Error('Email service not configured');
+  }
+
+  const mailOptions = {
+    from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
+    to: email,
+    subject: subject,
+    html: htmlContent || undefined,
+    text: textContent || undefined,
+  };
+
+  try {
+    await transport.sendMail(mailOptions);
+    console.log(`Mass email sent to: ${email}`);
+  } catch (error) {
+    console.error(`Error sending mass email to ${email}:`, error);
+    throw error;
+  }
+}
+
 module.exports = {
   sendPasswordResetEmail,
   sendUsernameReminderEmail,
+  sendVerificationEmail,
+  sendMassEmail,
   testEmailConfig,
 };

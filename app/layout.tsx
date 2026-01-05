@@ -4,6 +4,7 @@ import { Fira_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import VerificationBanner from "./components/VerificationBanner";
+import PasswordGate from "./components/PasswordGate";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,10 +34,12 @@ export default function RootLayout({
         className={`${inter.variable} ${firaMono.variable} font-sans antialiased`}
         style={{ backgroundColor: '#0E1116', color: '#E5E7EB' }}
       >
-        <AuthProvider>
-          <VerificationBanner />
-          {children}
-        </AuthProvider>
+        <PasswordGate>
+          <AuthProvider>
+            <VerificationBanner />
+            {children}
+          </AuthProvider>
+        </PasswordGate>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
-// Email verification utilities
+// Email verification utilities (PostgreSQL compatible)
 const crypto = require('crypto');
-const { getDb } = require('../../db/db');
+const { getOne, execute } = require('../lib/db');
 
 // Generate secure verification token
 function generateVerificationToken() {
@@ -9,16 +9,18 @@ function generateVerificationToken() {
 
 // Create verification token in database
 async function createVerificationToken(userId, email) {
-  const db = await getDb();
   const token = generateVerificationToken();
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
   // Delete any existing tokens for this user
-  await db.run('DELETE FROM verification_tokens WHERE user_id = ?', [userId]);
+  await execute(
+    'DELETE FROM verification_tokens WHERE user_id = $1',
+    [userId]
+  );
 
   // Create new token
-  await db.run(
-    'INSERT INTO verification_tokens (user_id, identifier, token, expires) VALUES (?, ?, ?, ?)',
+  await execute(
+    'INSERT INTO verification_tokens (user_id, identifier, token, expires) VALUES ($1, $2, $3, $4)',
     [userId, email, token, expires.toISOString()]
   );
 
@@ -27,10 +29,8 @@ async function createVerificationToken(userId, email) {
 
 // Verify token and mark user as verified
 async function verifyEmailToken(token) {
-  const db = await getDb();
-  
-  const tokenRecord = await db.get(
-    'SELECT * FROM verification_tokens WHERE token = ? AND expires > datetime("now")',
+  const tokenRecord = await getOne(
+    'SELECT * FROM verification_tokens WHERE token = $1 AND expires > NOW()',
     [token]
   );
 
@@ -39,30 +39,28 @@ async function verifyEmailToken(token) {
   }
 
   // Mark user as verified
-  await db.run(
-    'UPDATE users SET email_verified = 1, verified_at = datetime("now") WHERE id = ?',
+  await execute(
+    'UPDATE users SET email_verified = true, verified_at = NOW() WHERE id = $1',
     [tokenRecord.user_id]
   );
 
   // Delete used token
-  await db.run('DELETE FROM verification_tokens WHERE token = ?', [token]);
+  await execute('DELETE FROM verification_tokens WHERE token = $1', [token]);
 
   return { success: true, userId: tokenRecord.user_id };
 }
 
 // Check rate limiting for verification emails
 async function checkVerificationRateLimit(userId, email, type = 'send') {
-  const db = await getDb();
-  
   // Check attempts in last 15 minutes
-  const recentAttempts = await db.get(
-    `SELECT COUNT(*) as count FROM email_verification_attempts 
-     WHERE user_id = ? AND attempt_type = ? AND created_at > datetime('now', '-15 minutes')`,
+  const recentAttempts = await getOne(
+    `SELECT COUNT(*)::int as count FROM email_verification_attempts 
+     WHERE user_id = $1 AND attempt_type = $2 AND created_at > NOW() - INTERVAL '15 minutes'`,
     [userId, type]
   );
 
   // Allow max 3 attempts per 15 minutes
-  if (recentAttempts.count >= 3) {
+  if (recentAttempts?.count >= 3) {
     return { allowed: false, retryAfter: 15 * 60 * 1000 }; // 15 minutes in ms
   }
 
@@ -71,26 +69,22 @@ async function checkVerificationRateLimit(userId, email, type = 'send') {
 
 // Record verification attempt
 async function recordVerificationAttempt(userId, email, type = 'send', ipAddress = null) {
-  const db = await getDb();
-  
-  await db.run(
-    'INSERT INTO email_verification_attempts (user_id, email, attempt_type, ip_address) VALUES (?, ?, ?, ?)',
+  await execute(
+    'INSERT INTO email_verification_attempts (user_id, email, attempt_type, ip_address) VALUES ($1, $2, $3, $4)',
     [userId, email, type, ipAddress]
   );
 }
 
 // Clean up expired tokens (run periodically)
 async function cleanupExpiredTokens() {
-  const db = await getDb();
-  const result = await db.run('DELETE FROM verification_tokens WHERE expires < datetime("now")');
-  return result.changes;
+  const result = await execute('DELETE FROM verification_tokens WHERE expires < NOW()');
+  return result.rowCount || 0;
 }
 
 // Check if user is verified
 async function isUserVerified(userId) {
-  const db = await getDb();
-  const user = await db.get('SELECT email_verified FROM users WHERE id = ?', [userId]);
-  return user?.email_verified === 1;
+  const user = await getOne('SELECT email_verified FROM users WHERE id = $1', [userId]);
+  return user?.email_verified === true;
 }
 
 module.exports = {

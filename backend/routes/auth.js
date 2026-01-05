@@ -8,6 +8,14 @@ const {
   generateToken,
   getUserFromRequest,
 } = require("../lib/auth");
+const {
+  createVerificationToken,
+  verifyEmailToken,
+  checkVerificationRateLimit,
+  recordVerificationAttempt,
+  isUserVerified,
+} = require("../lib/email-verification");
+const { sendVerificationEmail } = require("../lib/email");
 
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
@@ -35,10 +43,10 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await hashPassword(password);
 
-    // Insert user and return the new user ID
+    // Insert user with email_verified = false (for manual registration)
     const result = await execute(
-      `INSERT INTO users (username, email, password, tier, created_at)
-       VALUES ($1, $2, $3, 'free', NOW())
+      `INSERT INTO users (username, email, password, tier, email_verified, created_at)
+       VALUES ($1, $2, $3, 'free', false, NOW())
        RETURNING id`,
       [username, email, hashedPassword]
     );
@@ -50,6 +58,7 @@ router.post("/register", async (req, res) => {
       id: userId,
       username,
       email,
+      email_verified: false, // User needs to verify email
     };
 
     const token = generateToken(user);
@@ -62,7 +71,30 @@ router.post("/register", async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    return res.status(201).json({ token, user });
+    // Create verification token and send email (don't block registration if email fails)
+    try {
+      const verificationToken = await createVerificationToken(userId, email);
+      const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+      
+      // Check rate limit
+      const rateLimit = await checkVerificationRateLimit(userId, email, 'send');
+      if (rateLimit.allowed) {
+        await sendVerificationEmail(email, username, verificationToken);
+        await recordVerificationAttempt(userId, email, 'send', ipAddress);
+        console.log(`Verification email sent to ${email} for user ${userId}`);
+      } else {
+        console.warn(`Rate limit exceeded for verification email to ${email}`);
+      }
+    } catch (emailError) {
+      // Don't fail registration if email sending fails
+      console.error('Failed to send verification email (registration still succeeded):', emailError);
+    }
+
+    return res.status(201).json({ 
+      token, 
+      user,
+      message: 'Account created successfully. Please check your email to verify your account.'
+    });
   } catch (error) {
     console.error("Registration error:", error);
     return res.status(500).json({ error: "Failed to register user" });
@@ -143,7 +175,7 @@ router.get("/me", async (req, res) => {
     }
 
     const dbUser = await getOne(
-      "SELECT id, username, email, tier, profile_picture, created_at FROM users WHERE id = $1",
+      "SELECT id, username, email, tier, profile_picture, email_verified, is_admin, created_at FROM users WHERE id = $1",
       [decoded.userId]
     );
 
@@ -158,6 +190,8 @@ router.get("/me", async (req, res) => {
         email: dbUser.email,
         tier: dbUser.tier || "free",
         profile_picture: dbUser.profile_picture || null,
+        email_verified: dbUser.email_verified || false,
+        is_admin: dbUser.is_admin || false,
         created_at: dbUser.created_at,
       },
     });
@@ -209,6 +243,81 @@ router.post("/setup-password", async (req, res) => {
   } catch (error) {
     console.error("Setup password error:", error);
     return res.status(500).json({ error: "Failed to set password" });
+  }
+});
+
+// POST /api/auth/verify-email - Verify email with token
+router.post("/verify-email", async (req, res) => {
+  try {
+    const { token } = req.body || {};
+
+    if (!token) {
+      return res.status(400).json({ error: "Verification token is required" });
+    }
+
+    const result = await verifyEmailToken(token);
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error || "Invalid or expired token" });
+    }
+
+    return res.json({ 
+      message: "Email verified successfully",
+      userId: result.userId 
+    });
+  } catch (error) {
+    console.error("Verify email error:", error);
+    return res.status(500).json({ error: "Failed to verify email" });
+  }
+});
+
+// POST /api/auth/resend-verification - Resend verification email
+router.post("/resend-verification", async (req, res) => {
+  try {
+    const user = getUserFromRequest(req);
+    if (!user || !user.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Get user details
+    const dbUser = await getOne(
+      "SELECT id, username, email, email_verified FROM users WHERE id = $1",
+      [user.userId]
+    );
+
+    if (!dbUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if already verified
+    if (dbUser.email_verified) {
+      return res.status(400).json({ error: "Email is already verified" });
+    }
+
+    // Check rate limit
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const rateLimit = await checkVerificationRateLimit(user.userId, dbUser.email, 'send');
+    
+    if (!rateLimit.allowed) {
+      return res.status(429).json({ 
+        error: "Too many verification emails sent. Please wait before requesting another.",
+        retryAfter: rateLimit.retryAfter 
+      });
+    }
+
+    // Create new verification token
+    const verificationToken = await createVerificationToken(user.userId, dbUser.email);
+    
+    // Send verification email
+    await sendVerificationEmail(dbUser.email, dbUser.username, verificationToken);
+    await recordVerificationAttempt(user.userId, dbUser.email, 'send', ipAddress);
+
+    return res.json({ 
+      message: "Verification email sent successfully. Please check your inbox." 
+    });
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    return res.status(500).json({ error: "Failed to resend verification email" });
   }
 });
 

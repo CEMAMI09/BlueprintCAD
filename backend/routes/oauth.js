@@ -143,9 +143,10 @@ async function handleOAuthCallback(provider, req, res) {
         counter++;
       }
 
+      // OAuth users are automatically verified (email is verified by OAuth provider)
       const result = await execute(
-        `INSERT INTO users (username, email, ${providerIdField}, oauth_provider, tier, profile_picture, created_at)
-         VALUES ($1, $2, $3, $4, 'free', $5, NOW())
+        `INSERT INTO users (username, email, ${providerIdField}, oauth_provider, tier, profile_picture, email_verified, created_at)
+         VALUES ($1, $2, $3, $4, 'free', $5, true, NOW())
          RETURNING id`,
         [
           uniqueUsername,
