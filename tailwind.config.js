@@ -8,6 +8,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Mona Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['Mona Sans', 'monospace'],
+      },
       colors: {
         gray: {
           950: '#0a0f1a',

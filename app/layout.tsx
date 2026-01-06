@@ -1,22 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { Fira_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import VerificationBanner from "./components/VerificationBanner";
 import PasswordGate from "./components/PasswordGate";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const firaMono = Fira_Mono({
-  weight: "400",
-  variable: "--font-fira-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -31,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${firaMono.variable} font-sans antialiased`}
+        className="font-sans antialiased"
         style={{ backgroundColor: '#0E1116', color: '#E5E7EB' }}
       >
         <PasswordGate>

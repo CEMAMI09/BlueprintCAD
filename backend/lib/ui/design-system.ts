@@ -82,8 +82,8 @@ export const DesignSystem = {
   
   typography: {
     fontFamily: {
-      sans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      mono: "'JetBrains Mono', 'Fira Code', monospace",
+      sans: "'Mona Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      mono: "'Mona Sans', 'JetBrains Mono', 'Fira Code', monospace",
     },
     fontSize: {
       xs: '12px',
