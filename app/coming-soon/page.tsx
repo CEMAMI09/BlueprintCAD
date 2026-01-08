@@ -308,8 +308,8 @@ export default function ComingSoonPage() {
               <div
                 className="relative w-full"
                 style={{
-                  // Keep a slight horizontal offset on desktop only, but no scroll movement
-                  transform: 'translateX(-40px)',
+                  // Keep a subtle horizontal offset on desktop only, but no scroll movement
+                  transform: 'translateX(-20px)',
                 }}
               >
                 <div
@@ -317,7 +317,7 @@ export default function ComingSoonPage() {
                   style={{
                     borderColor: 'rgba(255,255,255,0.08)',
                     boxShadow: '0 12px 48px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)',
-                    transform: 'scale(1.4)',
+                    transform: 'scale(1.2)',
                     transformOrigin: 'top left',
                     overflow: 'hidden',
                     maxWidth: '100%',
