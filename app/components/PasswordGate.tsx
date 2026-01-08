@@ -38,8 +38,8 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     setLoading(false);
   }, []);
 
-  // Don't show gate on coming-soon page
-  if (pathname === '/coming-soon') {
+  // Don't show gate on coming-soon, privacy, or contact pages
+  if (pathname === '/coming-soon' || pathname === '/privacy' || pathname === '/contact') {
     return <>{children}</>;
   }
 

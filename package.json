@@ -33,6 +33,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-globe.gl": "^2.37.0",
+    "globe.gl": "^2.39.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.5.0",
     "sqlite": "^5.1.1",

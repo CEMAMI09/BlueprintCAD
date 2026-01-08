@@ -364,17 +364,17 @@ export default function ComingSoonPage() {
       <section id="why-section" className="pt-20 md:pt-24 pb-0 md:pb-0">
         {/* Top line - already aligned with globe box top */}
         <div
-          className="border-t mt-12 md:mt-16"
+          className="border-t mt-8 md:mt-14 lg:mt-16"
           style={{ borderColor: colors.border }}
         />
 
         {/* Content band */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-stretch pt-0 pb-0 md:pt-0 md:pb-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-start lg:items-stretch pt-8 md:pt-14 lg:pt-0 pb-8 md:pb-12 lg:pb-0">
             {/* Left: Text */}
-            <div className="flex flex-col justify-center h-full">
+            <div className="flex flex-col lg:justify-center lg:h-full pt-3 md:pt-7 lg:pt-0 pb-0">
               <h2
-                className="text-2xl md:text-3xl font-bold mb-8"
+                className="text-2xl md:text-3xl font-bold mb-6 md:mb-8"
                 style={{
                   color: colors.textPrimary,
                   fontWeight: 700,
@@ -384,7 +384,7 @@ export default function ComingSoonPage() {
                 CAD tools weren't built for creators.
               </h2>
               <div
-                className="space-y-4 text-lg leading-relaxed"
+                className="space-y-4 text-base md:text-lg leading-relaxed"
                 style={{
                   color: colors.textSecondary,
                   lineHeight: '1.6',
@@ -393,6 +393,7 @@ export default function ComingSoonPage() {
                 <p>Sharing files is fragmented.</p>
                 <p>Marketplaces treat designs like static downloads.</p>
                 <p>Collaboration lives behind enterprise software.</p>
+                <p>Creators are everywhere. Their tools aren't.</p>
                 <p
                   className="mt-6"
                   style={{
@@ -405,22 +406,19 @@ export default function ComingSoonPage() {
               </div>
             </div>
           
-            {/* Right: Globe - align to the right edge */}
-            <div
-              className="hidden md:flex items-stretch justify-end"
-              style={{ marginRight: 'calc((100vw - 100%)/2)' }}
-            >
-              <div className="w-full">
-                <GlobeHero />
-              </div>
+            {/* Right: Globe - hidden on mobile, visible on desktop */}
+            <div className="hidden lg:flex items-center justify-center w-full h-full min-h-[600px]">
+              <GlobeHero />
             </div>
           </div>
         </div>
 
-        {/* Bottom line - fine-tuned spacing under the globe band */}
+        {/* Bottom line - increased spacing */}
         <div
-          className="border-t"
-          style={{ borderColor: colors.border, transform: 'translateY(124px)' }}
+          className="border-t mt-8 md:mt-12 lg:mt-16"
+          style={{ 
+            borderColor: colors.border,
+          }}
         />
       </section>
 

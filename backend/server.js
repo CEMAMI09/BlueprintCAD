@@ -71,6 +71,7 @@ app.use("/api/thumbnails", require("./routes/thumbnails"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/analytics", require("./routes/analytics"));
 app.use("/api/waitlist", require("./routes/waitlist"));
+app.use("/api/contact", require("./routes/contact"));
 app.use("/api/email-campaigns", require("./routes/email-campaigns"));
 app.use("/api/test-email", require("./routes/test-email"));
 

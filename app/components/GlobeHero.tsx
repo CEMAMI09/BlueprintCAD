@@ -25,37 +25,88 @@ export default function GlobeHero() {
   };
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) {
+      console.warn('[GlobeHero] Container ref is null');
+      return;
+    }
 
     let cancelled = false;
+    let globeInstance: any = null;
+    let resizeCleanup: (() => void) | null = null;
 
     (async () => {
-      // Dynamically import globe.gl only on the client to avoid SSR/window issues
-      const { default: GlobeFactory } = await import('globe.gl');
-
-      // TS typings describe GlobeFactory as a constructor; cast to any so we can
-      // use the documented functional factory style without changing behavior.
-      const globe = (GlobeFactory as any)(containerRef.current!)
-        .backgroundColor('rgba(0,0,0,0)')
-        .globeImageUrl(null as any)
-        .width(800)
-        .height(800);
-
-      // Apply material
-      const globeMaterial = new MeshPhongMaterial({
-        color: '#4F7DFF',
-        // Semi-transparent shell; let points show through by not writing depth
-        opacity: 0.12,
-        emissive: '#4F7DFF',
-        emissiveIntensity: 0.04,
-        transparent: true,
-        depthWrite: false,
-      });
-      globe.globeMaterial(globeMaterial);
-
-      // Configure controls for auto-rotation and no user-driven movement
       try {
-        const controls = globe.controls?.();
+        // Dynamically import globe.gl only on the client to avoid SSR/window issues
+        const { default: GlobeFactory } = await import('globe.gl');
+        console.log('[GlobeHero] globe.gl imported successfully');
+
+        if (!containerRef.current) {
+          console.warn('[GlobeHero] Container ref is null after import');
+          return;
+        }
+
+        // Get container dimensions
+        const container = containerRef.current;
+        const getDimensions = () => {
+          const computedStyle = window.getComputedStyle(container);
+          const width = container.clientWidth || parseInt(computedStyle.width) || 400;
+          const height = container.clientHeight || parseInt(computedStyle.height) || 400;
+          return { width: Math.max(width, 300), height: Math.max(height, 300) };
+        };
+        
+        const { width, height } = getDimensions();
+        console.log('[GlobeHero] Container dimensions:', { width, height });
+
+        // TS typings describe GlobeFactory as a constructor; cast to any so we can
+        // use the documented functional factory style without changing behavior.
+        globeInstance = (GlobeFactory as any)(container)
+          .backgroundColor('rgba(0,0,0,0)')
+          .globeImageUrl(null as any)
+          .width(width)
+          .height(height);
+        
+        console.log('[GlobeHero] Globe instance created');
+
+        // Apply material
+        const globeMaterial = new MeshPhongMaterial({
+          color: '#4F7DFF',
+          // Semi-transparent shell; let points show through by not writing depth
+          opacity: 0.12,
+          emissive: '#4F7DFF',
+          emissiveIntensity: 0.04,
+          transparent: true,
+          depthWrite: false,
+        });
+        globeInstance.globeMaterial(globeMaterial);
+
+        // Set up resize handler after globe is created
+        const handleResize = () => {
+          if (cancelled || !globeInstance || !containerRef.current) return;
+          const getDimensions = () => {
+            const container = containerRef.current!;
+            const computedStyle = window.getComputedStyle(container);
+            const width = container.clientWidth || parseInt(computedStyle.width) || 400;
+            const height = container.clientHeight || parseInt(computedStyle.height) || 400;
+            return { width: Math.max(width, 300), height: Math.max(height, 300) };
+          };
+          const { width, height } = getDimensions();
+          try {
+            globeInstance.width(width).height(height);
+          } catch (e) {
+            console.warn('[GlobeHero] Failed to resize globe:', e);
+          }
+        };
+        
+        window.addEventListener('resize', handleResize);
+        
+        // Store cleanup function for later use
+        resizeCleanup = () => {
+          window.removeEventListener('resize', handleResize);
+        };
+
+        // Configure controls for auto-rotation and no user-driven movement
+        try {
+          const controls = globeInstance.controls?.();
         if (controls) {
           const anyControls = controls as any;
           anyControls.autoRotate = true;
@@ -154,7 +205,7 @@ export default function GlobeHero() {
             }
           });
 
-          globe
+          globeInstance
             .pointsData(points)
             .pointLat('lat')
             .pointLng('lng')
@@ -166,22 +217,34 @@ export default function GlobeHero() {
             .pointsMerge(true);
         })
         .catch((err) => {
-          console.error('Failed to load GeoJSON:', err);
+          console.error('[GlobeHero] Failed to load GeoJSON:', err);
         });
+      } catch (error) {
+        console.error('[GlobeHero] Error initializing globe:', error);
+      }
     })();
 
     return () => {
       cancelled = true;
+      if (resizeCleanup) {
+        resizeCleanup();
+      }
+      if (globeInstance && typeof globeInstance._destructor === 'function') {
+        globeInstance._destructor();
+      }
     };
   }, []);
 
   return (
-    <div className="relative w-full flex items-center justify-start pl-0 h-full min-h-[520px]">
-      {/* Globe box is nudged to the right within its column */}
+    <div className="relative w-full flex items-center justify-center min-h-[300px] md:min-h-[520px] lg:min-h-[600px]">
       <div
         ref={containerRef}
-        className="w-full h-full max-w-[800px] md:max-w-[800px]"
-        style={{ aspectRatio: '1 / 1', marginLeft: '160px', marginTop: '-150px' }}
+        className="w-full h-full max-w-full md:max-w-[600px] min-h-[300px] md:min-h-[520px] lg:min-h-[600px]"
+        style={{ 
+          width: '100%', 
+          height: '100%',
+          aspectRatio: '1 / 1',
+        }}
       />
     </div>
   );

@@ -4,6 +4,10 @@
 function getApiBaseUrl(): string {
   const base = process.env.NEXT_PUBLIC_API_URL;
   if (!base) {
+    // Fallback to current origin for client-side requests
+    if (typeof window !== 'undefined') {
+      return window.location.origin.replace(':3000', ':8080');
+    }
     throw new Error("NEXT_PUBLIC_API_URL is not set");
   }
   return base;
