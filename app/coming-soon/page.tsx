@@ -174,16 +174,13 @@ export default function ComingSoonPage() {
 
             </div>
 
-            {/* Right: Visual - Hidden on mobile, scaled on tablet, full on desktop */}
-            {screenSize !== 'mobile' && (
+            {/* Right: Visual - Hidden on mobile and tablet, only show on desktop (lg breakpoint) */}
+            <div className="hidden lg:block relative w-full">
               <div
                 className="relative w-full"
                 style={{
                   // Keep a slight horizontal offset on desktop only, but no scroll movement
-                  transform:
-                    screenSize === 'desktop'
-                      ? 'translateX(-40px)'
-                      : 'translateX(0px)',
+                  transform: 'translateX(-40px)',
                 }}
               >
                 <div
@@ -191,8 +188,8 @@ export default function ComingSoonPage() {
                   style={{
                     borderColor: 'rgba(255,255,255,0.08)',
                     boxShadow: '0 12px 48px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)',
-                    transform: screenSize === 'desktop' ? 'scale(1.4)' : 'scale(1.0)',
-                    transformOrigin: screenSize === 'desktop' ? 'top left' : 'center',
+                    transform: 'scale(1.4)',
+                    transformOrigin: 'top left',
                     overflow: 'hidden',
                     maxWidth: '100%',
                   }}
@@ -219,7 +216,7 @@ export default function ComingSoonPage() {
                   />
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </section>
