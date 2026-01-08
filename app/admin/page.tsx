@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Users, Settings, Shield } from 'lucide-react';
 
@@ -18,36 +16,6 @@ const colors = {
 };
 
 export default function AdminPage() {
-  const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const authStatus = localStorage.getItem('site_access_granted');
-    const adminStatus = localStorage.getItem('is_admin');
-    
-    if (authStatus !== 'true' || adminStatus !== 'true') {
-      // Not an admin, redirect to coming-soon
-      router.replace('/coming-soon');
-      return;
-    }
-    
-    setIsAdmin(true);
-    setLoading(false);
-  }, [router]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.bgPrimary }}>
-        <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
-
   const adminLinks = [
     {
       title: 'Email Campaigns',

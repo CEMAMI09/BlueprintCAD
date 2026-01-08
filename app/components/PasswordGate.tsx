@@ -46,8 +46,12 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
 
   // No redirects needed - we'll render the coming-soon page directly for non-allowed routes
 
-  // Always allow privacy and contact pages
-  if (pathname === '/privacy' || pathname === '/contact') {
+  // Always allow privacy, contact, and sitemap pages
+  if (
+    pathname === '/privacy' ||
+    pathname === '/contact' ||
+    pathname === '/sitemap.xml'
+  ) {
     return <>{children}</>;
   }
 
@@ -185,16 +189,6 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
         </div>
       );
     }
-  }
-
-  // If authenticated as admin but on non-admin route, redirect to /admin
-  if (isAuthenticated && isAdmin) {
-    router.replace('/admin');
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.bgPrimary }}>
-        <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-      </div>
-    );
   }
 
   // For all other routes (including /, /coming-soon, /this, /that, etc.), show coming-soon page
