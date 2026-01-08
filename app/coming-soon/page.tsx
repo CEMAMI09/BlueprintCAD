@@ -180,15 +180,23 @@ export default function ComingSoonPage() {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center">
+          <div className="flex items-center justify-between h-20 md:h-20">
+            {/* Logo + wordmark */}
+            <Link href="/" className="flex items-center gap-3">
               <img
                 src="/bpcube3.png.png"
                 alt="BlueprintCAD"
                 className="w-auto"
-                style={{ height: '30px' }}
+                style={{ height: '40px' }}
               />
+              <span
+                className="text-base md:text-lg font-semibold tracking-tight"
+                style={{
+                  color: colors.textPrimary,
+                }}
+              >
+                BlueprintCAD
+              </span>
             </Link>
 
             {/* Right side */}

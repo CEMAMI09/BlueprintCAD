@@ -57,9 +57,10 @@ export default function GlobeHero() {
         const { width, height } = getDimensions();
         console.log('[GlobeHero] Container dimensions:', { width, height });
 
-        // TS typings describe GlobeFactory as a constructor; cast to any so we can
-        // use the documented functional factory style without changing behavior.
-        globeInstance = (GlobeFactory as any)(container)
+        // Use the two-step factory style: GlobeFactory() returns a Globe creator,
+        // which we then call with the container element.
+        const globeFactoryInstance = (GlobeFactory as any)();
+        globeInstance = globeFactoryInstance(container)
           .backgroundColor('rgba(0,0,0,0)')
           .globeImageUrl(null as any)
           .width(width)
