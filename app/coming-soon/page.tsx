@@ -5,9 +5,14 @@ import {
   Eye,
   GitBranch,
   DollarSign,
+  Mail,
+  CheckCircle2,
+  Loader2,
+  ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import GlobeHero from '@/app/components/GlobeHero';
+import { apiFetch } from '@/lib/apiClient';
 
 // Design system colors
 const colors = {
@@ -28,6 +33,24 @@ export default function ComingSoonPage() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [screenSize, setScreenSize] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const headerRef = useRef<HTMLDivElement>(null);
+  
+  // Waitlist form state
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [showNameField, setShowNameField] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [position, setPosition] = useState<number | null>(null);
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  const scrollToWaitlist = () => {
+    const waitlistSection = document.getElementById('waitlist');
+    if (waitlistSection) {
+      waitlistSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Check for reduced motion preference and screen size
   useEffect(() => {
@@ -68,6 +91,54 @@ export default function ComingSoonPage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleEmailContinue = () => {
+    if (!email || !emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    setError('');
+    setShowNameField(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (!email || !emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const data = await apiFetch('/api/waitlist', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: email.trim(),
+          name: name.trim() || undefined,
+          source: 'website',
+        }),
+      });
+
+      setSuccess(true);
+      setPosition(data.position || null);
+      setEmail('');
+      setName('');
+      setShowNameField(false);
+      
+      // Reset success message after 5 seconds
+      setTimeout(() => {
+        setSuccess(false);
+        setPosition(null);
+      }, 5000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to join waitlist. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // NOTE: Parallax for the dashboard image was removed – visual now stays fixed while scrolling.
 
@@ -122,6 +193,24 @@ export default function ComingSoonPage() {
 
             {/* Right side */}
             <div className="flex items-center">
+              <button
+                onClick={scrollToWaitlist}
+                className="px-4 py-2 text-sm font-medium rounded-lg transition-all"
+                style={{
+                  backgroundColor: colors.accent,
+                  color: '#0B0E14',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.accentHover;
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.accent;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                Join waitlist
+              </button>
             </div>
           </div>
         </div>
@@ -172,6 +261,38 @@ export default function ComingSoonPage() {
                 Design, collaborate, and sell — with CAD-native versioning, interactive previews, and built-in monetization.
               </p>
 
+              {/* Hero CTA Button */}
+              <button
+                onClick={scrollToWaitlist}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all group"
+                style={{
+                  backgroundColor: colors.accent,
+                  color: '#0B0E14',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.accentHover;
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = `0 4px 12px ${colors.accentGlow}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.accent;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.accentPressed;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.accentHover;
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+              >
+                Join waitlist
+                <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
+                  <ArrowRight size={18} />
+                </span>
+              </button>
             </div>
 
             {/* Right: Visual - Hidden on mobile and tablet, only show on desktop (lg breakpoint) */}
@@ -336,6 +457,178 @@ export default function ComingSoonPage() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* Waitlist Section */}
+      <section id="waitlist" className="py-20 md:py-32" style={{ backgroundColor: colors.bgPrimary }}>
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2
+              className="text-3xl md:text-4xl font-bold mb-4"
+              style={{
+                color: colors.textPrimary,
+                fontWeight: 700,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              Join the waitlist
+            </h2>
+            <p
+              className="text-lg"
+              style={{
+                color: colors.textSecondary,
+                lineHeight: '1.6',
+              }}
+            >
+              Be the first to know when we launch. Get early access to BlueprintCAD.
+            </p>
+          </div>
+
+          {success ? (
+            <div
+              className="p-6 rounded-lg border text-center"
+              style={{
+                borderColor: colors.success,
+                backgroundColor: `${colors.success}10`,
+              }}
+            >
+              <CheckCircle2 size={32} style={{ color: colors.success, margin: '0 auto 12px' }} />
+              <h3
+                className="text-xl font-bold mb-2"
+                style={{ color: colors.success }}
+              >
+                You're on the list!
+              </h3>
+              <p style={{ color: colors.textSecondary }}>
+                {position 
+                  ? `You're #${position} on the waiting list. We'll notify you when we launch!`
+                  : "We'll notify you when we launch!"}
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={showNameField ? handleSubmit : (e) => { e.preventDefault(); handleEmailContinue(); }} className="space-y-4">
+              {/* Email field - always shown */}
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
+                placeholder="Enter your email"
+                className="w-full px-4 py-3 rounded-lg border transition-all"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.03)',
+                  borderColor: error ? '#EF4444' : colors.border,
+                  color: colors.textPrimary,
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = colors.accent;
+                  e.currentTarget.style.outline = 'none';
+                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.accentGlow}`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = error ? '#EF4444' : colors.border;
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                required
+              />
+              
+              {/* Name field - appears after email is entered */}
+              {showNameField && (
+                <div
+                  style={{
+                    animation: 'fadeInSlideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                >
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setError('');
+                    }}
+                    placeholder="Your name (optional)"
+                    className="w-full px-4 py-3 rounded-lg border transition-all"
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.03)',
+                      borderColor: colors.border,
+                      color: colors.textPrimary,
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = colors.accent;
+                      e.currentTarget.style.outline = 'none';
+                      e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.accentGlow}`;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = colors.border;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                    autoFocus
+                  />
+                </div>
+              )}
+              
+              {/* Submit button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-6 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                style={{
+                  backgroundColor: colors.accent,
+                  color: '#0B0E14',
+                  height: '48px',
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = colors.accentHover;
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = `0 4px 12px ${colors.accentGlow}`;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = colors.accent;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                onMouseDown={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = colors.accentPressed;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
+                }}
+                onMouseUp={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = colors.accentHover;
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }
+                }}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Joining...
+                  </>
+                ) : (
+                  <>
+                    {showNameField ? 'Submit' : 'Continue'}
+                    {!showNameField && (
+                      <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
+                        <ArrowRight size={18} />
+                      </span>
+                    )}
+                  </>
+                )}
+              </button>
+              
+              {error && (
+                <p className="text-sm text-center" style={{ color: '#EF4444' }}>
+                  {error}
+                </p>
+              )}
+            </form>
+          )}
         </div>
       </section>
 
