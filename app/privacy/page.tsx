@@ -14,14 +14,14 @@ const colors = {
 export default function PrivacyPage() {
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen flex flex-col"
       style={{ backgroundColor: colors.bgPrimary, color: colors.textPrimary }}
     >
       {/* Header */}
       <header className="border-b" style={{ borderColor: colors.border }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center">
+            <Link href="/coming-soon" className="flex items-center">
               <img
                 src="/bpcube3.png.png"
                 alt="BlueprintCAD"
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
               />
             </Link>
             <Link
-              href="/"
+              href="/coming-soon"
               className="text-sm transition-all hover:opacity-80"
               style={{ color: colors.textSecondary }}
             >
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <h1
           className="text-4xl md:text-5xl font-bold mb-8"
           style={{
@@ -267,7 +267,7 @@ export default function PrivacyPage() {
 
       {/* Footer */}
       <footer
-        className="py-8 border-t mt-16"
+        className="py-8 border-t mt-auto"
         style={{
           borderColor: colors.border,
         }}
