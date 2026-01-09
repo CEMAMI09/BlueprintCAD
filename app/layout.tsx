@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import VerificationBanner from "./components/VerificationBanner";
 import PasswordGate from "./components/PasswordGate";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "BlueprintCAD",
@@ -26,6 +27,7 @@ export default function RootLayout({
             {children}
           </AuthProvider>
         </PasswordGate>
+        <Analytics />
       </body>
     </html>
   );

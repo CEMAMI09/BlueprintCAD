@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Loader2,
   ArrowRight,
+  Gift,
 } from 'lucide-react';
 import Link from 'next/link';
 import GlobeHero from '@/app/components/GlobeHero';
@@ -270,37 +271,53 @@ export default function ComingSoonPage() {
               </p>
 
               {/* Hero CTA Button */}
-              <button
-                onClick={scrollToWaitlist}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all group"
-                style={{
-                  backgroundColor: colors.accent,
-                  color: '#0B0E14',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.accentHover;
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = `0 4px 12px ${colors.accentGlow}`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.accent;
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.accentPressed;
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.accentHover;
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }}
-              >
-                Join waitlist
-                <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
-                  <ArrowRight size={18} />
-                </span>
-              </button>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={scrollToWaitlist}
+                  className="inline-flex items-center gap-2 rounded-lg font-medium transition-all group"
+                  style={{
+                    backgroundColor: colors.accent,
+                    color: '#0B0E14',
+                    padding: '0.75rem 1.25rem',
+                    maxWidth: 'fit-content',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.accentHover;
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = `0 4px 12px ${colors.accentGlow}`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.accent;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.accentPressed;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.accentHover;
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                >
+                  Join waitlist
+                  <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
+                    <ArrowRight size={18} />
+                  </span>
+                </button>
+                
+                {/* Subtle benefit message */}
+                <p
+                  className="text-sm flex items-center gap-1.5"
+                  style={{
+                    color: colors.textSecondary,
+                    opacity: 0.7,
+                  }}
+                >
+                  <Gift size={14} style={{ color: colors.accent, opacity: 0.8 }} />
+                  <span>3 months free + Founders badge</span>
+                </p>
+              </div>
             </div>
 
             {/* Right: Visual - Hidden on mobile and tablet, only show on desktop (lg breakpoint) */}
@@ -483,7 +500,7 @@ export default function ComingSoonPage() {
               Join the waitlist
             </h2>
             <p
-              className="text-lg"
+              className="text-lg mb-4"
               style={{
                 color: colors.textSecondary,
                 lineHeight: '1.6',
@@ -491,6 +508,19 @@ export default function ComingSoonPage() {
             >
               Be the first to know when we launch. Get early access to BlueprintCAD.
             </p>
+            
+            {/* Subtle benefit badge */}
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm mb-8"
+              style={{
+                backgroundColor: `${colors.accent}10`,
+                border: `1px solid ${colors.accent}20`,
+                color: colors.textSecondary,
+              }}
+            >
+              <Gift size={14} style={{ color: colors.accent }} />
+              <span>All waitlist members get <strong style={{ color: colors.textPrimary }}>3 months free</strong> Creator subscription + <strong style={{ color: colors.textPrimary }}>Founders badge</strong></span>
+            </div>
           </div>
 
           {success ? (
