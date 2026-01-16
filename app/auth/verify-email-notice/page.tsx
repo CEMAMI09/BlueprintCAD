@@ -77,7 +77,7 @@ export default function VerifyEmailNotice() {
               </p>
 
               {resendSuccess && (
-                <div className="mb-4 p-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: `${DS.colors.success}22`, color: DS.colors.success }}>
+                <div className="mb-4 p-3 rounded-lg flex items-center gap-2" style={{ backgroundColor: `${DS.colors.accent.success}22`, color: DS.colors.accent.success }}>
                   <CheckCircle size={20} />
                   <span className="text-sm">Verification email sent!</span>
                 </div>

@@ -53,7 +53,7 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
       setHasRegularLogin(true);
       
       // If on /admin, redirect to regular site
-      if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+      if (pathname && (pathname === '/admin' || pathname.startsWith('/admin/'))) {
         router.push('/');
       }
     } else {
@@ -101,7 +101,7 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
   }
 
   // Handle admin routes
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+  if (pathname && (pathname === '/admin' || pathname.startsWith('/admin/'))) {
     // If authenticated as admin, allow access
     if (isAuthenticated && isAdmin) {
       return <>{children}</>;

@@ -96,7 +96,7 @@ export default function VerifyEmail() {
 
             {status === 'success' && (
               <div className="text-center">
-                <CheckCircle size={64} className="mx-auto mb-4" style={{ color: DS.colors.success }} />
+                <CheckCircle size={64} className="mx-auto mb-4" style={{ color: DS.colors.accent.success }} />
                 <h2 className="text-2xl font-bold mb-2" style={{ color: DS.colors.text.primary }}>
                   Email Verified!
                 </h2>
