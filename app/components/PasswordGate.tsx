@@ -29,10 +29,11 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
   const [error, setError] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasRegularLogin, setHasRegularLogin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check if already authenticated
+  const checkAuth = () => {
+    // Check if already authenticated via password gate
     const authStatus = localStorage.getItem('site_access_granted');
     const adminStatus = localStorage.getItem('is_admin');
     if (authStatus === 'true') {
@@ -40,9 +41,44 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
       if (adminStatus === 'true') {
         setIsAdmin(true);
       }
+    } else {
+      setIsAuthenticated(false);
+      setIsAdmin(false);
     }
+    
+    // Check if user has regular login (token/user)
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (token && user) {
+      setHasRegularLogin(true);
+      
+      // If on /admin, redirect to regular site
+      if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+        router.push('/');
+      }
+    } else {
+      setHasRegularLogin(false);
+    }
+    
     setLoading(false);
-  }, []);
+  };
+
+  useEffect(() => {
+    checkAuth();
+    
+    // Listen for user login/logout events
+    const handleUserChange = () => {
+      checkAuth();
+    };
+    
+    window.addEventListener('userChanged', handleUserChange);
+    window.addEventListener('storage', handleUserChange);
+    
+    return () => {
+      window.removeEventListener('userChanged', handleUserChange);
+      window.removeEventListener('storage', handleUserChange);
+    };
+  }, [pathname, router]);
 
   // No redirects needed - we'll render the coming-soon page directly for non-allowed routes
 
@@ -189,6 +225,18 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
         </div>
       );
     }
+  }
+
+  // Check if user has regular login (token/user) - if so, allow access to actual pages
+  if (hasRegularLogin) {
+    // User is logged in - show actual page
+    return <>{children}</>;
+  }
+
+  // Check if user has password gate access
+  if (isAuthenticated) {
+    // User has password access - show actual page
+    return <>{children}</>;
   }
 
   // For all other routes (including /, /coming-soon, /this, /that, etc.), show coming-soon page
