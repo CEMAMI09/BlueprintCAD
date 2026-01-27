@@ -5,11 +5,13 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './frontend/**/*.{js,ts,jsx,tsx,mdx}',
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './landing page/src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       fontFamily: {
         sans: ['Mona Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        heading: ['Montserrat', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['Mona Sans', 'monospace'],
       },
       colors: {

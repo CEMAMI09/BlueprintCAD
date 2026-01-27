@@ -325,42 +325,32 @@ export default function ComingSoonPage() {
               <div
                 className="relative w-full"
                 style={{
-                  // Keep a subtle horizontal offset on desktop only, but no scroll movement
-                  transform: 'translateX(-20px)',
+                  // Push image further to the right on desktop
+                  transform: 'translateX(50px)',
                 }}
               >
-                <div
-                  className="rounded-lg border w-full"
+                <img
+                  src="/thumbnail.svg"
+                  alt="BlueprintCAD Dashboard"
+                  className="w-full h-auto"
                   style={{
-                    borderColor: 'rgba(255,255,255,0.08)',
-                    boxShadow: '0 12px 48px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)',
-                    transform: 'scale(1.2)',
+                    display: 'block',
+                    opacity: 1,
+                    maxWidth: '140%',
+                    height: 'auto',
+                    transform: 'scale(1.45)',
                     transformOrigin: 'top left',
-                    overflow: 'hidden',
-                    maxWidth: '100%',
                   }}
-                >
-                  <img
-                    src="/mock2.png"
-                    alt="BlueprintCAD Dashboard"
-                    className="w-full h-auto"
-                    style={{
-                      display: 'block',
-                      opacity: 1,
-                      maxWidth: '100%',
-                      height: 'auto',
-                    }}
-                    onLoad={() => {
-                      setImageLoaded(true);
-                    }}
-                    onError={(e) => {
-                      console.error('Failed to load dashboard image:', e);
-                      setImageLoaded(true);
-                    }}
-                    loading="eager"
-                    fetchPriority="high"
-                  />
-                </div>
+                  onLoad={() => {
+                    setImageLoaded(true);
+                  }}
+                  onError={(e) => {
+                    console.error('Failed to load dashboard image:', e);
+                    setImageLoaded(true);
+                  }}
+                  loading="eager"
+                  fetchPriority="high"
+                />
               </div>
             </div>
           </div>

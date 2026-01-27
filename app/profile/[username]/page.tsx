@@ -376,7 +376,7 @@ export default function ProfilePage() {
       centerPanel={
         <CenterPanel>
           <PanelContent>
-            <div className="max-w-7xl mx-auto px-6 py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
               {/* Profile Header */}
               <Card padding={profile.banner ? "none" : "lg"} className="mb-6 overflow-hidden">
                 {/* Banner - Only show if banner exists */}
@@ -393,8 +393,8 @@ export default function ProfilePage() {
                   </div>
                 )}
                 
-                <div className={profile.banner ? "px-6" : ""} style={{ paddingTop: profile.banner ? '40px' : '0', paddingBottom: profile.banner ? '16px' : '0' }}>
-                  <div className="flex items-start gap-6">
+                <div className={profile.banner ? "px-4 sm:px-6" : ""} style={{ paddingTop: profile.banner ? '40px' : '0', paddingBottom: profile.banner ? '16px' : '0' }}>
+                  <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6">
                     {/* Avatar */}
                     <div 
                       className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold flex-shrink-0 border-4 relative z-10"
@@ -425,9 +425,9 @@ export default function ProfilePage() {
                     </div>
 
                   {/* Info */}
-                  <div className="flex-1" style={{ paddingTop: '0px' }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
+                  <div className="flex-1 w-full" style={{ paddingTop: '0px' }}>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-2">
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h1 className="text-2xl font-bold flex items-center" style={{ color: DS.colors.text.primary, marginTop: '-8px' }}>
                             {profile.display_name || username}
@@ -441,7 +441,7 @@ export default function ProfilePage() {
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
                         {isOwnProfile ? (
                           <>
                             <Button variant="secondary" icon={<Settings size={18} />} onClick={() => router.push('/settings')}>
@@ -492,7 +492,7 @@ export default function ProfilePage() {
                       </p>
                     )}
 
-                    <div className="flex items-center gap-6 text-sm" style={{ color: DS.colors.text.tertiary }}>
+                    <div className="flex flex-wrap items-center gap-4 text-sm" style={{ color: DS.colors.text.tertiary }}>
                       {profile.location && (
                         <div className="flex items-center gap-1">
                           <MapPin size={16} />
@@ -637,7 +637,12 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Stats */}
-                <div className={`grid gap-4 mt-5 pt-5 border-t ${isOwnProfile && storage ? 'grid-cols-5' : 'grid-cols-4'}`} style={{ borderColor: DS.colors.border.default }}>
+                <div
+                  className={`grid gap-4 mt-5 pt-5 border-t ${
+                    isOwnProfile && storage ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
+                  }`}
+                  style={{ borderColor: DS.colors.border.default }}
+                >
                   <div className="text-center">
                     <div className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
                       {projects.length}
@@ -703,7 +708,7 @@ export default function ProfilePage() {
                         description={isOwnProfile ? "Upload your first project to get started!" : `${username} hasn't uploaded any projects yet.`}
                       />
                     ) : (
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {projects.map((project) => (
                           <Card
                             key={project.id}
@@ -784,7 +789,7 @@ export default function ProfilePage() {
                         description="Projects you star will appear here."
                       />
                     ) : (
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {starredProjects.map((project) => (
                           <Card
                             key={project.id}

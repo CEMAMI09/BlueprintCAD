@@ -259,10 +259,10 @@ export default function MarketplacePage() {
           />
           
           <PanelContent>
-            <div className="py-6 pl-4 md:pl-8 pr-0">
-              <div className="flex gap-4">
+            <div className="py-6 pl-4 md:pl-8 pr-4">
+              <div className="flex flex-col lg:flex-row gap-6">
               {/* Filters Sidebar - INSIDE center panel */}
-              <div className="w-64 flex-shrink-0">
+              <div className="w-full lg:w-64 flex-shrink-0 mb-6 lg:mb-0">
                 <div className="sticky top-0 space-y-6">
                   {/* Search */}
                   <div>
@@ -495,7 +495,7 @@ export default function MarketplacePage() {
 
                 {/* All Listings */}
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredListings.map((listing) => (
                       <Link href={`/project/${listing.id}`} key={listing.id} style={{ textDecoration: 'none' }}>
                         <Card

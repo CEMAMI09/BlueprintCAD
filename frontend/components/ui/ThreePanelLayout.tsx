@@ -6,6 +6,8 @@
 'use client';
 
 import { ReactNode, useState, createContext, useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import { Menu, X, ArrowLeft } from 'lucide-react';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 
 interface LayoutContextType {
@@ -45,6 +47,9 @@ export function ThreePanelLayout({
 }: ThreePanelLayoutProps) {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelVisible, setRightPanelVisible] = useState(!hideRightPanel);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const router = useRouter();
 
   const toggleLeftPanel = () => setLeftPanelCollapsed(!leftPanelCollapsed);
   const toggleRightPanel = () => setRightPanelVisible(!rightPanelVisible);
@@ -62,13 +67,54 @@ export function ThreePanelLayout({
       }}
     >
       <div 
-        className="h-screen w-screen overflow-hidden flex"
+        className="min-h-screen w-screen overflow-hidden flex flex-col md:flex-row"
         style={{ backgroundColor: DS.colors.background.app }}
       >
-        {/* LEFT PANEL - Navigation Sidebar */}
+        {/* MOBILE TOP BAR - Back + Menu (always available on small screens) */}
+        <div
+          className="md:hidden flex items-center justify-between px-4 py-3 border-b sticky top-0 z-30"
+          style={{
+            backgroundColor: DS.colors.background.panel,
+            borderColor: DS.colors.border.subtle,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-md"
+            style={{
+              color: DS.colors.text.primary,
+              backgroundColor: DS.colors.background.elevated,
+            }}
+          >
+            <ArrowLeft size={16} />
+            <span>Back</span>
+          </button>
+          <div className="text-sm font-semibold tracking-wide">
+            BlueprintCAD
+          </div>
+          {!hideLeftPanel ? (
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="inline-flex items-center justify-center w-9 h-9 rounded-md"
+              aria-label="Open navigation menu"
+              style={{
+                backgroundColor: DS.colors.background.elevated,
+                color: DS.colors.text.primary,
+              }}
+            >
+              <Menu size={20} />
+            </button>
+          ) : (
+            <div className="w-9 h-9" />
+          )}
+        </div>
+
+        {/* LEFT PANEL - Navigation Sidebar (desktop) */}
         {!hideLeftPanel && (
           <aside
-            className="flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+            className="hidden md:block flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
             style={{
               width: leftWidth,
               backgroundColor: DS.colors.background.panel,
@@ -87,7 +133,7 @@ export function ThreePanelLayout({
         {/* RIGHT PANEL - Contextual Information */}
         {!hideRightPanel && rightPanelVisible && rightPanel && (
           <aside
-            className="flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+            className="hidden lg:block flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
             style={{
               width: DS.layout.rightPanel.width,
               backgroundColor: DS.colors.background.panel,
@@ -96,6 +142,52 @@ export function ThreePanelLayout({
           >
             {rightPanel}
           </aside>
+        )}
+
+        {/* MOBILE NAV DRAWER - uses leftPanel content for page options */}
+        {mobileNavOpen && !hideLeftPanel && (
+          <div className="fixed inset-0 z-40 md:hidden">
+            {/* Backdrop */}
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setMobileNavOpen(false)}
+              aria-label="Close navigation menu"
+            />
+            {/* Drawer */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-72 max-w-full flex flex-col"
+              style={{
+                backgroundColor: DS.colors.background.panel,
+                borderRight: `1px solid ${DS.colors.border.subtle}`,
+              }}
+            >
+              <div
+                className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0"
+                style={{ borderColor: DS.colors.border.subtle }}
+              >
+                <span className="text-sm font-semibold" style={{ color: DS.colors.text.primary }}>
+                  Page Options
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-md"
+                  aria-label="Close navigation"
+                  style={{
+                    backgroundColor: DS.colors.background.elevated,
+                    color: DS.colors.text.primary,
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {/* Reuse the desktop left panel content for mobile navigation */}
+                {leftPanel}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </LayoutContext.Provider>

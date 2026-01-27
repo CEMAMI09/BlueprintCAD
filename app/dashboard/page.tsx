@@ -206,7 +206,7 @@ export default function DashboardPage() {
             ) : (
               <>
                 {/* Stats Grid */}
-                <div className="grid grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                   {displayStats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
@@ -346,7 +346,7 @@ export default function DashboardPage() {
                       No trending designs
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {(showAllTrending ? trending : trending.slice(0, 6)).map((design) => (
                   <Card 
                         key={design.id} 

@@ -335,7 +335,7 @@ export default function ExplorePage() {
             }
           />
           <PanelContent>
-            <div className="max-w-7xl mx-auto px-6 py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
               {/* Search & Filters */}
               <div className="mb-6">
               <SearchBar
@@ -419,7 +419,7 @@ export default function ExplorePage() {
                       <Users size={20} />
                       Users
                     </h3>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {users.map((user) => (
                         <Card
                           key={user.id}
@@ -492,7 +492,7 @@ export default function ExplorePage() {
                         description={`No designs match "${searchQuery}"`}
                       />
                     ) : viewMode === 'grid' ? (
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {designs.map((design) => {
                             return (
                               <Link href={`/project/${design.id}`} key={design.id} style={{ textDecoration: 'none' }}>
@@ -739,7 +739,7 @@ export default function ExplorePage() {
                 description="Be the first to upload a design to the community!"
               />
             ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {designs.map((design) => {
                     return (
                       <Link href={`/project/${design.id}`} key={design.id} style={{ textDecoration: 'none' }}>

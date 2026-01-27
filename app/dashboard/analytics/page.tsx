@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import {
   ThreePanelLayout,
   CenterPanel,
@@ -11,7 +10,6 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Card } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
-import { apiFetch } from '@/lib/apiClient';
 import {
   LineChart,
   Line,
@@ -55,47 +53,100 @@ interface AnalyticsData {
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
+// Placeholder analytics data for now
+const PLACEHOLDER_ANALYTICS: AnalyticsData = {
+  totalRevenue: 12840,
+  revenueByMonth: [
+    { month: 'Jan', revenue: 820, order_count: 14 },
+    { month: 'Feb', revenue: 1150, order_count: 19 },
+    { month: 'Mar', revenue: 1630, order_count: 24 },
+    { month: 'Apr', revenue: 1425, order_count: 21 },
+    { month: 'May', revenue: 1980, order_count: 28 },
+    { month: 'Jun', revenue: 2215, order_count: 31 },
+    { month: 'Jul', revenue: 2280, order_count: 30 },
+    { month: 'Aug', revenue: 2240, order_count: 29 },
+    { month: 'Sep', revenue: 1875, order_count: 26 },
+    { month: 'Oct', revenue: 920, order_count: 15 },
+    { month: 'Nov', revenue: 650, order_count: 11 },
+    { month: 'Dec', revenue: 575, order_count: 10 },
+  ],
+  totalDownloads: 4860,
+  downloadsByFile: [
+    { id: 1, title: 'Parametric Gearbox v3', download_count: 980, revenue: 6240 },
+    { id: 2, title: 'CNC Router Table', download_count: 640, revenue: 3120 },
+    { id: 3, title: 'Low-Poly Desk Lamp', download_count: 420, revenue: 840 },
+    { id: 4, title: 'Printer Enclosure Kit', download_count: 310, revenue: 930 },
+    { id: 5, title: 'Magnetic Tool Wall', download_count: 260, revenue: 520 },
+  ],
+  totalViews: 38240,
+  viewsByFile: [
+    { id: 1, title: 'Parametric Gearbox v3', view_count: 9200, total_views: 9200 },
+    { id: 2, title: 'CNC Router Table', view_count: 6700, total_views: 6700 },
+    { id: 3, title: 'Low-Poly Desk Lamp', view_count: 5400, total_views: 5400 },
+    { id: 4, title: 'Printer Enclosure Kit', view_count: 4800, total_views: 4800 },
+    { id: 5, title: 'Magnetic Tool Wall', view_count: 3600, total_views: 3600 },
+  ],
+  conversionRate: 4.7,
+  topSellingItems: [
+    {
+      id: 1,
+      title: 'Parametric Gearbox v3',
+      thumbnail_path: '',
+      download_count: 980,
+      revenue: 6240,
+      price: 6.37,
+    },
+    {
+      id: 2,
+      title: 'CNC Router Table',
+      thumbnail_path: '',
+      download_count: 640,
+      revenue: 3120,
+      price: 4.88,
+    },
+    {
+      id: 3,
+      title: 'Printer Enclosure Kit',
+      thumbnail_path: '',
+      download_count: 310,
+      revenue: 930,
+      price: 3.00,
+    },
+  ],
+  trends: {
+    revenue: [
+      { date: 'Day 1', revenue: 220, order_count: 4 },
+      { date: 'Day 2', revenue: 340, order_count: 6 },
+      { date: 'Day 3', revenue: 180, order_count: 3 },
+      { date: 'Day 4', revenue: 390, order_count: 7 },
+      { date: 'Day 5', revenue: 260, order_count: 5 },
+      { date: 'Day 6', revenue: 410, order_count: 8 },
+      { date: 'Day 7', revenue: 320, order_count: 6 },
+    ],
+    downloads: [
+      { date: 'Day 1', download_count: 120 },
+      { date: 'Day 2', download_count: 180 },
+      { date: 'Day 3', download_count: 95 },
+      { date: 'Day 4', download_count: 210 },
+      { date: 'Day 5', download_count: 140 },
+      { date: 'Day 6', download_count: 230 },
+      { date: 'Day 7', download_count: 190 },
+    ],
+    views: [
+      { date: 'Day 1', view_count: 640 },
+      { date: 'Day 2', view_count: 810 },
+      { date: 'Day 3', view_count: 520 },
+      { date: 'Day 4', view_count: 980 },
+      { date: 'Day 5', view_count: 760 },
+      { date: 'Day 6', view_count: 1120 },
+      { date: 'Day 7', view_count: 880 },
+    ],
+  },
+  period: 30,
+};
+
 export default function SellerAnalyticsPage() {
-  const router = useRouter();
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30');
-
-  // Initialize with empty data structure
-  const getEmptyAnalytics = (): AnalyticsData => ({
-    totalRevenue: 0,
-    revenueByMonth: [],
-    totalDownloads: 0,
-    downloadsByFile: [],
-    totalViews: 0,
-    viewsByFile: [],
-    conversionRate: 0,
-    topSellingItems: [],
-    trends: { revenue: [], downloads: [], views: [] },
-    period: parseInt(period),
-  });
-
-  useEffect(() => {
-    fetchAnalytics();
-  }, [period]);
-
-  const fetchAnalytics = async () => {
-    try {
-      setLoading(true);
-      const data = await apiFetch(`/api/analytics/seller?period=${period}`);
-      setAnalytics(data);
-    } catch (error: any) {
-      console.error('Error fetching analytics:', error);
-      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-        router.push('/login');
-      } else {
-        // Set empty analytics data instead of null to prevent "Failed to load" message
-        setAnalytics(getEmptyAnalytics());
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -108,26 +159,7 @@ export default function SellerAnalyticsPage() {
     return new Intl.NumberFormat('en-US').format(num);
   };
 
-  if (loading) {
-    return (
-      <ThreePanelLayout
-        leftPanel={<GlobalNavSidebar />}
-        centerPanel={
-          <CenterPanel>
-            <PanelHeader title="Seller Analytics" />
-            <PanelContent>
-              <div className="flex items-center justify-center h-64">
-                <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-              </div>
-            </PanelContent>
-          </CenterPanel>
-        }
-      />
-    );
-  }
-
-  // Use empty analytics if null
-  const displayAnalytics = analytics || getEmptyAnalytics();
+  const displayAnalytics = PLACEHOLDER_ANALYTICS;
 
   return (
     <ThreePanelLayout

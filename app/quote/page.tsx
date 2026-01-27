@@ -423,7 +423,20 @@ export default function QuotePage() {
           });
         }
         if (data.printability) {
-          setPrintability(data.printability);
+          // Ensure printability arrays contain strings, not objects
+          const sanitizedPrintability = {
+            ...data.printability,
+            issues: (data.printability.issues || []).map((item: any) => 
+              typeof item === 'string' ? item : item?.message || JSON.stringify(item)
+            ),
+            warnings: (data.printability.warnings || []).map((item: any) => 
+              typeof item === 'string' ? item : item?.message || JSON.stringify(item)
+            ),
+            recommendations: (data.printability.recommendations || []).map((item: any) => 
+              typeof item === 'string' ? item : item?.message || JSON.stringify(item)
+            )
+          };
+          setPrintability(sanitizedPrintability);
         }
       }
     } catch (err) {
@@ -510,8 +523,15 @@ export default function QuotePage() {
           manufacturingOptions: manufacturingOptions
         });
       } else {
-        const errorData = await res.json();
-        setError(errorData.error || 'Failed to get estimate');
+        const errorData = await res.json().catch(() => ({}));
+        // Handle different error formats
+        const errorMessage = 
+          typeof errorData === 'string' ? errorData :
+          errorData?.message || 
+          errorData?.error || 
+          (typeof errorData === 'object' && errorData !== null ? JSON.stringify(errorData) : null) ||
+          'Failed to get estimate';
+        setError(errorMessage);
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -760,7 +780,9 @@ export default function QuotePage() {
                                 style={{ backgroundColor: DS.colors.accent.error + '20' }}
                               >
                                 <AlertCircle size={20} style={{ color: DS.colors.accent.error }} />
-                                <span style={{ color: DS.colors.accent.error }}>{error}</span>
+                                <span style={{ color: DS.colors.accent.error }}>
+                                  {error}
+                                </span>
                               </div>
                             )}
 
@@ -1044,7 +1066,7 @@ export default function QuotePage() {
                         )}
 
                         {/* Recommendations */}
-                        {aiEstimate && aiEstimate.recommendations.length > 0 && (
+                            {aiEstimate && aiEstimate.recommendations.length > 0 && (
                           <Card padding="lg">
                             <div className="flex items-start gap-3">
                               <Info size={20} style={{ color: DS.colors.primary.blue, flexShrink: 0, marginTop: '2px' }} />
