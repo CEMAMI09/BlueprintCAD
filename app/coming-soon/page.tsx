@@ -12,7 +12,7 @@ import {
   Gift,
 } from 'lucide-react';
 import Link from 'next/link';
-import GlobeHero from '@/app/components/GlobeHero';
+import HeadphonesViewer from '@/app/components/HeadphonesViewer';
 import { apiFetch } from '@/lib/apiClient';
 
 // Design system colors
@@ -32,7 +32,6 @@ export default function ComingSoonPage() {
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [screenSize, setScreenSize] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const headerRef = useRef<HTMLDivElement>(null);
   
   // Waitlist form state
@@ -53,7 +52,7 @@ export default function ComingSoonPage() {
     }
   };
 
-  // Check for reduced motion preference and screen size
+  // Check for reduced motion preference
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
@@ -61,24 +60,8 @@ export default function ComingSoonPage() {
     const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
     mediaQuery.addEventListener('change', handleChange);
     
-    // Check screen size: mobile < 768px, tablet 768-1024px, desktop > 1024px
-    const checkScreenSize = () => {
-      const width = window.innerWidth;
-      if (width < 768) {
-        setScreenSize('mobile');
-      } else if (width < 1024) {
-        setScreenSize('tablet');
-      } else {
-        setScreenSize('desktop');
-      }
-    };
-    
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
-      window.removeEventListener('resize', checkScreenSize);
     };
   }, []);
 
@@ -163,25 +146,20 @@ export default function ComingSoonPage() {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen overflow-x-hidden"
       style={{ backgroundColor: colors.bgPrimary, color: colors.textPrimary }}
     >
       {/* Header */}
       <header
         ref={headerRef}
-        className={`transition-all duration-300 ${
-          isHeaderSticky ? 'sticky top-0 z-50' : 'relative'
-        }`}
+        className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-md border-b`}
         style={{
-          backgroundColor: isHeaderSticky
-            ? 'rgba(11, 14, 20, 0.8)'
-            : 'transparent',
-          backdropFilter: isHeaderSticky ? 'blur(12px)' : 'none',
-          borderBottom: isHeaderSticky ? `1px solid ${colors.border}` : 'none',
+          backgroundColor: isHeaderSticky ? 'rgba(11, 14, 20, 0.8)' : 'rgba(11, 14, 20, 0.95)',
+          borderColor: colors.border,
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 md:h-20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-20">
+          <div className="flex items-center justify-between h-20">
             {/* Logo + wordmark */}
             <Link href="/" className="flex items-center gap-3">
               <img
@@ -191,7 +169,7 @@ export default function ComingSoonPage() {
                 style={{ height: '40px' }}
               />
               <span
-                className="text-base md:text-lg font-semibold tracking-tight"
+                className="text-base md:text-lg font-semibold tracking-tight font-heading"
                 style={{
                   color: colors.textPrimary,
                 }}
@@ -226,11 +204,11 @@ export default function ComingSoonPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-24 md:pt-32 pb-16 md:pb-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`grid gap-12 lg:gap-16 items-center ${screenSize === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
+      <section className="pt-12 pb-12 lg:pt-24 lg:pb-24 overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-6 lg:px-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Text */}
-            <div className="lg:pr-8 -ml-6 sm:-ml-10 md:-ml-16 lg:-ml-20">
+            <div className="lg:pr-8">
               {/* Eyebrow pill */}
               <div
                 className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-6"
@@ -247,7 +225,7 @@ export default function ComingSoonPage() {
 
               {/* Main headline */}
               <h1
-                className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
+                className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight font-heading"
                 style={{
                   color: colors.textPrimary,
                   fontWeight: 700,
@@ -260,7 +238,7 @@ export default function ComingSoonPage() {
 
               {/* Subheadline */}
               <p
-                className="text-lg md:text-xl mb-8 leading-relaxed"
+                className="text-base md:text-lg lg:text-xl mb-8 leading-relaxed"
                 style={{
                   color: colors.textSecondary,
                   lineHeight: '1.5',
@@ -321,24 +299,25 @@ export default function ComingSoonPage() {
             </div>
 
             {/* Right: Visual - Hidden on mobile and tablet, only show on desktop (lg breakpoint) */}
-            <div className="hidden lg:block relative w-full">
+            <div className="hidden lg:block relative w-full" style={{ minHeight: '600px', overflow: 'visible' }}>
               <div
-                className="relative w-full"
+                className="relative"
                 style={{
-                  // Push image further to the right on desktop and move it up slightly
-                  transform: 'translateX(5px) translateY(-60px)',
+                  transform: 'translateX(-15px) translateY(40px)',
+                  width: '200%',
+                  height: 'auto',
                 }}
               >
                 <img
-                  src="/thumbnail.svg"
+                  src="/thumbnail3.svg"
                   alt="BlueprintCAD Dashboard"
-                  className="w-full h-auto"
+                  className="h-auto"
                   style={{
                     display: 'block',
                     opacity: 1,
-                    maxWidth: '140%',
+                    width: '50%',
                     height: 'auto',
-                    transform: 'scale(1.9)',
+                    transform: 'scale(2.0)',
                     transformOrigin: 'top left',
                   }}
                   onLoad={() => {
@@ -358,20 +337,20 @@ export default function ComingSoonPage() {
       </section>
 
       {/* Why this exists */}
-      <section id="why-section" className="pt-20 md:pt-24 pb-0 md:pb-0">
-        {/* Top line - already aligned with globe box top */}
+      <section id="why-section" className="pt-12 pb-12 lg:pt-24 lg:pb-24">
+        {/* Top line */}
         <div
-          className="border-t mt-8 md:mt-14 lg:mt-16"
+          className="border-t mt-8 lg:mt-16"
           style={{ borderColor: colors.border }}
         />
 
         {/* Content band */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-start lg:items-stretch pt-8 md:pt-14 lg:pt-0 pb-8 md:pb-12 lg:pb-0">
+        <div className="max-w-7xl mx-auto px-6 lg:px-20">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.9fr)] gap-8 lg:gap-16 items-center pt-8 lg:pt-12 pb-8 lg:pb-12">
             {/* Left: Text */}
-            <div className="flex flex-col lg:justify-center lg:h-full pt-3 md:pt-7 lg:pt-0 pb-0">
+            <div className="flex flex-col lg:justify-center lg:h-full">
               <h2
-                className="text-2xl md:text-3xl font-bold mb-6 md:mb-8"
+                className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 lg:mb-8 font-heading"
                 style={{
                   color: colors.textPrimary,
                   fontWeight: 700,
@@ -403,9 +382,11 @@ export default function ComingSoonPage() {
               </div>
             </div>
           
-            {/* Right: Globe - hidden on mobile, visible on desktop */}
-            <div className="hidden lg:flex items-center justify-center w-full h-full min-h-[600px]">
-              <GlobeHero />
+            {/* Right: 3D Headphones Viewer - hidden on mobile, visible on desktop */}
+            <div className="hidden lg:flex items-center justify-start w-full h-full overflow-visible">
+              <div className="w-full max-w-[700px] ml-auto">
+                <HeadphonesViewer />
+              </div>
             </div>
           </div>
         </div>
@@ -420,8 +401,8 @@ export default function ComingSoonPage() {
       </section>
 
       {/* Core Pillars */}
-      <section className="py-20 md:py-24 mt-24 md:mt-32" style={{ backgroundColor: colors.bgPrimary }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 lg:py-24 mt-12 lg:mt-32" style={{ backgroundColor: colors.bgPrimary }}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {pillars.map((pillar, index) => {
               const Icon = pillar.icon;
@@ -452,7 +433,7 @@ export default function ComingSoonPage() {
                     />
                   </div>
                   <h3
-                    className="text-xl font-bold mb-3"
+                    className="text-xl font-bold mb-3 font-heading"
                     style={{
                       color: colors.textPrimary,
                       fontWeight: 700,
@@ -476,11 +457,11 @@ export default function ComingSoonPage() {
       </section>
 
       {/* Waitlist Section */}
-      <section id="waitlist" className="py-20 md:py-32" style={{ backgroundColor: colors.bgPrimary }}>
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="waitlist" className="py-12 lg:py-24" style={{ backgroundColor: colors.bgPrimary }}>
+        <div className="max-w-2xl mx-auto px-6 lg:px-20">
           <div className="text-center mb-12">
             <h2
-              className="text-3xl md:text-4xl font-bold mb-4"
+              className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 font-heading"
               style={{
                 color: colors.textPrimary,
                 fontWeight: 700,
@@ -490,7 +471,7 @@ export default function ComingSoonPage() {
               Join the waitlist
             </h2>
             <p
-              className="text-lg mb-4"
+              className="text-base md:text-lg mb-4"
               style={{
                 color: colors.textSecondary,
                 lineHeight: '1.6',
@@ -513,29 +494,30 @@ export default function ComingSoonPage() {
             </div>
           </div>
 
-          {success ? (
-            <div
-              className="p-6 rounded-lg border text-center"
-              style={{
-                borderColor: colors.success,
-                backgroundColor: `${colors.success}10`,
-              }}
-            >
-              <CheckCircle2 size={32} style={{ color: colors.success, margin: '0 auto 12px' }} />
-              <h3
-                className="text-xl font-bold mb-2"
-                style={{ color: colors.success }}
+          <div className="min-h-[200px] flex items-center justify-center">
+            {success ? (
+              <div
+                className="p-6 rounded-lg border text-center w-full transition-all duration-300"
+                style={{
+                  borderColor: colors.success,
+                  backgroundColor: `${colors.success}10`,
+                }}
               >
-                You're on the list!
-              </h3>
-              <p style={{ color: colors.textSecondary }}>
-                {position 
-                  ? `You're #${position} on the waiting list. We'll notify you when we launch!`
-                  : "We'll notify you when we launch!"}
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={showNameField ? handleSubmit : (e) => { e.preventDefault(); handleEmailContinue(); }} className="space-y-4">
+                <CheckCircle2 size={32} style={{ color: colors.success, margin: '0 auto 12px' }} />
+                <h3
+                  className="text-xl font-bold mb-2 font-heading"
+                  style={{ color: colors.success }}
+                >
+                  You're on the list!
+                </h3>
+                <p style={{ color: colors.textSecondary }}>
+                  {position 
+                    ? `You're #${position} on the waiting list. We'll notify you when we launch!`
+                    : "We'll notify you when we launch!"}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={showNameField ? handleSubmit : (e) => { e.preventDefault(); handleEmailContinue(); }} className="space-y-4 w-full transition-all duration-300">
               {/* Email field - always shown */}
               <input
                 type="email"
@@ -650,13 +632,14 @@ export default function ComingSoonPage() {
                 )}
               </button>
               
-              {error && (
-                <p className="text-sm text-center" style={{ color: '#EF4444' }}>
-                  {error}
-                </p>
-              )}
-            </form>
-          )}
+                {error && (
+                  <p className="text-sm text-center" style={{ color: '#EF4444' }}>
+                    {error}
+                  </p>
+                )}
+              </form>
+            )}
+          </div>
         </div>
       </section>
 
@@ -667,7 +650,7 @@ export default function ComingSoonPage() {
           borderColor: colors.border,
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 text-sm">
             <p style={{ color: colors.textSecondary }}>
               © {new Date().getFullYear()} BlueprintCAD

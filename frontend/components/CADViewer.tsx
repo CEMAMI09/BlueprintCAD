@@ -122,8 +122,13 @@ export default function CADViewer({
         camera.position.set(2, 2, 2);
 
         renderer = new WebGLRenderer({ antialias: true });
-        renderer.setSize(width, height);
+        renderer.setSize(width, height, false);
         renderer.outputEncoding = sRGBEncoding;
+        
+        // Ensure canvas fits container exactly
+        renderer.domElement.style.width = '100%';
+        renderer.domElement.style.height = '100%';
+        renderer.domElement.style.display = 'block';
         
         if (seq !== seqRef.current) return;
         container.appendChild(renderer.domElement);
@@ -149,7 +154,7 @@ export default function CADViewer({
         controls.enableZoom = true;
         controls.enablePan = true;
         controls.autoRotate = autoRotate;
-        controls.autoRotateSpeed = 2;
+        controls.autoRotateSpeed = 0.5;
         
         // Mobile touch improvements
         controls.touches = {
@@ -289,10 +294,13 @@ export default function CADViewer({
         const onResize = () => {
           if (!containerRef.current || !renderer || !camera) return;
           const container = containerRef.current;
-          const w = container.clientWidth || container.offsetWidth || 800;
-          const h = container.clientHeight || container.offsetHeight || 600;
+          const rect = container.getBoundingClientRect();
+          const w = rect.width || container.clientWidth || 800;
+          const h = rect.height || container.clientHeight || 600;
           if (w > 0 && h > 0) {
-            renderer.setSize(w, h);
+            renderer.setSize(w, h, false);
+            renderer.domElement.style.width = '100%';
+            renderer.domElement.style.height = '100%';
             camera.aspect = w / h;
             camera.updateProjectionMatrix();
           }
@@ -577,7 +585,7 @@ export default function CADViewer({
   }
 
   return (
-    <div className={`rounded-xl border border-gray-800 bg-gray-900 ${className}`}>
+    <div className={`rounded-xl border-2 border-gray-800 bg-gray-900 overflow-hidden ${className}`} style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)' }}>
       {showControls && (
         <div className="px-4 pt-4 pb-2 flex items-center justify-between border-b border-gray-800">
           <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -595,8 +603,8 @@ export default function CADViewer({
         </div>
       )}
       
-      <div className="relative">
-        <div ref={containerRef} className={`${height} w-full`} />
+      <div className="relative overflow-hidden rounded-b-xl">
+        <div ref={containerRef} className={`${height} w-full`} style={{ boxSizing: 'border-box' }} />
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-3">
