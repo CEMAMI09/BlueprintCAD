@@ -152,7 +152,7 @@ export default function ComingSoonPage() {
       {/* Header */}
       <header
         ref={headerRef}
-        className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-md border-b`}
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-md border-b"
         style={{
           backgroundColor: isHeaderSticky ? 'rgba(11, 14, 20, 0.8)' : 'rgba(11, 14, 20, 0.95)',
           borderColor: colors.border,
@@ -160,22 +160,13 @@ export default function ComingSoonPage() {
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="flex items-center justify-between h-20">
-            {/* Logo + wordmark */}
-            <Link href="/" className="flex items-center gap-3">
+            {/* Logo */}
+            <Link href="/" className="flex items-center">
               <img
-                src="/bpcube3.png.png"
+                src="/BlueprintCAD (3).svg"
                 alt="BlueprintCAD"
-                className="w-auto"
-                style={{ height: '40px' }}
+                className="h-12 md:h-14 w-auto"
               />
-              <span
-                className="text-base md:text-lg font-semibold tracking-tight font-heading"
-                style={{
-                  color: colors.textPrimary,
-                }}
-              >
-                BlueprintCAD
-              </span>
             </Link>
 
             {/* Right side */}
@@ -203,6 +194,7 @@ export default function ComingSoonPage() {
         </div>
       </header>
 
+      <main className="pt-20">
       {/* Hero Section */}
       <section className="pt-12 pb-12 lg:pt-24 lg:pb-24 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
@@ -686,6 +678,7 @@ export default function ComingSoonPage() {
           </div>
         </div>
       </footer>
+      </main>
     </div>
   );
 }
