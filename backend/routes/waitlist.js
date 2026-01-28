@@ -7,26 +7,35 @@ const { sendMassEmail } = require("../lib/email");
 
 // POST /api/waitlist - Add email to waiting list
 router.post("/", async (req, res) => {
+  const startTime = Date.now();
+  console.log('[Waitlist] Received signup request:', { email: req.body?.email, name: req.body?.name });
+  
   try {
     const { email, name, source } = req.body || {};
 
     if (!email) {
+      console.log('[Waitlist] Missing email');
       return res.status(400).json({ error: "Email is required" });
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      console.log('[Waitlist] Invalid email format:', email);
       return res.status(400).json({ error: "Invalid email format" });
     }
+
+    const normalizedEmail = email.toLowerCase();
+    console.log('[Waitlist] Checking for existing email:', normalizedEmail);
 
     // Check if email already exists
     const existing = await getOne(
       "SELECT id, email FROM waiting_list WHERE email = $1",
-      [email.toLowerCase()]
+      [normalizedEmail]
     );
 
     if (existing) {
+      console.log('[Waitlist] Email already exists:', normalizedEmail);
       // Get their position
       const position = await getOne(
         "SELECT COUNT(*)::int as count FROM waiting_list WHERE created_at < $1",
@@ -40,28 +49,68 @@ router.post("/", async (req, res) => {
     }
 
     // Get current position (count of people before them)
+    console.log('[Waitlist] Getting current position count');
     const positionResult = await getOne(
       "SELECT COUNT(*)::int as count FROM waiting_list",
       []
     );
     const position = (positionResult?.count || 0) + 1;
+    console.log('[Waitlist] Calculated position:', position);
 
     // Insert into waiting list
-    const result = await execute(
-      `INSERT INTO waiting_list (email, name, source, position, created_at)
-       VALUES ($1, $2, $3, $4, NOW())
-       RETURNING id, email, position, created_at`,
-      [email.toLowerCase(), name || null, source || "website", position]
-    );
+    console.log('[Waitlist] Inserting new entry:', { email: normalizedEmail, name, source, position });
+    let result;
+    try {
+      result = await execute(
+        `INSERT INTO waiting_list (email, name, source, position, created_at)
+         VALUES ($1, $2, $3, $4, NOW())
+         RETURNING id, email, position, created_at`,
+        [normalizedEmail, name || null, source || "website", position]
+      );
 
-    return res.status(201).json({
-      message: "Successfully added to waiting list!",
-      position: result.rows[0].position,
-      email: result.rows[0].email,
-    });
+      console.log('[Waitlist] Insert result:', { 
+        rowCount: result?.rowCount, 
+        hasRows: !!(result?.rows && result.rows.length > 0),
+        duration: Date.now() - startTime 
+      });
+
+      // Ensure we have the result before sending response
+      if (!result || !result.rows || result.rows.length === 0) {
+        console.error("[Waitlist] Insert returned no rows - database insert may have failed");
+        return res.status(500).json({ error: "Failed to add to waiting list" });
+      }
+
+      console.log('[Waitlist] Successfully inserted, sending response');
+      const response = {
+        message: "Successfully added to waiting list!",
+        position: result.rows[0].position,
+        email: result.rows[0].email,
+      };
+      
+      // Send response only after successful insert
+      res.status(201).json(response);
+      console.log('[Waitlist] Response sent successfully, total duration:', Date.now() - startTime, 'ms');
+      return;
+    } catch (dbError) {
+      console.error("[Waitlist] Database error during insert:", dbError);
+      console.error("[Waitlist] Error details:", {
+        message: dbError.message,
+        code: dbError.code,
+        detail: dbError.detail,
+        constraint: dbError.constraint,
+        stack: dbError.stack?.split('\n').slice(0, 5).join('\n'),
+      });
+      throw dbError; // Re-throw to be caught by outer catch
+    }
   } catch (error) {
-    console.error("Waitlist signup error:", error);
-    return res.status(500).json({ error: "Failed to add to waiting list" });
+    console.error("[Waitlist] Signup error:", error);
+    console.error("[Waitlist] Error stack:", error.stack?.split('\n').slice(0, 10).join('\n'));
+    const duration = Date.now() - startTime;
+    console.error("[Waitlist] Request failed after", duration, "ms");
+    return res.status(500).json({ 
+      error: "Failed to add to waiting list",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
