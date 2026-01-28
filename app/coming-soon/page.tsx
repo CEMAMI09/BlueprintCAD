@@ -230,7 +230,7 @@ export default function ComingSoonPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`grid gap-12 lg:gap-16 items-center ${screenSize === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
             {/* Left: Text */}
-            <div className="lg:pr-8">
+            <div className="lg:pr-8 -ml-6 sm:-ml-10 md:-ml-16 lg:-ml-20">
               {/* Eyebrow pill */}
               <div
                 className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-6"
@@ -325,8 +325,8 @@ export default function ComingSoonPage() {
               <div
                 className="relative w-full"
                 style={{
-                  // Push image further to the right on desktop
-                  transform: 'translateX(50px)',
+                  // Push image further to the right on desktop and move it up slightly
+                  transform: 'translateX(5px) translateY(-60px)',
                 }}
               >
                 <img
@@ -338,7 +338,7 @@ export default function ComingSoonPage() {
                     opacity: 1,
                     maxWidth: '140%',
                     height: 'auto',
-                    transform: 'scale(1.45)',
+                    transform: 'scale(1.9)',
                     transformOrigin: 'top left',
                   }}
                   onLoad={() => {
