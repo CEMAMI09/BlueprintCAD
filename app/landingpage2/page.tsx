@@ -2,7 +2,6 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 
 // Dynamically import components to avoid SSR issues
 const Navbar = dynamic(() => import('./components/Navbar'), { ssr: false });
@@ -21,13 +20,12 @@ export default function LandingPage2() {
       <Navbar />
       <Hero />
       {/* Full-width gradient strip below hero */}
-      <section className="w-full" style={{ position: 'relative', height: '320px' }}>
-        <Image
-          src="/gradiant.png"
+      <section className="w-full relative h-[320px]">
+        {/* Use img for SVG to avoid Next Image optimizer (no gradiant.png in public, only gradiant.svg) */}
+        <img
+          src="/gradiant.svg"
           alt="BlueprintCAD gradient background"
-          fill
-          priority={false}
-          style={{ objectFit: 'cover' }}
+          className="w-full h-full object-cover absolute inset-0"
         />
       </section>
       <LogoGrid />

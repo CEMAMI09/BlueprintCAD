@@ -1,0 +1,425 @@
+Date : 2026-01-28 22:58:31
+Directory : c:\Users\codye\forge
+Total : 293 files,  63786 codes, 3387 comments, 5990 blanks, all 73163 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| TypeScript JSX     |        122 |     33,608 |      1,128 |      2,721 |     37,457 |
+| JavaScript         |        125 |     13,385 |      1,973 |      2,219 |     17,577 |
+| JSON               |          3 |     10,709 |          0 |          3 |     10,712 |
+| PostCSS            |          4 |      2,095 |        213 |        508 |      2,816 |
+| Diff               |          1 |      1,671 |          0 |          1 |      1,672 |
+| Markdown           |          9 |      1,466 |          0 |        430 |      1,896 |
+| TypeScript         |          6 |        428 |         25 |         53 |        506 |
+| MS SQL             |          9 |        344 |         48 |         54 |        446 |
+| JSON with Comments |          1 |         60 |          0 |          1 |         61 |
+| XML                |         13 |         20 |          0 |          0 |         20 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++-------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                          | files      | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                             |        293 |     63,786 |      3,387 |      5,990 |     73,163 |
+| . (Files)                                                                     |         18 |     12,373 |         29 |        454 |     12,856 |
+| app                                                                           |         92 |     26,858 |        881 |      2,108 |     29,847 |
+| app (Files)                                                                   |          6 |        228 |         19 |         33 |        280 |
+| app\[username]                                                                |          1 |        806 |         13 |         40 |        859 |
+| app\[username]\store                                                          |          1 |        806 |         13 |         40 |        859 |
+| app\admin                                                                     |          2 |        487 |         12 |         43 |        542 |
+| app\admin (Files)                                                             |          1 |         95 |          3 |          8 |        106 |
+| app\admin\email-campaigns                                                     |          1 |        392 |          9 |         35 |        436 |
+| app\analytics                                                                 |          1 |        384 |          3 |         25 |        412 |
+| app\api                                                                       |          1 |         62 |          0 |         13 |         75 |
+| app\api\auth                                                                  |          1 |         62 |          0 |         13 |         75 |
+| app\api\auth\[...nextauth]                                                    |          1 |         62 |          0 |         13 |         75 |
+| app\auth                                                                      |          4 |        526 |         17 |         76 |        619 |
+| app\auth\callback                                                             |          1 |         53 |          5 |         11 |         69 |
+| app\auth\setup-password                                                       |          1 |        236 |         10 |         31 |        277 |
+| app\auth\verify-email                                                         |          1 |        135 |          1 |         17 |        153 |
+| app\auth\verify-email-notice                                                  |          1 |        102 |          1 |         17 |        120 |
+| app\buy                                                                       |          1 |        490 |          9 |         38 |        537 |
+| app\checkout                                                                  |          2 |        606 |         15 |         63 |        684 |
+| app\checkout (Files)                                                          |          1 |        482 |         10 |         49 |        541 |
+| app\checkout\success                                                          |          1 |        124 |          5 |         14 |        143 |
+| app\coming-soon                                                               |          1 |        615 |         30 |         40 |        685 |
+| app\components                                                                |         11 |      1,511 |         73 |        217 |      1,801 |
+| app\contact                                                                   |          1 |        174 |          5 |         11 |        190 |
+| app\context                                                                   |          2 |        244 |         14 |         40 |        298 |
+| app\dashboard                                                                 |          2 |        977 |         28 |         43 |      1,048 |
+| app\dashboard (Files)                                                         |          1 |        505 |         20 |         23 |        548 |
+| app\dashboard\analytics                                                       |          1 |        472 |          8 |         20 |        500 |
+| app\explore                                                                   |          2 |        914 |         31 |         24 |        969 |
+| app\folders                                                                   |          2 |      1,940 |         47 |        105 |      2,092 |
+| app\folders (Files)                                                           |          1 |        349 |         17 |         25 |        391 |
+| app\folders\[id]                                                              |          1 |      1,591 |         30 |         80 |      1,701 |
+| app\forgot-password                                                           |          1 |        141 |          4 |         14 |        159 |
+| app\forgot-username                                                           |          1 |        141 |          4 |         14 |        159 |
+| app\forum                                                                     |          2 |      1,310 |         35 |         78 |      1,423 |
+| app\forum (Files)                                                             |          1 |        824 |         30 |         49 |        903 |
+| app\forum\[id]                                                                |          1 |        486 |          5 |         29 |        520 |
+| app\issues                                                                    |          1 |        570 |         11 |         59 |        640 |
+| app\landingpage                                                               |          3 |        113 |         12 |         15 |        140 |
+| app\landingpage2                                                              |         13 |        986 |         64 |        137 |      1,187 |
+| app\landingpage2 (Files)                                                      |          3 |        304 |         21 |         48 |        373 |
+| app\landingpage2\components                                                   |         10 |        682 |         43 |         89 |        814 |
+| app\login                                                                     |          1 |        250 |          8 |         27 |        285 |
+| app\marketplace                                                               |          2 |        847 |         28 |         26 |        901 |
+| app\messages                                                                  |          2 |      1,225 |         22 |         59 |      1,306 |
+| app\notifications                                                             |          1 |        383 |         25 |         40 |        448 |
+| app\order                                                                     |          2 |        525 |          4 |         40 |        569 |
+| app\order (Files)                                                             |          1 |        415 |          4 |         29 |        448 |
+| app\order\thank-you                                                           |          1 |        110 |          0 |         11 |        121 |
+| app\orders                                                                    |          1 |        393 |          7 |         26 |        426 |
+| app\privacy                                                                   |          1 |        292 |          4 |         19 |        315 |
+| app\profile                                                                   |          4 |      2,093 |         59 |        142 |      2,294 |
+| app\profile\[username]                                                        |          4 |      2,093 |         59 |        142 |      2,294 |
+| app\profile\[username] (Files)                                                |          2 |      1,707 |         59 |        106 |      1,872 |
+| app\profile\[username]\followers                                              |          1 |        193 |          0 |         18 |        211 |
+| app\profile\[username]\following                                              |          1 |        193 |          0 |         18 |        211 |
+| app\project                                                                   |          2 |        983 |         43 |         51 |      1,077 |
+| app\project\[id]                                                              |          2 |        983 |         43 |         51 |      1,077 |
+| app\providers                                                                 |          1 |          6 |          0 |          3 |          9 |
+| app\purchase                                                                  |          1 |        582 |         13 |         34 |        629 |
+| app\quote                                                                     |          2 |      1,886 |         97 |        189 |      2,172 |
+| app\register                                                                  |          1 |        277 |          9 |         24 |        310 |
+| app\reset-password                                                            |          1 |        214 |          5 |         23 |        242 |
+| app\settings                                                                  |          2 |      1,150 |         29 |         71 |      1,250 |
+| app\settings (Files)                                                          |          1 |        925 |         26 |         47 |        998 |
+| app\settings\account                                                          |          1 |        225 |          3 |         24 |        252 |
+| app\share                                                                     |          1 |        337 |         17 |         28 |        382 |
+| app\share\[token]                                                             |          1 |        337 |         17 |         28 |        382 |
+| app\storefront                                                                |          1 |        434 |          0 |         23 |        457 |
+| app\subscription                                                              |          2 |        522 |          8 |         44 |        574 |
+| app\subscription (Files)                                                      |          1 |        381 |          6 |         28 |        415 |
+| app\subscription\success                                                      |          1 |        141 |          2 |         16 |        159 |
+| app\support                                                                   |          1 |        191 |          8 |         11 |        210 |
+| app\transfer-requests                                                         |          1 |         30 |          0 |          4 |         34 |
+| app\upload                                                                    |          1 |        889 |         47 |         80 |      1,016 |
+| app\verify-email                                                              |          1 |        124 |          2 |         16 |        142 |
+| backend                                                                       |         86 |      9,282 |      1,340 |      1,594 |     12,216 |
+| backend (Files)                                                               |          2 |        138 |         15 |         23 |        176 |
+| backend\lib                                                                   |         27 |      4,258 |        863 |        699 |      5,820 |
+| backend\lib (Files)                                                           |         26 |      4,125 |        853 |        684 |      5,662 |
+| backend\lib\ui                                                                |          1 |        133 |         10 |         15 |        158 |
+| backend\migrations                                                            |          2 |         10 |          6 |          8 |         24 |
+| backend\routes                                                                |         17 |      2,901 |        285 |        485 |      3,671 |
+| backend\scripts                                                               |         38 |      1,975 |        171 |        379 |      2,525 |
+| components                                                                    |          1 |        245 |          7 |         23 |        275 |
+| db                                                                            |         21 |      1,434 |        106 |        209 |      1,749 |
+| db (Files)                                                                    |          1 |        254 |          7 |          7 |        268 |
+| db\migrations                                                                 |         20 |      1,180 |         99 |        202 |      1,481 |
+| frontend                                                                      |         36 |      7,321 |        290 |        699 |      8,310 |
+| frontend\components                                                           |         34 |      7,201 |        290 |        689 |      8,180 |
+| frontend\components (Files)                                                   |         31 |      6,329 |        247 |        619 |      7,195 |
+| frontend\components\ui                                                        |          3 |        872 |         43 |         70 |        985 |
+| frontend\types                                                                |          2 |        120 |          0 |         10 |        130 |
+| lib                                                                           |         22 |      2,933 |        561 |        460 |      3,954 |
+| lib (Files)                                                                   |         21 |      2,800 |        551 |        445 |      3,796 |
+| lib\ui                                                                        |          1 |        133 |         10 |         15 |        158 |
+| patches                                                                       |          1 |      1,671 |          0 |          1 |      1,672 |
+| public                                                                        |         15 |      1,647 |        168 |        436 |      2,251 |
+| scripts                                                                       |          1 |         22 |          5 |          6 |         33 |
++-------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                      | language           | code       | comment    | blank      | total      |
++-------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| c:\Users\codye\forge\ARCHITECTURE.md                                          | Markdown           |        418 |          0 |        100 |        518 |
+| c:\Users\codye\forge\ARCHITECTURE_SUMMARY.md                                  | Markdown           |        178 |          0 |         54 |        232 |
+| c:\Users\codye\forge\EMAIL_SETUP_INSTRUCTIONS.md                              | Markdown           |         93 |          0 |         23 |        116 |
+| c:\Users\codye\forge\MASS_EMAIL_GUIDE.md                                      | Markdown           |        238 |          0 |         71 |        309 |
+| c:\Users\codye\forge\README.md                                                | Markdown           |         29 |          0 |          7 |         36 |
+| c:\Users\codye\forge\SENDGRID_SETUP.md                                        | Markdown           |         38 |          0 |         17 |         55 |
+| c:\Users\codye\forge\SMTP_TROUBLESHOOTING.md                                  | Markdown           |        101 |          0 |         46 |        147 |
+| c:\Users\codye\forge\STOREFRONT_IMPLEMENTATION_STATUS.md                      | Markdown           |        123 |          0 |         24 |        147 |
+| c:\Users\codye\forge\WAITLIST_SETUP.md                                        | Markdown           |        248 |          0 |         88 |        336 |
+| c:\Users\codye\forge\app\[username]\store\page.tsx                            | TypeScript JSX     |        806 |         13 |         40 |        859 |
+| c:\Users\codye\forge\app\admin\email-campaigns\page.tsx                       | TypeScript JSX     |        392 |          9 |         35 |        436 |
+| c:\Users\codye\forge\app\admin\page.tsx                                       | TypeScript JSX     |         95 |          3 |          8 |        106 |
+| c:\Users\codye\forge\app\analytics\page.tsx                                   | TypeScript JSX     |        384 |          3 |         25 |        412 |
+| c:\Users\codye\forge\app\api\auth\[...nextauth]\route.js                      | JavaScript         |         62 |          0 |         13 |         75 |
+| c:\Users\codye\forge\app\auth\callback\page.tsx                               | TypeScript JSX     |         53 |          5 |         11 |         69 |
+| c:\Users\codye\forge\app\auth\setup-password\page.tsx                         | TypeScript JSX     |        236 |         10 |         31 |        277 |
+| c:\Users\codye\forge\app\auth\verify-email-notice\page.tsx                    | TypeScript JSX     |        102 |          1 |         17 |        120 |
+| c:\Users\codye\forge\app\auth\verify-email\page.tsx                           | TypeScript JSX     |        135 |          1 |         17 |        153 |
+| c:\Users\codye\forge\app\buy\page.tsx                                         | TypeScript JSX     |        490 |          9 |         38 |        537 |
+| c:\Users\codye\forge\app\checkout\page.tsx                                    | TypeScript JSX     |        482 |         10 |         49 |        541 |
+| c:\Users\codye\forge\app\checkout\success\page.tsx                            | TypeScript JSX     |        124 |          5 |         14 |        143 |
+| c:\Users\codye\forge\app\coming-soon\page.tsx                                 | TypeScript JSX     |        615 |         30 |         40 |        685 |
+| c:\Users\codye\forge\app\components\CheckoutModal.tsx                         | TypeScript JSX     |        148 |          3 |         26 |        177 |
+| c:\Users\codye\forge\app\components\ConditionalWrappers.tsx                   | TypeScript JSX     |         19 |          2 |          5 |         26 |
+| c:\Users\codye\forge\app\components\FolderBreadcrumb.tsx                      | TypeScript JSX     |        124 |          1 |         14 |        139 |
+| c:\Users\codye\forge\app\components\FolderTree.tsx                            | TypeScript JSX     |        190 |          4 |         30 |        224 |
+| c:\Users\codye\forge\app\components\HeadphonesViewer.tsx                      | TypeScript JSX     |        118 |          3 |          9 |        130 |
+| c:\Users\codye\forge\app\components\HeroCADVisual.tsx                         | TypeScript JSX     |        109 |         16 |         25 |        150 |
+| c:\Users\codye\forge\app\components\PasswordGate.tsx                          | TypeScript JSX     |        204 |         19 |         24 |        247 |
+| c:\Users\codye\forge\app\components\VerificationBanner.tsx                    | TypeScript JSX     |        102 |          1 |         11 |        114 |
+| c:\Users\codye\forge\app\components\layout.tsx                                | TypeScript JSX     |          9 |          0 |          1 |         10 |
+| c:\Users\codye\forge\app\components\navbar.tsx                                | TypeScript JSX     |        251 |         12 |         24 |        287 |
+| c:\Users\codye\forge\app\components\threepreview.tsx                          | TypeScript JSX     |        237 |         12 |         48 |        297 |
+| c:\Users\codye\forge\app\contact\page.tsx                                     | TypeScript JSX     |        174 |          5 |         11 |        190 |
+| c:\Users\codye\forge\app\context\AuthContext.tsx                              | TypeScript JSX     |        128 |          7 |         21 |        156 |
+| c:\Users\codye\forge\app\context\UserContext.tsx                              | TypeScript JSX     |        116 |          7 |         19 |        142 |
+| c:\Users\codye\forge\app\dashboard\analytics\page.tsx                         | TypeScript JSX     |        472 |          8 |         20 |        500 |
+| c:\Users\codye\forge\app\dashboard\page.tsx                                   | TypeScript JSX     |        505 |         20 |         23 |        548 |
+| c:\Users\codye\forge\app\error.tsx                                            | TypeScript JSX     |         24 |          1 |          2 |         27 |
+| c:\Users\codye\forge\app\explore\error.tsx                                    | TypeScript JSX     |         24 |          1 |          2 |         27 |
+| c:\Users\codye\forge\app\explore\page.tsx                                     | TypeScript JSX     |        890 |         30 |         22 |        942 |
+| c:\Users\codye\forge\app\folders\[id]\page.tsx                                | TypeScript JSX     |      1,591 |         30 |         80 |      1,701 |
+| c:\Users\codye\forge\app\folders\page.tsx                                     | TypeScript JSX     |        349 |         17 |         25 |        391 |
+| c:\Users\codye\forge\app\forgot-password\page.tsx                             | TypeScript JSX     |        141 |          4 |         14 |        159 |
+| c:\Users\codye\forge\app\forgot-username\page.tsx                             | TypeScript JSX     |        141 |          4 |         14 |        159 |
+| c:\Users\codye\forge\app\forum\[id]\page.tsx                                  | TypeScript JSX     |        486 |          5 |         29 |        520 |
+| c:\Users\codye\forge\app\forum\page.tsx                                       | TypeScript JSX     |        824 |         30 |         49 |        903 |
+| c:\Users\codye\forge\app\global-error.tsx                                     | TypeScript JSX     |         28 |          1 |          2 |         31 |
+| c:\Users\codye\forge\app\globals.css                                          | PostCSS            |        117 |         15 |         21 |        153 |
+| c:\Users\codye\forge\app\issues\page.tsx                                      | TypeScript JSX     |        570 |         11 |         59 |        640 |
+| c:\Users\codye\forge\app\landingpage2\components\CTA.tsx                      | TypeScript JSX     |         25 |          3 |          5 |         33 |
+| c:\Users\codye\forge\app\landingpage2\components\FeatureGrid.tsx              | TypeScript JSX     |         79 |          6 |          8 |         93 |
+| c:\Users\codye\forge\app\landingpage2\components\Footer.tsx                   | TypeScript JSX     |         69 |          5 |          7 |         81 |
+| c:\Users\codye\forge\app\landingpage2\components\Hero.tsx                     | TypeScript JSX     |         70 |          4 |          5 |         79 |
+| c:\Users\codye\forge\app\landingpage2\components\LogoGrid.tsx                 | TypeScript JSX     |         67 |          3 |         10 |         80 |
+| c:\Users\codye\forge\app\landingpage2\components\Navbar.tsx                   | TypeScript JSX     |        178 |          9 |         22 |        209 |
+| c:\Users\codye\forge\app\landingpage2\components\NumberedSteps.tsx            | TypeScript JSX     |         61 |          6 |          8 |         75 |
+| c:\Users\codye\forge\app\landingpage2\components\ScrollReveal.tsx             | TypeScript JSX     |         39 |          0 |         10 |         49 |
+| c:\Users\codye\forge\app\landingpage2\components\SplitContent.tsx             | TypeScript JSX     |         52 |          4 |          9 |         65 |
+| c:\Users\codye\forge\app\landingpage2\components\Testimonial.tsx              | TypeScript JSX     |         42 |          3 |          5 |         50 |
+| c:\Users\codye\forge\app\landingpage2\landing-page2.css                       | PostCSS            |        253 |         19 |         41 |        313 |
+| c:\Users\codye\forge\app\landingpage2\layout.tsx                              | TypeScript JSX     |         14 |          0 |          3 |         17 |
+| c:\Users\codye\forge\app\landingpage2\page.tsx                                | TypeScript JSX     |         37 |          2 |          4 |         43 |
+| c:\Users\codye\forge\app\landingpage\landing-page.css                         | PostCSS            |         98 |         11 |         11 |        120 |
+| c:\Users\codye\forge\app\landingpage\layout.tsx                               | TypeScript JSX     |         14 |          1 |          3 |         18 |
+| c:\Users\codye\forge\app\landingpage\page.tsx                                 | TypeScript JSX     |          1 |          0 |          1 |          2 |
+| c:\Users\codye\forge\app\layout.tsx                                           | TypeScript JSX     |         33 |          0 |          3 |         36 |
+| c:\Users\codye\forge\app\login\page.tsx                                       | TypeScript JSX     |        250 |          8 |         27 |        285 |
+| c:\Users\codye\forge\app\marketplace\error.tsx                                | TypeScript JSX     |         24 |          1 |          2 |         27 |
+| c:\Users\codye\forge\app\marketplace\page.tsx                                 | TypeScript JSX     |        823 |         27 |         24 |        874 |
+| c:\Users\codye\forge\app\messages\error.tsx                                   | TypeScript JSX     |         24 |          0 |          3 |         27 |
+| c:\Users\codye\forge\app\messages\page.tsx                                    | TypeScript JSX     |      1,201 |         22 |         56 |      1,279 |
+| c:\Users\codye\forge\app\not-found.tsx                                        | TypeScript JSX     |         21 |          1 |          2 |         24 |
+| c:\Users\codye\forge\app\notifications\page.tsx                               | TypeScript JSX     |        383 |         25 |         40 |        448 |
+| c:\Users\codye\forge\app\order\page.tsx                                       | TypeScript JSX     |        415 |          4 |         29 |        448 |
+| c:\Users\codye\forge\app\order\thank-you\page.tsx                             | TypeScript JSX     |        110 |          0 |         11 |        121 |
+| c:\Users\codye\forge\app\orders\page.tsx                                      | TypeScript JSX     |        393 |          7 |         26 |        426 |
+| c:\Users\codye\forge\app\page.tsx                                             | TypeScript JSX     |          5 |          1 |          3 |          9 |
+| c:\Users\codye\forge\app\privacy\page.tsx                                     | TypeScript JSX     |        292 |          4 |         19 |        315 |
+| c:\Users\codye\forge\app\profile\[username]\followers\page.tsx                | TypeScript JSX     |        193 |          0 |         18 |        211 |
+| c:\Users\codye\forge\app\profile\[username]\following\page.tsx                | TypeScript JSX     |        193 |          0 |         18 |        211 |
+| c:\Users\codye\forge\app\profile\[username]\page.tsx                          | TypeScript JSX     |        910 |         29 |         49 |        988 |
+| c:\Users\codye\forge\app\profile\[username]\page_old.tsx                      | TypeScript JSX     |        797 |         30 |         57 |        884 |
+| c:\Users\codye\forge\app\project\[id]\error.tsx                               | TypeScript JSX     |         24 |          1 |          2 |         27 |
+| c:\Users\codye\forge\app\project\[id]\page.tsx                                | TypeScript JSX     |        959 |         42 |         49 |      1,050 |
+| c:\Users\codye\forge\app\providers\AuthProvider.tsx                           | TypeScript JSX     |          6 |          0 |          3 |          9 |
+| c:\Users\codye\forge\app\purchase\page.tsx                                    | TypeScript JSX     |        582 |         13 |         34 |        629 |
+| c:\Users\codye\forge\app\quote\page.tsx                                       | TypeScript JSX     |      1,160 |         77 |        108 |      1,345 |
+| c:\Users\codye\forge\app\quote\page_old.tsx                                   | TypeScript JSX     |        726 |         20 |         81 |        827 |
+| c:\Users\codye\forge\app\register\page.tsx                                    | TypeScript JSX     |        277 |          9 |         24 |        310 |
+| c:\Users\codye\forge\app\reset-password\page.tsx                              | TypeScript JSX     |        214 |          5 |         23 |        242 |
+| c:\Users\codye\forge\app\settings\account\page.tsx                            | TypeScript JSX     |        225 |          3 |         24 |        252 |
+| c:\Users\codye\forge\app\settings\page.tsx                                    | TypeScript JSX     |        925 |         26 |         47 |        998 |
+| c:\Users\codye\forge\app\share\[token]\page.tsx                               | TypeScript JSX     |        337 |         17 |         28 |        382 |
+| c:\Users\codye\forge\app\storefront\page.tsx                                  | TypeScript JSX     |        434 |          0 |         23 |        457 |
+| c:\Users\codye\forge\app\subscription\page.tsx                                | TypeScript JSX     |        381 |          6 |         28 |        415 |
+| c:\Users\codye\forge\app\subscription\success\page.tsx                        | TypeScript JSX     |        141 |          2 |         16 |        159 |
+| c:\Users\codye\forge\app\support\page.tsx                                     | TypeScript JSX     |        191 |          8 |         11 |        210 |
+| c:\Users\codye\forge\app\transfer-requests\page.tsx                           | TypeScript JSX     |         30 |          0 |          4 |         34 |
+| c:\Users\codye\forge\app\upload\page.tsx                                      | TypeScript JSX     |        889 |         47 |         80 |      1,016 |
+| c:\Users\codye\forge\app\verify-email\page.tsx                                | TypeScript JSX     |        124 |          2 |         16 |        142 |
+| c:\Users\codye\forge\backend\lib\activity-logger.js                           | JavaScript         |         81 |         34 |         14 |        129 |
+| c:\Users\codye\forge\backend\lib\auth.js                                      | JavaScript         |         62 |          7 |         12 |         81 |
+| c:\Users\codye\forge\backend\lib\cad-formats.js                               | JavaScript         |        251 |         54 |         25 |        330 |
+| c:\Users\codye\forge\backend\lib\db.js                                        | JavaScript         |         61 |          8 |         13 |         82 |
+| c:\Users\codye\forge\backend\lib\email-templates.js                           | JavaScript         |        269 |          1 |          6 |        276 |
+| c:\Users\codye\forge\backend\lib\email-verification.js                        | JavaScript         |         67 |         14 |         18 |         99 |
+| c:\Users\codye\forge\backend\lib\email.js                                     | JavaScript         |        384 |         49 |         36 |        469 |
+| c:\Users\codye\forge\backend\lib\file-metadata-utils.js                       | JavaScript         |         90 |         24 |         16 |        130 |
+| c:\Users\codye\forge\backend\lib\folder-utils.js                              | JavaScript         |        179 |         69 |         45 |        293 |
+| c:\Users\codye\forge\backend\lib\generateThumbnail.js                         | JavaScript         |        390 |         85 |         75 |        550 |
+| c:\Users\codye\forge\backend\lib\generateThumbnailR2.js                       | JavaScript         |        118 |         25 |         22 |        165 |
+| c:\Users\codye\forge\backend\lib\generateThumbnailSimple.js                   | JavaScript         |         72 |         19 |         18 |        109 |
+| c:\Users\codye\forge\backend\lib\print-cost-config.js                         | JavaScript         |        178 |         14 |         10 |        202 |
+| c:\Users\codye\forge\backend\lib\print-cost-estimator.js                      | JavaScript         |        467 |        119 |         96 |        682 |
+| c:\Users\codye\forge\backend\lib\print-cost-validator.js                      | JavaScript         |        271 |         39 |         40 |        350 |
+| c:\Users\codye\forge\backend\lib\privacy-utils.js                             | JavaScript         |         79 |         40 |         21 |        140 |
+| c:\Users\codye\forge\backend\lib\r2.js                                        | JavaScript         |         52 |         11 |         15 |         78 |
+| c:\Users\codye\forge\backend\lib\rate-limit.js                                | JavaScript         |         71 |         31 |         20 |        122 |
+| c:\Users\codye\forge\backend\lib\sendgrid-api.js                              | JavaScript         |         39 |          9 |          8 |         56 |
+| c:\Users\codye\forge\backend\lib\stl-printability.js                          | JavaScript         |         96 |         17 |         20 |        133 |
+| c:\Users\codye\forge\backend\lib\stl-utils.js                                 | JavaScript         |        104 |         39 |         35 |        178 |
+| c:\Users\codye\forge\backend\lib\stripe-utils.js                              | JavaScript         |         66 |         19 |         12 |         97 |
+| c:\Users\codye\forge\backend\lib\subscription-utils.js                        | JavaScript         |        305 |         50 |         45 |        400 |
+| c:\Users\codye\forge\backend\lib\thumbnailGenerator.js                        | JavaScript         |        134 |         29 |         28 |        191 |
+| c:\Users\codye\forge\backend\lib\thumbnailGeneratorSimple.js                  | JavaScript         |        211 |         36 |         26 |        273 |
+| c:\Users\codye\forge\backend\lib\ui\design-system.ts                          | TypeScript         |        133 |         10 |         15 |        158 |
+| c:\Users\codye\forge\backend\lib\verification-middleware.js                   | JavaScript         |         28 |         11 |          8 |         47 |
+| c:\Users\codye\forge\backend\migrations\add_email_verification.sql            | MS SQL             |          4 |          1 |          3 |          8 |
+| c:\Users\codye\forge\backend\migrations\add_oauth_fields.sql                  | MS SQL             |          6 |          5 |          5 |         16 |
+| c:\Users\codye\forge\backend\routes\analytics.js                              | JavaScript         |        274 |         25 |         28 |        327 |
+| c:\Users\codye\forge\backend\routes\auth.js                                   | JavaScript         |        245 |         26 |         54 |        325 |
+| c:\Users\codye\forge\backend\routes\cad.js                                    | JavaScript         |        172 |         12 |         25 |        209 |
+| c:\Users\codye\forge\backend\routes\contact.js                                | JavaScript         |        125 |          6 |         16 |        147 |
+| c:\Users\codye\forge\backend\routes\dashboard.js                              | JavaScript         |        107 |          7 |         13 |        127 |
+| c:\Users\codye\forge\backend\routes\email-campaigns.js                        | JavaScript         |        203 |         14 |         40 |        257 |
+| c:\Users\codye\forge\backend\routes\files.js                                  | JavaScript         |         64 |         10 |         17 |         91 |
+| c:\Users\codye\forge\backend\routes\folders.js                                | JavaScript         |        156 |         16 |         21 |        193 |
+| c:\Users\codye\forge\backend\routes\oauth.js                                  | JavaScript         |        198 |         26 |         47 |        271 |
+| c:\Users\codye\forge\backend\routes\projects.js                               | JavaScript         |        353 |         47 |         59 |        459 |
+| c:\Users\codye\forge\backend\routes\stats.js                                  | JavaScript         |         50 |          7 |         12 |         69 |
+| c:\Users\codye\forge\backend\routes\subscriptions.js                          | JavaScript         |         28 |          6 |          8 |         42 |
+| c:\Users\codye\forge\backend\routes\test-email.js                             | JavaScript         |         88 |          6 |         16 |        110 |
+| c:\Users\codye\forge\backend\routes\thumbnails.js                             | JavaScript         |         49 |         14 |         15 |         78 |
+| c:\Users\codye\forge\backend\routes\upload.js                                 | JavaScript         |         88 |          9 |         18 |        115 |
+| c:\Users\codye\forge\backend\routes\users.js                                  | JavaScript         |        374 |         28 |         34 |        436 |
+| c:\Users\codye\forge\backend\routes\waitlist.js                               | JavaScript         |        327 |         26 |         62 |        415 |
+| c:\Users\codye\forge\backend\schema.sql                                       | MS SQL             |         60 |          5 |          8 |         73 |
+| c:\Users\codye\forge\backend\scripts\add-admin-column.js                      | JavaScript         |         70 |          4 |         15 |         89 |
+| c:\Users\codye\forge\backend\scripts\add-comments-system.js                   | JavaScript         |        115 |          8 |         15 |        138 |
+| c:\Users\codye\forge\backend\scripts\add-email-verification.js                | JavaScript         |         91 |         13 |         23 |        127 |
+| c:\Users\codye\forge\backend\scripts\add-extended-profile-fields.js           | JavaScript         |         47 |          6 |          8 |         61 |
+| c:\Users\codye\forge\backend\scripts\add-file-versions.js                     | JavaScript         |         50 |          4 |          6 |         60 |
+| c:\Users\codye\forge\backend\scripts\add-follow-requests.js                   | JavaScript         |         25 |          1 |          5 |         31 |
+| c:\Users\codye\forge\backend\scripts\add-messaging-notifications.js           | JavaScript         |         57 |          4 |          9 |         70 |
+| c:\Users\codye\forge\backend\scripts\add-oauth-support.js                     | JavaScript         |        125 |         15 |         23 |        163 |
+| c:\Users\codye\forge\backend\scripts\add-ownership-transfer.js                | JavaScript         |         76 |          6 |         11 |         93 |
+| c:\Users\codye\forge\backend\scripts\add-private-accounts.js                  | JavaScript         |         23 |          1 |          5 |         29 |
+| c:\Users\codye\forge\backend\scripts\add-profile-columns.js                   | JavaScript         |         28 |          0 |          6 |         34 |
+| c:\Users\codye\forge\backend\scripts\add-profile-fields.js                    | JavaScript         |         21 |          0 |          4 |         25 |
+| c:\Users\codye\forge\backend\scripts\add-project-dimensions.js                | JavaScript         |         35 |          0 |          6 |         41 |
+| c:\Users\codye\forge\backend\scripts\add-recovery-tokens-table.js             | JavaScript         |         48 |          3 |          7 |         58 |
+| c:\Users\codye\forge\backend\scripts\add-rename-move-support.js               | JavaScript         |         92 |          7 |         16 |        115 |
+| c:\Users\codye\forge\backend\scripts\check-comments.js                        | JavaScript         |         17 |          0 |          6 |         23 |
+| c:\Users\codye\forge\backend\scripts\check-schema.js                          | JavaScript         |         18 |          0 |          6 |         24 |
+| c:\Users\codye\forge\backend\scripts\check-users.js                           | JavaScript         |         16 |          0 |          5 |         21 |
+| c:\Users\codye\forge\backend\scripts\create-follows-table.js                  | JavaScript         |         32 |          3 |          6 |         41 |
+| c:\Users\codye\forge\backend\scripts\create-forum-tables.js                   | JavaScript         |         66 |          3 |          8 |         77 |
+| c:\Users\codye\forge\backend\scripts\create-verification-tables.sql           | MS SQL             |         45 |         10 |          8 |         63 |
+| c:\Users\codye\forge\backend\scripts\create-waitlist-tables.sql               | MS SQL             |         39 |          7 |          7 |         53 |
+| c:\Users\codye\forge\backend\scripts\debug-file.js                            | JavaScript         |         44 |          3 |          8 |         55 |
+| c:\Users\codye\forge\backend\scripts\fix-uploaded-filenames.js                | JavaScript         |         31 |          4 |          7 |         42 |
+| c:\Users\codye\forge\backend\scripts\force_all_previews_work.js               | JavaScript         |         36 |          4 |          7 |         47 |
+| c:\Users\codye\forge\backend\scripts\generate-existing-thumbnails.js          | JavaScript         |         91 |         11 |         21 |        123 |
+| c:\Users\codye\forge\backend\scripts\generate-missing-thumbnails.js           | JavaScript         |         51 |          5 |         13 |         69 |
+| c:\Users\codye\forge\backend\scripts\grant-admin.js                           | JavaScript         |         49 |          3 |         15 |         67 |
+| c:\Users\codye\forge\backend\scripts\migrate-existing-projects-to-versions.js | JavaScript         |         72 |          4 |          8 |         84 |
+| c:\Users\codye\forge\backend\scripts\migrate-nested-folders.js                | JavaScript         |         95 |          5 |         11 |        111 |
+| c:\Users\codye\forge\backend\scripts\migrate-thumbnails.js                    | JavaScript         |         62 |          7 |         14 |         83 |
+| c:\Users\codye\forge\backend\scripts\run-migration.js                         | JavaScript         |         22 |          1 |          7 |         30 |
+| c:\Users\codye\forge\backend\scripts\run-waitlist-migration.js                | JavaScript         |         49 |          5 |         16 |         70 |
+| c:\Users\codye\forge\backend\scripts\sync_uploads_with_db.js                  | JavaScript         |         44 |          5 |          8 |         57 |
+| c:\Users\codye\forge\backend\scripts\test-privacy-filter.js                   | JavaScript         |         51 |          1 |          7 |         59 |
+| c:\Users\codye\forge\backend\scripts\test-recovery-system.js                  | JavaScript         |         74 |         11 |         15 |        100 |
+| c:\Users\codye\forge\backend\scripts\verify-migration.js                      | JavaScript         |         41 |          4 |         10 |         55 |
+| c:\Users\codye\forge\backend\scripts\verify-schema.js                         | JavaScript         |         27 |          3 |          7 |         37 |
+| c:\Users\codye\forge\backend\server.js                                        | JavaScript         |         78 |         10 |         15 |        103 |
+| c:\Users\codye\forge\components\LicenseSelectionModal.tsx                     | TypeScript JSX     |        245 |          7 |         23 |        275 |
+| c:\Users\codye\forge\db\db.js                                                 | JavaScript         |        254 |          7 |          7 |        268 |
+| c:\Users\codye\forge\db\migrations\002_orders_schema.sql                      | MS SQL             |         40 |          1 |          3 |         44 |
+| c:\Users\codye\forge\db\migrations\003_issues_schema.js                       | JavaScript         |         61 |          2 |          7 |         70 |
+| c:\Users\codye\forge\db\migrations\004_cad_editor_schema.js                   | JavaScript         |         95 |          4 |         10 |        109 |
+| c:\Users\codye\forge\db\migrations\005_add_user_tier.js                       | JavaScript         |         23 |          1 |          5 |         29 |
+| c:\Users\codye\forge\db\migrations\006_add_subscriptions.js                   | JavaScript         |        113 |         11 |         17 |        141 |
+| c:\Users\codye\forge\db\migrations\007_add_file_branches.js                   | JavaScript         |        100 |          8 |         15 |        123 |
+| c:\Users\codye\forge\db\migrations\008_make_branch_id_nullable.js             | JavaScript         |         48 |          8 |         13 |         69 |
+| c:\Users\codye\forge\db\migrations\009_add_file_metadata.js                   | JavaScript         |         87 |          9 |         18 |        114 |
+| c:\Users\codye\forge\db\migrations\010_backfill_file_metadata.js              | JavaScript         |         96 |         10 |         17 |        123 |
+| c:\Users\codye\forge\db\migrations\011_add_notification_dismissed.js          | JavaScript         |         31 |          1 |          9 |         41 |
+| c:\Users\codye\forge\db\migrations\012_add_activity_log.js                    | JavaScript         |         46 |          2 |          9 |         57 |
+| c:\Users\codye\forge\db\migrations\013_add_analytics_tables.js                | JavaScript         |         55 |          3 |         10 |         68 |
+| c:\Users\codye\forge\db\migrations\013_add_share_links.js                     | JavaScript         |         45 |          3 |         11 |         59 |
+| c:\Users\codye\forge\db\migrations\014_storefront_licenses.sql                | MS SQL             |        132 |         13 |         14 |        159 |
+| c:\Users\codye\forge\db\migrations\add_feature_trees.sql                      | MS SQL             |         12 |          1 |          2 |         15 |
+| c:\Users\codye\forge\db\migrations\add_thumbnail_path.sql                     | MS SQL             |          6 |          5 |          4 |         15 |
+| c:\Users\codye\forge\db\migrations\check-orders.js                            | JavaScript         |         53 |          4 |          9 |         66 |
+| c:\Users\codye\forge\db\migrations\grant_full_access.js                       | JavaScript         |         82 |          6 |         16 |        104 |
+| c:\Users\codye\forge\db\migrations\run-orders-migration.js                    | JavaScript         |         14 |          4 |          5 |         23 |
+| c:\Users\codye\forge\db\migrations\setup-cad-user.js                          | JavaScript         |         41 |          3 |          8 |         52 |
+| c:\Users\codye\forge\design.json                                              | JSON               |          0 |          0 |          1 |          1 |
+| c:\Users\codye\forge\eslint.config.mjs                                        | JavaScript         |         14 |          2 |          3 |         19 |
+| c:\Users\codye\forge\frontend\components\ActivityPanel.tsx                    | TypeScript JSX     |        249 |          7 |         26 |        282 |
+| c:\Users\codye\forge\frontend\components\BranchManagementModal.tsx            | TypeScript JSX     |        401 |          1 |         29 |        431 |
+| c:\Users\codye\forge\frontend\components\CADViewer.tsx                        | TypeScript JSX     |        502 |         62 |         70 |        634 |
+| c:\Users\codye\forge\frontend\components\CADViewerModal.tsx                   | TypeScript JSX     |         82 |          4 |          8 |         94 |
+| c:\Users\codye\forge\frontend\components\ChangeRoleModal.tsx                  | TypeScript JSX     |        138 |          1 |         17 |        156 |
+| c:\Users\codye\forge\frontend\components\CommentSystem.tsx                    | TypeScript JSX     |        510 |         25 |         48 |        583 |
+| c:\Users\codye\forge\frontend\components\ConfirmationModal.tsx                | TypeScript JSX     |         95 |          0 |          6 |        101 |
+| c:\Users\codye\forge\frontend\components\CreateFolderModal.tsx                | TypeScript JSX     |        119 |          0 |         11 |        130 |
+| c:\Users\codye\forge\frontend\components\FileVersioning.tsx                   | TypeScript JSX     |        274 |          0 |         26 |        300 |
+| c:\Users\codye\forge\frontend\components\FolderCard.tsx                       | TypeScript JSX     |        162 |          0 |         10 |        172 |
+| c:\Users\codye\forge\frontend\components\FolderContextSidebar.tsx             | TypeScript JSX     |        484 |          5 |         42 |        531 |
+| c:\Users\codye\forge\frontend\components\HistoryModal.tsx                     | TypeScript JSX     |        170 |          0 |         12 |        182 |
+| c:\Users\codye\forge\frontend\components\InvitationsNotification.tsx          | TypeScript JSX     |        105 |          1 |          9 |        115 |
+| c:\Users\codye\forge\frontend\components\InviteMemberModal.tsx                | TypeScript JSX     |         82 |          0 |          9 |         91 |
+| c:\Users\codye\forge\frontend\components\Layout.js                            | JavaScript         |         11 |          1 |          1 |         13 |
+| c:\Users\codye\forge\frontend\components\MoveFolderModal.tsx                  | TypeScript JSX     |        174 |          1 |         17 |        192 |
+| c:\Users\codye\forge\frontend\components\Navbar.tsx                           | TypeScript JSX     |        242 |         12 |         24 |        278 |
+| c:\Users\codye\forge\frontend\components\NotificationsDropdown.tsx            | TypeScript JSX     |        229 |          9 |         17 |        255 |
+| c:\Users\codye\forge\frontend\components\ProjectCard.js                       | JavaScript         |        155 |          4 |         13 |        172 |
+| c:\Users\codye\forge\frontend\components\RenameModal.tsx                      | TypeScript JSX     |         95 |          0 |         12 |        107 |
+| c:\Users\codye\forge\frontend\components\SaveProjectModal.tsx                 | TypeScript JSX     |        268 |         12 |         16 |        296 |
+| c:\Users\codye\forge\frontend\components\ShareLinkModal.tsx                   | TypeScript JSX     |        293 |         10 |         20 |        323 |
+| c:\Users\codye\forge\frontend\components\SubscriptionGate.tsx                 | TypeScript JSX     |        124 |          6 |         17 |        147 |
+| c:\Users\codye\forge\frontend\components\ThreeDViewer.tsx                     | TypeScript JSX     |        132 |         41 |         17 |        190 |
+| c:\Users\codye\forge\frontend\components\ThreePreview.tsx                     | TypeScript JSX     |        266 |         26 |         36 |        328 |
+| c:\Users\codye\forge\frontend\components\TierBadge.tsx                        | TypeScript JSX     |         92 |         15 |         11 |        118 |
+| c:\Users\codye\forge\frontend\components\TransferOwnershipModal.tsx           | TypeScript JSX     |        161 |          0 |         18 |        179 |
+| c:\Users\codye\forge\frontend\components\TransferRequestsList.tsx             | TypeScript JSX     |        194 |          1 |         21 |        216 |
+| c:\Users\codye\forge\frontend\components\UpgradeModal.tsx                     | TypeScript JSX     |        205 |          0 |         16 |        221 |
+| c:\Users\codye\forge\frontend\components\VersionDropdown.tsx                  | TypeScript JSX     |        104 |          0 |         14 |        118 |
+| c:\Users\codye\forge\frontend\components\VersionHistory.tsx                   | TypeScript JSX     |        211 |          3 |         26 |        240 |
+| c:\Users\codye\forge\frontend\components\ui\GlobalNavSidebar.tsx              | TypeScript JSX     |        279 |         16 |         18 |        313 |
+| c:\Users\codye\forge\frontend\components\ui\ThreePanelLayout.tsx              | TypeScript JSX     |        230 |         14 |         23 |        267 |
+| c:\Users\codye\forge\frontend\components\ui\UIComponents.tsx                  | TypeScript JSX     |        363 |         13 |         29 |        405 |
+| c:\Users\codye\forge\frontend\types\index.ts                                  | TypeScript         |         88 |          0 |          6 |         94 |
+| c:\Users\codye\forge\frontend\types\next-auth.d.ts                            | TypeScript         |         32 |          0 |          4 |         36 |
+| c:\Users\codye\forge\lib\activityLogger.js                                    | JavaScript         |          3 |          0 |          2 |          5 |
+| c:\Users\codye\forge\lib\api.ts                                               | TypeScript         |          0 |          0 |          1 |          1 |
+| c:\Users\codye\forge\lib\apiClient.ts                                         | TypeScript         |         42 |          5 |         12 |         59 |
+| c:\Users\codye\forge\lib\auth.js                                              | JavaScript         |         32 |          1 |          6 |         39 |
+| c:\Users\codye\forge\lib\cad-formats.js                                       | JavaScript         |        251 |         54 |         25 |        330 |
+| c:\Users\codye\forge\lib\db.js                                                | JavaScript         |        196 |          5 |          6 |        207 |
+| c:\Users\codye\forge\lib\email-templates.js                                   | JavaScript         |        269 |          1 |          6 |        276 |
+| c:\Users\codye\forge\lib\email-verification.js                                | JavaScript         |         61 |         14 |         20 |         95 |
+| c:\Users\codye\forge\lib\email.js                                             | JavaScript         |        201 |         17 |         19 |        237 |
+| c:\Users\codye\forge\lib\folder-utils.js                                      | JavaScript         |        179 |         69 |         45 |        293 |
+| c:\Users\codye\forge\lib\print-cost-config.js                                 | JavaScript         |        178 |         14 |         10 |        202 |
+| c:\Users\codye\forge\lib\print-cost-estimator.js                              | JavaScript         |        367 |         92 |         81 |        540 |
+| c:\Users\codye\forge\lib\print-cost-validator.js                              | JavaScript         |        271 |         39 |         40 |        350 |
+| c:\Users\codye\forge\lib\privacy-utils.js                                     | JavaScript         |         79 |         40 |         21 |        140 |
+| c:\Users\codye\forge\lib\rate-limit.js                                        | JavaScript         |         71 |         31 |         20 |        122 |
+| c:\Users\codye\forge\lib\stl-printability.js                                  | JavaScript         |         96 |         17 |         20 |        133 |
+| c:\Users\codye\forge\lib\stl-utils.js                                         | JavaScript         |        104 |         39 |         35 |        178 |
+| c:\Users\codye\forge\lib\stripe-utils.js                                      | JavaScript         |        170 |         39 |         24 |        233 |
+| c:\Users\codye\forge\lib\thumbnailGenerator.js                                | JavaScript         |        134 |         29 |         28 |        191 |
+| c:\Users\codye\forge\lib\thumbnailGeneratorSimple.js                          | JavaScript         |         73 |         33 |         17 |        123 |
+| c:\Users\codye\forge\lib\ui\design-system.ts                                  | TypeScript         |        133 |         10 |         15 |        158 |
+| c:\Users\codye\forge\lib\verification-middleware.js                           | JavaScript         |         23 |         12 |          7 |         42 |
+| c:\Users\codye\forge\next.config.js                                           | JavaScript         |         78 |         26 |         15 |        119 |
+| c:\Users\codye\forge\package-lock.json                                        | JSON               |     10,644 |          0 |          1 |     10,645 |
+| c:\Users\codye\forge\package.json                                             | JSON               |         65 |          0 |          1 |         66 |
+| c:\Users\codye\forge\patches\next+13.5.6.patch                                | Diff               |      1,671 |          0 |          1 |      1,672 |
+| c:\Users\codye\forge\postcss.config.js                                        | JavaScript         |          6 |          0 |          0 |          6 |
+| c:\Users\codye\forge\postcss.config.mjs                                       | JavaScript         |          7 |          0 |          2 |          9 |
+| c:\Users\codye\forge\public\BlueprintCAD (1).svg                              | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\BlueprintCAD (2).svg                              | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\BlueprintCAD (3).svg                              | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\file.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\globe.svg                                         | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\gradiant.svg                                      | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\landingpage.tsx                                   | TypeScript JSX     |          0 |          0 |          1 |          1 |
+| c:\Users\codye\forge\public\next.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\output.css                                        | PostCSS            |      1,627 |        168 |        435 |      2,230 |
+| c:\Users\codye\forge\public\sitemap.xml                                       | XML                |          8 |          0 |          0 |          8 |
+| c:\Users\codye\forge\public\thumbnail.svg                                     | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\thumbnail2.svg                                    | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\thumbnail3.svg                                    | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\vercel.svg                                        | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\public\window.svg                                        | XML                |          1 |          0 |          0 |          1 |
+| c:\Users\codye\forge\scripts\dev.js                                           | JavaScript         |         22 |          5 |          6 |         33 |
+| c:\Users\codye\forge\tailwind.config.js                                       | JavaScript         |         33 |          1 |          0 |         34 |
+| c:\Users\codye\forge\tsconfig.json                                            | JSON with Comments |         60 |          0 |          1 |         61 |
+| Total                                                                         |                    |     63,786 |      3,387 |      5,990 |     73,163 |
++-------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+

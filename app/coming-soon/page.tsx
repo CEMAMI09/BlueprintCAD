@@ -45,11 +45,39 @@ export default function ComingSoonPage() {
   
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
-  const scrollToWaitlist = () => {
-    const waitlistSection = document.getElementById('waitlist');
-    if (waitlistSection) {
-      waitlistSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  const smoothScrollTo = (element: HTMLElement) => {
+    if (prefersReducedMotion) {
+      element.scrollIntoView({ block: 'start' });
+      return;
     }
+    const start = window.scrollY;
+    const end = element.getBoundingClientRect().top + start;
+    const distance = end - start;
+    const duration = 700;
+    let startTime: number | null = null;
+
+    const step = (timestamp: number) => {
+      if (startTime == null) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutCubic(progress);
+      window.scrollTo(0, start + distance * eased);
+      if (progress < 1) requestAnimationFrame(step);
+    };
+
+    requestAnimationFrame(step);
+  };
+
+  const scrollToWaitlist = () => {
+    const el = document.getElementById('waitlist');
+    if (el) smoothScrollTo(el);
+  };
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) smoothScrollTo(el);
   };
 
   // Check for reduced motion preference
@@ -65,11 +93,11 @@ export default function ComingSoonPage() {
     };
   }, []);
 
-  // Header sticky behavior
+  // Header: show floating bar only after scrolling past the initial header (a bit more than h-20)
   useEffect(() => {
+    const threshold = 140;
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setIsHeaderSticky(scrollY > 12);
+      setIsHeaderSticky(window.scrollY > threshold);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -149,28 +177,25 @@ export default function ComingSoonPage() {
       className="min-h-screen overflow-x-hidden"
       style={{ backgroundColor: colors.bgPrimary, color: colors.textPrimary }}
     >
-      {/* Header */}
+      {/* Initial header: in-flow, scrolls away with the page (not sticky) */}
       <header
         ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-md border-b"
+        className="w-full z-40 transition-all duration-300 ease-out backdrop-blur-md border-b"
         style={{
-          backgroundColor: isHeaderSticky ? 'rgba(11, 14, 20, 0.8)' : 'rgba(11, 14, 20, 0.95)',
+          backgroundColor: 'rgba(11, 14, 20, 0.95)',
           borderColor: colors.border,
         }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center shrink-0">
               <img
                 src="/BlueprintCAD (3).svg"
                 alt="BlueprintCAD"
                 className="h-12 md:h-14 w-auto"
               />
             </Link>
-
-            {/* Right side */}
-            <div className="flex items-center">
+            <div className="flex items-center shrink-0">
               <button
                 onClick={scrollToWaitlist}
                 className="px-4 py-2 text-sm font-medium rounded-lg transition-all"
@@ -194,9 +219,86 @@ export default function ComingSoonPage() {
         </div>
       </header>
 
-      <main className="pt-20">
+      {/* Sticky floating bar: fades/slides in after scrolling past the initial header */}
+      <header
+        className="fixed top-3 left-4 right-4 z-50 backdrop-blur-md transition-all duration-300 ease-out"
+        style={{
+          backgroundColor: 'rgba(11, 14, 20, 0.85)',
+          border: `1px solid ${colors.border}`,
+          borderRadius: 28,
+          maxWidth: 900,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+          opacity: isHeaderSticky ? 1 : 0,
+          transform: isHeaderSticky ? 'translateY(0)' : 'translateY(-12px)',
+          pointerEvents: isHeaderSticky ? 'auto' : 'none',
+        }}
+      >
+          <div className="w-full mx-auto px-6 lg:px-8">
+            <div className="flex items-center justify-between h-14 gap-8">
+              <Link href="/" className="flex items-center shrink-0">
+                <img
+                  src="/bpcube3.png.png"
+                  alt="BlueprintCAD"
+                  className="h-7 w-auto"
+                />
+              </Link>
+              <nav className="flex items-center gap-1 sm:gap-2 flex-1 justify-center">
+                {[
+                  { id: 'hero', label: 'Home' },
+                  { id: 'why-section', label: 'Why' },
+                  { id: 'features', label: 'Features' },
+                  { id: 'pricing', label: 'Pricing' },
+                  { id: 'waitlist', label: 'Waitlist' },
+                ].map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => scrollToSection(id)}
+                    className="group relative px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:opacity-90 overflow-visible"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    {label}
+                    <span
+                      className="absolute bottom-1 left-2 right-2 h-0.5 rounded-full transition-transform duration-200 ease-out origin-left scale-x-0 group-hover:scale-x-100"
+                      style={{ backgroundColor: colors.accent }}
+                      aria-hidden
+                    />
+                  </button>
+                ))}
+              </nav>
+              <div className="flex items-center shrink-0">
+                <button
+                  onClick={scrollToWaitlist}
+                  className="px-4 py-2 text-sm font-medium rounded-lg transition-all"
+                  style={{
+                    backgroundColor: colors.accent,
+                    color: '#0B0E14',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.accentHover;
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.accent;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  Join waitlist
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+      <main>
       {/* Hero Section */}
-      <section className="pt-12 pb-12 lg:pt-24 lg:pb-24 overflow-x-hidden">
+      <section
+        id="hero"
+        className="pt-12 pb-[6.5rem] lg:pt-24 lg:pb-[9.5rem] overflow-x-hidden"
+        style={{ backgroundColor: colors.bgPrimary, color: colors.textPrimary }}
+      >
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Text */}
@@ -328,15 +430,15 @@ export default function ComingSoonPage() {
         </div>
       </section>
 
-      {/* Why this exists */}
-      <section id="why-section" className="pt-12 pb-12 lg:pt-24 lg:pb-24">
-        {/* Top line */}
-        <div
-          className="border-t mt-8 lg:mt-16"
-          style={{ borderColor: colors.border }}
-        />
-
-        {/* Content band */}
+      {/* Why this exists - dark section */}
+      <section
+        id="why-section"
+        className="pt-4 pb-12 lg:pt-8 lg:pb-24 border-t border-b"
+        style={{
+          borderColor: colors.border,
+          background: 'radial-gradient(circle at top, #111827 0%, #020617 60%, #020617 100%)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.9fr)] gap-8 lg:gap-16 items-center pt-8 lg:pt-12 pb-8 lg:pb-12">
             {/* Left: Text */}
@@ -382,68 +484,239 @@ export default function ComingSoonPage() {
             </div>
           </div>
         </div>
-
-        {/* Bottom line - increased spacing */}
-        <div
-          className="border-t mt-8 md:mt-12 lg:mt-16"
-          style={{ 
-            borderColor: colors.border,
-          }}
-        />
       </section>
 
-      {/* Core Pillars */}
-      <section className="py-12 lg:py-24 mt-12 lg:mt-32" style={{ backgroundColor: colors.bgPrimary }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-20">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {pillars.map((pillar, index) => {
-              const Icon = pillar.icon;
-              return (
-                <div
-                  key={index}
-                  className="p-6 rounded-lg border transition-all"
-                  style={{
-                    borderColor: colors.border,
-                    backgroundColor: 'transparent',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = colors.accent;
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = colors.border;
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  <div className="mb-4">
-                    <Icon
-                      size={24}
-                      style={{
-                        color: colors.accent,
-                        strokeWidth: 1.5,
-                      }}
-                    />
+      {/* Deep feature rows - dark blue */}
+      <section
+        id="features"
+        className="py-16 lg:py-28"
+        style={{
+          background: 'linear-gradient(135deg, #0B1220 0%, #0B1F3A 50%, #020617 100%)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-6 lg:px-20 space-y-16 lg:space-y-20">
+          {/* Row 1: text left, image right */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold mb-4" style={{ color: '#E5E7EB' }}>
+                Design once, explore everywhere.
+              </h2>
+              <p className="text-base md:text-lg mb-4" style={{ color: '#9CA3AF' }}>
+                BlueprintCAD gives you a single source of truth for your 3D work — projects, revisions, and previews stay in sync across desktop and mobile.
+              </p>
+              <p className="text-sm md:text-base" style={{ color: '#9CA3AF' }}>
+                Interactive previews, responsive dashboards, and creator-first analytics make it easy to share progress with clients, collaborators, and your audience.
+              </p>
+            </div>
+            <div className="relative">
+              <div className="rounded-2xl border bg-gradient-to-br from-[#111827] via-[#0B1220] to-[#1D4ED8] border-[rgba(148,163,184,0.35)] p-4 lg:p-6 shadow-xl shadow-blue-900/40">
+                <img
+                  src="/thumbnail3.svg"
+                  alt="BlueprintCAD dashboard mockup"
+                  className="w-full h-auto rounded-xl border border-[rgba(148,163,184,0.25)] bg-black/20"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: image left, text right */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div className="order-2 lg:order-1 relative">
+              <div className="rounded-2xl border border-[rgba(148,163,184,0.4)] bg-gradient-to-tr from-[#020617] via-[#111827] to-[#1D4ED8]/40 p-6 flex items-center justify-center">
+                <div className="grid grid-cols-2 gap-3 w-full max-w-md">
+                  <div className="rounded-xl border border-[rgba(148,163,184,0.35)] bg-black/40 p-3 text-xs text-slate-300">
+                    <p className="font-semibold mb-1">Branch: v3.2-lightweight</p>
+                    <p>Exploded view for assembly docs.</p>
                   </div>
-                  <h3
-                    className="text-xl font-bold mb-3 font-heading"
-                    style={{
-                      color: colors.textPrimary,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {pillar.title}
-                  </h3>
-                  <p
-                    style={{
-                      color: colors.textSecondary,
-                      lineHeight: '1.5',
-                    }}
-                  >
-                    {pillar.description}
-                  </p>
+                  <div className="rounded-xl border border-[rgba(148,163,184,0.35)] bg-black/40 p-3 text-xs text-slate-300">
+                    <p className="font-semibold mb-1">Review requests</p>
+                    <p>2 open comments on tolerances.</p>
+                  </div>
+                  <div className="rounded-xl border border-[rgba(148,163,184,0.35)] bg-black/40 p-3 text-xs text-slate-300 col-span-2">
+                    <p className="font-semibold mb-1">Version timeline</p>
+                    <p>Auto-snapshots across branches with visual diffs.</p>
+                  </div>
                 </div>
-              );
-            })}
+              </div>
+            </div>
+            <div className="order-1 lg:order-2">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold mb-4" style={{ color: '#E5E7EB' }}>
+                Versions that stay in sync.
+              </h2>
+              <p className="text-base md:text-lg mb-4" style={{ color: '#9CA3AF' }}>
+                Branches, reviews, and approvals are built into the file system — no more shipping ZIPs or guessing which STEP is final.
+              </p>
+              <p className="text-sm md:text-base" style={{ color: '#9CA3AF' }}>
+                Keep teams aligned with clear history, visual diffs, and project timelines that work the way engineers and designers actually think.
+              </p>
+            </div>
+          </div>
+
+          {/* Row 3: text left, image right */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold mb-4" style={{ color: '#E5E7EB' }}>
+                Turn downloads into a business.
+              </h2>
+              <p className="text-base md:text-lg mb-4" style={{ color: '#9CA3AF' }}>
+                Launch a storefront, set licenses, and plug directly into manufacturing — without duct-taping marketplaces, spreadsheets, and quote forms.
+              </p>
+              <p className="text-sm md:text-base" style={{ color: '#9CA3AF' }}>
+                BlueprintCAD handles pricing, distribution, and analytics so you can focus on designing work people actually want to pay for.
+              </p>
+            </div>
+            <div className="relative">
+              <div className="rounded-2xl border border-[rgba(56,189,248,0.45)] bg-gradient-to-br from-[#022c22] via-[#064e3b] to-[#0f172a] p-6 shadow-xl shadow-emerald-900/40">
+                <div className="space-y-4 text-sm text-emerald-50">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">Creator Storefront</span>
+                    <span className="text-emerald-200 text-xs">Live</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-xs">
+                    <div className="rounded-lg bg-black/20 p-3">
+                      <p className="text-emerald-200">Monthly revenue</p>
+                      <p className="text-lg font-semibold">$4,320</p>
+                    </div>
+                    <div className="rounded-lg bg-black/20 p-3">
+                      <p className="text-emerald-200">Conversion</p>
+                      <p className="text-lg font-semibold">3.1%</p>
+                    </div>
+                    <div className="rounded-lg bg-black/20 p-3">
+                      <p className="text-emerald-200">Top product</p>
+                      <p>Parametric bracket kit</p>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-black/25 p-3 text-xs">
+                    <p className="text-emerald-200 mb-1">Manufacturing ready</p>
+                    <p>Instant DFM checks and AI quotes for every upload.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section - three tiers */}
+      <section
+        id="pricing"
+        className="py-16 lg:py-24"
+        style={{ backgroundColor: colors.bgPrimary }}
+      >
+        <div className="max-w-6xl mx-auto px-6 lg:px-20">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4" style={{ color: colors.textPrimary }}>
+              Pricing that scales with you.
+            </h2>
+            <p className="text-base md:text-lg" style={{ color: colors.textSecondary }}>
+              Start free, then grow into selling, storefronts, and teams — without switching tools.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            {/* Free */}
+            <div className="rounded-2xl border p-6 flex flex-col shadow-sm" style={{ borderColor: colors.border, backgroundColor: 'rgba(255,255,255,0.03)' }}>
+              <h3 className="text-lg font-heading font-semibold mb-1" style={{ color: colors.textPrimary }}>
+                Free
+              </h3>
+              <p className="text-sm mb-4" style={{ color: colors.textSecondary }}>
+                Build &amp; browse.
+              </p>
+              <p className="text-3xl font-heading font-bold mb-2" style={{ color: colors.textPrimary }}>
+                $0
+              </p>
+              <p className="text-xs uppercase tracking-wide mb-4" style={{ color: colors.textSecondary }}>
+                For getting started.
+              </p>
+              <ul className="space-y-2 text-sm mb-6" style={{ color: colors.textSecondary }}>
+                <li>Unlimited public projects</li>
+                <li>500MB storage</li>
+                <li>Public profile &amp; explore</li>
+                <li>Basic search, comments &amp; stars</li>
+                <li>1–2 private projects</li>
+                <li>3 AI quote estimates / month</li>
+                <li>Sell designs (15% commission)</li>
+              </ul>
+              <button
+                onClick={scrollToWaitlist}
+                className="mt-auto inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium"
+                style={{ color: colors.textPrimary, borderColor: colors.border, backgroundColor: 'transparent' }}
+              >
+                Join waitlist
+              </button>
+            </div>
+
+            {/* Creator - highlighted */}
+            <div className="rounded-2xl border-2 p-6 flex flex-col shadow-lg relative transform md:-translate-y-4 overflow-visible" style={{ borderColor: colors.accent, backgroundColor: 'rgba(255,255,255,0.03)' }}>
+              <div
+                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full text-xs font-medium"
+                style={{ color: colors.accent, border: `2px solid ${colors.accent}`, backgroundColor: colors.bgPrimary }}
+              >
+                Most popular
+              </div>
+              <h3 className="text-lg font-heading font-semibold mb-1" style={{ color: colors.textPrimary }}>
+                Creator
+              </h3>
+              <p className="text-sm mb-4" style={{ color: colors.textSecondary }}>
+                Sell &amp; earn.
+              </p>
+              <p className="text-3xl font-heading font-bold mb-2" style={{ color: colors.textPrimary }}>
+                $15<span className="text-base font-normal">/month</span>
+              </p>
+              <p className="text-xs uppercase tracking-wide mb-4" style={{ color: colors.textSecondary }}>
+                For serious solo creators.
+              </p>
+              <ul className="space-y-2 text-sm mb-6" style={{ color: colors.textSecondary }}>
+                <li>Everything in Free</li>
+                <li>Sell designs in marketplace</li>
+                <li>Personal storefront &amp; Stripe payouts</li>
+                <li>AI manufacturing quotes</li>
+                <li>Licensing controls &amp; reviews</li>
+                <li>Sales analytics &amp; featured eligibility</li>
+                <li>Lower platform fees (5%)</li>
+                <li>More private projects, 50GB storage</li>
+              </ul>
+              <button
+                onClick={scrollToWaitlist}
+                className="mt-auto inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm"
+                style={{ backgroundColor: colors.accent, color: '#0B0E14' }}
+              >
+                Join Creator waitlist
+              </button>
+            </div>
+
+            {/* Studio */}
+            <div className="rounded-2xl border p-6 flex flex-col shadow-sm" style={{ borderColor: colors.border, backgroundColor: 'rgba(255,255,255,0.03)' }}>
+              <h3 className="text-lg font-heading font-semibold mb-1" style={{ color: colors.textPrimary }}>
+                Studio
+              </h3>
+              <p className="text-sm mb-4" style={{ color: colors.textSecondary }}>
+                Teams &amp; scaling.
+              </p>
+              <p className="text-3xl font-heading font-bold mb-2" style={{ color: colors.textPrimary }}>
+                $49<span className="text-base font-normal">/month</span>
+              </p>
+              <p className="text-xs uppercase tracking-wide mb-4" style={{ color: colors.textSecondary }}>
+                For studios &amp; teams.
+              </p>
+              <ul className="space-y-2 text-sm mb-6" style={{ color: colors.textSecondary }}>
+                <li>Everything in Creator</li>
+                <li>10 team members in storefront</li>
+                <li>Team folders &amp; role-based permissions</li>
+                <li>Shared analytics &amp; collaboration</li>
+                <li>Priority quoting</li>
+                <li>Shared storefront brand</li>
+                <li>200GB storage</li>
+                <li>API access</li>
+              </ul>
+              <button
+                onClick={scrollToWaitlist}
+                className="mt-auto inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium"
+                style={{ color: colors.textPrimary, borderColor: colors.border, backgroundColor: 'transparent' }}
+              >
+                Talk to sales
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -640,6 +913,7 @@ export default function ComingSoonPage() {
         className="py-8 border-t"
         style={{
           borderColor: colors.border,
+          backgroundColor: colors.bgPrimary,
         }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
