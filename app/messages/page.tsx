@@ -157,10 +157,11 @@ function MessagesPageContent() {
     setStorefrontLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront`, {
+      const res = await fetch('/api/storefront', {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: 'include',
       });
       if (res.ok) {
         const data = await res.json();

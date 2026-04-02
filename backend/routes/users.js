@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const { getOne, getAll, execute } = require("../lib/db");
 const { getUserFromRequest } = require("../lib/auth");
+const { normalizeTier } = require("../lib/subscriptionFeatures");
 
 // GET /api/users/me - Get current user
 router.get("/me", async (req, res) => {
@@ -91,11 +92,13 @@ router.get("/me", async (req, res) => {
     const bannerUrl =
       publicBase && user.banner ? `${publicBase}/${user.banner}` : null;
 
+    const tierNorm = normalizeTier(user.tier);
     res.json({
       id: user.id,
       username: user.username,
       email: user.email,
-      tier: user.tier || "free",
+      tier: tierNorm,
+      subscription_tier: tierNorm,
       profile_picture: user.profile_picture || null,
       profile_picture_url: profilePictureUrl,
       bio: user.bio || null,
@@ -283,11 +286,13 @@ router.put("/me", async (req, res) => {
     const bannerUrl =
       publicBase && updatedUser.banner ? `${publicBase}/${updatedUser.banner}` : null;
 
+    const tierNormPut = normalizeTier(updatedUser.tier);
     res.json({
       id: updatedUser.id,
       username: updatedUser.username,
       email: updatedUser.email,
-      tier: updatedUser.tier || "free",
+      tier: tierNormPut,
+      subscription_tier: tierNormPut,
       profile_picture: updatedUser.profile_picture || null,
       profile_picture_url: profilePictureUrl,
       bio: updatedUser.bio || null,
@@ -409,11 +414,13 @@ router.get("/:username", async (req, res) => {
     const bannerUrl =
       publicBase && user.banner ? `${publicBase}/${user.banner}` : null;
 
+    const tierNormPublic = normalizeTier(user.tier);
     res.json({
       id: user.id,
       username: user.username,
       email: showEmail ? user.email : null,
-      tier: user.tier || "free",
+      tier: tierNormPublic,
+      subscription_tier: tierNormPublic,
       profile_picture: user.profile_picture || null,
       profile_picture_url: profilePictureUrl,
       bio: user.bio || null,

@@ -129,7 +129,10 @@ export function GlobalNavSidebar() {
   };
 
   return (
-    <div className="h-full flex flex-col" style={{ backgroundColor: DS.colors.background.panel }}>
+    <div
+      className="h-full min-h-0 max-h-full flex flex-col"
+      style={{ backgroundColor: DS.colors.background.panel }}
+    >
       {/* Logo / Brand */}
       <div
         className="flex-shrink-0 flex items-center border-b"

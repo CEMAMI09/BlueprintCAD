@@ -1,16 +1,41 @@
 /**
  * Headless Three.js Thumbnail Generator
- * Uses node-canvas for 2D projection rendering
- * No Puppeteer or external services required
+ * Software z-buffer rasterization (correct occlusion). Painter-sorted 2D fills
+ * fail on real meshes — background shows through as gaps/spots.
  */
 
 const fs = require('fs');
 const path = require('path');
 const { createCanvas } = require('canvas');
+const { PNG } = require('pngjs');
 const THREE = require('three');
+const { REPO_ROOT } = require('./repoRoot');
+
+/** Barycentric weights for p0, p1, p2 (same order as triangle indices). */
+function barycentric2D(px, py, p0x, p0y, p1x, p1y, p2x, p2y) {
+  const v0x = p1x - p0x;
+  const v0y = p1y - p0y;
+  const v1x = p2x - p0x;
+  const v1y = p2y - p0y;
+  const v2x = px - p0x;
+  const v2y = py - p0y;
+  const d00 = v0x * v0x + v0y * v0y;
+  const d01 = v0x * v1x + v0y * v1y;
+  const d11 = v1x * v1x + v1y * v1y;
+  const d20 = v2x * v0x + v2y * v0y;
+  const d21 = v2x * v1x + v2y * v1y;
+  const denom = d00 * d11 - d01 * d01;
+  if (Math.abs(denom) < 1e-24) return null;
+  const v = (d11 * d20 - d01 * d21) / denom;
+  const w = (d00 * d21 - d01 * d20) / denom;
+  const u = 1 - v - w;
+  const eps = -1e-5;
+  if (u >= eps && v >= eps && w >= eps) return { u, v, w };
+  return null;
+}
 
 /**
- * Generate thumbnail from CAD file using Three.js geometry + canvas 2D projection
+ * Generate thumbnail from CAD file using Three.js geometry + software z-buffer rasterization
  * @param {string} cadFilePath - Full path to CAD file
  * @param {string} outputPath - Full path where thumbnail should be saved
  * @param {object} options - Rendering options
@@ -18,10 +43,10 @@ const THREE = require('three');
  */
 async function generateThumbnail(cadFilePath, outputPath, options = {}) {
   const {
-    width = 800,
-    height = 600,
+    width = 1200,
+    height = 675,
     backgroundColor = 0x0a0f18,
-    cameraAngle = { x: 30, y: 25 },
+    cameraAngle = { x: 32, y: 42 },
   } = options;
 
   try {
@@ -31,25 +56,8 @@ async function generateThumbnail(cadFilePath, outputPath, options = {}) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    // Create canvas
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-    
     // Create Three.js scene for geometry processing
     const scene = new THREE.Scene();
-
-    // Setup camera (30° x 25° angle as specified)
-    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-    const angleX = (cameraAngle.x * Math.PI) / 180;
-    const angleY = (cameraAngle.y * Math.PI) / 180;
-    const distance = 5;
-    camera.position.set(
-      distance * Math.sin(angleY) * Math.cos(angleX),
-      distance * Math.sin(angleX),
-      distance * Math.cos(angleY) * Math.cos(angleX)
-    );
-    camera.lookAt(0, 0, 0);
-    camera.updateMatrixWorld();
 
     // Load CAD file
     const ext = path.extname(cadFilePath).toLowerCase();
@@ -83,15 +91,17 @@ async function generateThumbnail(cadFilePath, outputPath, options = {}) {
             const text = data.toString('utf8');
             geometry = loader.parse(text);
           } else {
-            // For binary STL, parse as ArrayBuffer
-            geometry = loader.parse(data.buffer);
+            // For binary STL: use a proper ArrayBuffer slice (Node Buffer.pool can make data.buffer oversized)
+            const ab = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+            geometry = loader.parse(ab);
           }
         } catch (parseError) {
           // If parsing fails, try the other format
           console.warn(`[Thumbnail] Failed to parse as ${isASCII ? 'ASCII' : 'Binary'}, trying alternative...`);
           try {
             if (isASCII) {
-              geometry = loader.parse(data.buffer);
+              const ab = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+              geometry = loader.parse(ab);
             } else {
               geometry = loader.parse(data.toString('utf8'));
             }
@@ -103,6 +113,9 @@ async function generateThumbnail(cadFilePath, outputPath, options = {}) {
         }
         
         console.log(`[Thumbnail] STL geometry loaded, vertices: ${geometry.attributes.position.count}`);
+        if (!geometry.attributes.normal) {
+          geometry.computeVertexNormals();
+        }
       } catch (stlError) {
         console.error(`[Thumbnail] STL loading error:`, stlError.message);
         throw stlError;
@@ -143,6 +156,8 @@ async function generateThumbnail(cadFilePath, outputPath, options = {}) {
           geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
           if (normals.length > 0) {
             geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+          } else {
+            geometry.computeVertexNormals();
           }
           console.log(`[Thumbnail] OBJ geometry extracted, vertices: ${positions.length / 3}`);
         } else {
@@ -178,11 +193,10 @@ async function generateThumbnail(cadFilePath, outputPath, options = {}) {
       // First, center the geometry at origin
       geometry.translate(-center.x, -center.y, -center.z);
       
-      // Then scale to fit in frame (with some padding)
-      const scale = 1.5 / maxDim;
+      // Normalize to ~2 units max extent so bounding-sphere math is stable; final framing uses true bounds
+      const scale = 2 / maxDim;
       geometry.scale(scale, scale, scale);
       
-      // Reset mesh position since geometry is now centered
       mesh.position.set(0, 0, 0);
       mesh.scale.set(1, 1, 1);
       
@@ -191,161 +205,273 @@ async function generateThumbnail(cadFilePath, outputPath, options = {}) {
       console.warn(`[Thumbnail] Warning: maxDim is 0, model may not render correctly`);
     }
 
-    mesh.updateMatrixWorld();
-    camera.lookAt(0, 0, 0); // Look at origin since model is centered there
-    camera.updateMatrixWorld();
-    
-    console.log(`[Thumbnail] Starting 2D projection rendering...`);
+    mesh.updateMatrixWorld(true);
+    const fitBox = new THREE.Box3().setFromObject(mesh);
+    const sphere = fitBox.getBoundingSphere(new THREE.Sphere());
+    const aspect = width / height;
+    const camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 1e6);
+    const angleX = (cameraAngle.x * Math.PI) / 180;
+    const angleY = (cameraAngle.y * Math.PI) / 180;
+    const dir = new THREE.Vector3(
+      Math.sin(angleY) * Math.cos(angleX),
+      Math.sin(angleX),
+      Math.cos(angleY) * Math.cos(angleX)
+    ).normalize();
+    const fovRad = (camera.fov * Math.PI) / 180;
+    const tanHalf = Math.tan(fovRad / 2);
+    const margin = 1.22;
+    let r = Math.max(sphere.radius * margin, 0.001);
+    const distV = r / tanHalf;
+    const distH = r / (tanHalf * aspect);
+    const dist = Math.max(distV, distH);
+    camera.position.copy(dir.clone().multiplyScalar(dist));
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld(true);
 
-    // Setup lighting for shading calculation
-    const light1 = new THREE.DirectionalLight(0xffffff, 0.8);
-    light1.position.set(3, 5, 2);
-    const light2 = new THREE.DirectionalLight(0xffffff, 0.3);
-    light2.position.set(-3, -5, -2);
-    const ambient = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+    console.log(
+      `[Thumbnail] Camera fit: radius≈${sphere.radius.toFixed(3)}, dist=${dist.toFixed(3)}, aspect=${aspect.toFixed(2)}`
+    );
+    console.log(`[Thumbnail] Software z-buffer rasterization (perspective-correct depth)...`);
 
-    // Render using 2D canvas projection
+    const light1 = new THREE.DirectionalLight(0xffffff, 0.9);
+    light1.position.set(6, 10, 8);
+    const light2 = new THREE.DirectionalLight(0xffffff, 0.42);
+    light2.position.set(-5, -4, -6);
+
+    /** Constant directions toward the lights (directional approximation). */
+    const L1 = new THREE.Vector3().copy(light1.position).normalize();
+    const L2 = new THREE.Vector3().copy(light2.position).normalize();
+    const camPos = camera.position;
+
     const positions = geometry.attributes.position;
     const normals = geometry.attributes.normal;
     const vertexCount = positions.count;
     const indices = geometry.index ? geometry.index.array : null;
-    
-    // Clear canvas with solid background (no transparency)
-    const bgColor = `#${backgroundColor.toString(16).padStart(6, '0')}`;
-    ctx.fillStyle = bgColor;
-    ctx.globalAlpha = 1.0;
-    ctx.fillRect(0, 0, width, height);
-    
-    // Project vertices to 2D and calculate lighting
-    const projectedVerts = [];
+
+    const bgR = (backgroundColor >> 16) & 0xff;
+    const bgG = (backgroundColor >> 8) & 0xff;
+    const bgB = backgroundColor & 0xff;
+
+    const png = new PNG({ width, height });
+    const zBuffer = new Float32Array(width * height);
+    zBuffer.fill(1);
+    for (let i = 0; i < width * height; i++) {
+      const o = i * 4;
+      png.data[o] = bgR;
+      png.data[o + 1] = bgG;
+      png.data[o + 2] = bgB;
+      png.data[o + 3] = 255;
+    }
+
+    const mvp = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    mvp.multiply(mesh.matrixWorld);
+
     const worldMatrix = mesh.matrixWorld;
     const normalMatrix = new THREE.Matrix3().getNormalMatrix(worldMatrix);
-    
+    const clips = [];
+    const screens = [];
+    const worldPosArr = new Float32Array(vertexCount * 3);
+    const worldNorArr = new Float32Array(vertexCount * 3);
+
     for (let i = 0; i < vertexCount; i++) {
       const x = positions.getX(i);
       const y = positions.getY(i);
       const z = positions.getZ(i);
-      
-      // Transform to world space
-      const worldPos = new THREE.Vector3(x, y, z).applyMatrix4(worldMatrix);
-      const projected = worldPos.project(camera);
-      const screenX = (projected.x * 0.5 + 0.5) * width;
-      const screenY = (-projected.y * 0.5 + 0.5) * height;
-      
-      // Calculate normal in world space for lighting
+      const clip = new THREE.Vector4(x, y, z, 1).applyMatrix4(mvp);
+      clips.push(clip);
+
+      const invW = 1 / clip.w;
+      const ndcX = clip.x * invW;
+      const ndcY = clip.y * invW;
+      screens.push({
+        x: (ndcX * 0.5 + 0.5) * width,
+        y: (-ndcY * 0.5 + 0.5) * height,
+      });
+
+      const wp = new THREE.Vector3(x, y, z).applyMatrix4(worldMatrix);
+      const o3 = i * 3;
+      worldPosArr[o3] = wp.x;
+      worldPosArr[o3 + 1] = wp.y;
+      worldPosArr[o3 + 2] = wp.z;
+
       let normal = new THREE.Vector3(0, 0, 1);
       if (normals) {
-        const nx = normals.getX(i);
-        const ny = normals.getY(i);
-        const nz = normals.getZ(i);
-        normal = new THREE.Vector3(nx, ny, nz).applyMatrix3(normalMatrix).normalize();
+        normal = new THREE.Vector3(normals.getX(i), normals.getY(i), normals.getZ(i))
+          .applyMatrix3(normalMatrix)
+          .normalize();
       }
-      
-      // Simple lighting calculation
-      const lightDir1 = new THREE.Vector3().subVectors(light1.position, worldPos).normalize();
-      const lightDir2 = new THREE.Vector3().subVectors(light2.position, worldPos).normalize();
-      const dot1 = Math.max(0, normal.dot(lightDir1));
-      const dot2 = Math.max(0, normal.dot(lightDir2));
-      const lighting = 0.6 + (dot1 * 0.8 + dot2 * 0.3);
-      
-      projectedVerts.push({ 
-        x: screenX, 
-        y: screenY, 
-        z: projected.z,
-        lighting: Math.min(1, lighting)
-      });
+      worldNorArr[o3] = normal.x;
+      worldNorArr[o3 + 1] = normal.y;
+      worldNorArr[o3 + 2] = normal.z;
     }
-    
-    // Draw triangles with lighting
-    ctx.lineWidth = 1;
-    
-    // Sort triangles by depth for proper rendering
-    const triangles = [];
-    
+
+    const baseR = 0;
+    const baseG = 136;
+    const baseB = 255;
+
+    /** Per-pixel Phong-style: diffuse + Blinn spec + rim (more depth than vertex Gouraud). */
+    const ambient = 0.11;
+    const keyDiff = 0.58;
+    const fillDiff = 0.26;
+    const specPow = 56;
+    const specStr = 0.32;
+    const rimPow = 2.4;
+    const rimStr = 0.14;
+
+    function drawTri(i0, i1, i2) {
+      const c0 = clips[i0];
+      const c1 = clips[i1];
+      const c2 = clips[i2];
+      if (c0.w <= 1e-6 || c1.w <= 1e-6 || c2.w <= 1e-6) return;
+
+      const p0 = screens[i0];
+      const p1 = screens[i1];
+      const p2 = screens[i2];
+      const invW0 = 1 / c0.w;
+      const invW1 = 1 / c1.w;
+      const invW2 = 1 / c2.w;
+      const ndcZ0 = c0.z * invW0;
+      const ndcZ1 = c1.z * invW1;
+      const ndcZ2 = c2.z * invW2;
+
+      const o0 = i0 * 3;
+      const o1 = i1 * 3;
+      const o2 = i2 * 3;
+      const wx0 = worldPosArr[o0];
+      const wy0 = worldPosArr[o0 + 1];
+      const wz0 = worldPosArr[o0 + 2];
+      const wx1 = worldPosArr[o1];
+      const wy1 = worldPosArr[o1 + 1];
+      const wz1 = worldPosArr[o1 + 2];
+      const wx2 = worldPosArr[o2];
+      const wy2 = worldPosArr[o2 + 1];
+      const wz2 = worldPosArr[o2 + 2];
+      const nx0 = worldNorArr[o0];
+      const ny0 = worldNorArr[o0 + 1];
+      const nz0 = worldNorArr[o0 + 2];
+      const nx1 = worldNorArr[o1];
+      const ny1 = worldNorArr[o1 + 1];
+      const nz1 = worldNorArr[o1 + 2];
+      const nx2 = worldNorArr[o2];
+      const ny2 = worldNorArr[o2 + 1];
+      const nz2 = worldNorArr[o2 + 2];
+
+      let minX = Math.floor(Math.min(p0.x, p1.x, p2.x));
+      let maxX = Math.ceil(Math.max(p0.x, p1.x, p2.x));
+      let minY = Math.floor(Math.min(p0.y, p1.y, p2.y));
+      let maxY = Math.ceil(Math.max(p0.y, p1.y, p2.y));
+      minX = Math.max(0, minX);
+      maxX = Math.min(width - 1, maxX);
+      minY = Math.max(0, minY);
+      maxY = Math.min(height - 1, maxY);
+
+      const L1x = L1.x;
+      const L1y = L1.y;
+      const L1z = L1.z;
+      const L2x = L2.x;
+      const L2y = L2.y;
+      const L2z = L2.z;
+      const cpx = camPos.x;
+      const cpy = camPos.y;
+      const cpz = camPos.z;
+
+      for (let py = minY; py <= maxY; py++) {
+        for (let px = minX; px <= maxX; px++) {
+          const cx = px + 0.5;
+          const cy = py + 0.5;
+          const bc = barycentric2D(cx, cy, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);
+          if (!bc) continue;
+          const { u, v, w } = bc;
+          const denom = u * invW0 + v * invW1 + w * invW2;
+          if (denom <= 0) continue;
+          const zNdc = (u * ndcZ0 * invW0 + v * ndcZ1 * invW1 + w * ndcZ2 * invW2) / denom;
+          const idx = py * width + px;
+          if (zNdc >= zBuffer[idx]) continue;
+          zBuffer[idx] = zNdc;
+
+          const wx =
+            (u * wx0 * invW0 + v * wx1 * invW1 + w * wx2 * invW2) / denom;
+          const wy =
+            (u * wy0 * invW0 + v * wy1 * invW1 + w * wy2 * invW2) / denom;
+          const wz =
+            (u * wz0 * invW0 + v * wz1 * invW1 + w * wz2 * invW2) / denom;
+
+          let nx =
+            (u * nx0 * invW0 + v * nx1 * invW1 + w * nx2 * invW2) / denom;
+          let ny =
+            (u * ny0 * invW0 + v * ny1 * invW1 + w * ny2 * invW2) / denom;
+          let nz =
+            (u * nz0 * invW0 + v * nz1 * invW1 + w * nz2 * invW2) / denom;
+          const nLen = Math.sqrt(nx * nx + ny * ny + nz * nz);
+          if (nLen < 1e-12) continue;
+          nx /= nLen;
+          ny /= nLen;
+          nz /= nLen;
+
+          const vx = cpx - wx;
+          const vy = cpy - wy;
+          const vz = cpz - wz;
+          const vLen = Math.sqrt(vx * vx + vy * vy + vz * vz);
+          if (vLen < 1e-12) continue;
+          const vnx = vx / vLen;
+          const vny = vy / vLen;
+          const vnz = vz / vLen;
+
+          const d1 = Math.max(0, nx * L1x + ny * L1y + nz * L1z);
+          const d2 = Math.max(0, nx * L2x + ny * L2y + nz * L2z);
+          const diffuse = ambient + keyDiff * d1 + fillDiff * d2;
+
+          const hx = L1x + vnx;
+          const hy = L1y + vny;
+          const hz = L1z + vnz;
+          const hLen = Math.sqrt(hx * hx + hy * hy + hz * hz);
+          let spec = 0;
+          if (hLen > 1e-12) {
+            const hnx = hx / hLen;
+            const hny = hy / hLen;
+            const hnz = hz / hLen;
+            const ndh = Math.max(0, nx * hnx + ny * hny + nz * hnz);
+            spec = Math.pow(ndh, specPow) * specStr;
+          }
+
+          const ndv = Math.max(0, nx * vnx + ny * vny + nz * vnz);
+          const rim = rimStr * Math.pow(1 - ndv, rimPow);
+
+          const shade = Math.min(1.15, diffuse + spec + rim);
+          const rr = Math.min(255, Math.floor(baseR * shade + 255 * spec * 0.85));
+          const gg = Math.min(255, Math.floor(baseG * shade + 255 * spec * 0.92));
+          const bb = Math.min(255, Math.floor(baseB * shade + 255 * spec * 1));
+
+          const o = idx * 4;
+          png.data[o] = rr;
+          png.data[o + 1] = gg;
+          png.data[o + 2] = bb;
+          png.data[o + 3] = 255;
+        }
+      }
+    }
+
+    let triCount = 0;
     if (indices) {
+      triCount = indices.length / 3;
       for (let i = 0; i < indices.length; i += 3) {
-        const i0 = indices[i];
-        const i1 = indices[i + 1];
-        const i2 = indices[i + 2];
-        const v0 = projectedVerts[i0];
-        const v1 = projectedVerts[i1];
-        const v2 = projectedVerts[i2];
-        const avgZ = (v0.z + v1.z + v2.z) / 3;
-        const avgLighting = (v0.lighting + v1.lighting + v2.lighting) / 3;
-        triangles.push({ v0, v1, v2, z: avgZ, lighting: avgLighting });
+        drawTri(indices[i], indices[i + 1], indices[i + 2]);
       }
     } else {
-      for (let i = 0; i < projectedVerts.length; i += 3) {
-        const v0 = projectedVerts[i];
-        const v1 = projectedVerts[i + 1];
-        const v2 = projectedVerts[i + 2];
-        const avgZ = (v0.z + v1.z + v2.z) / 3;
-        const avgLighting = (v0.lighting + v1.lighting + v2.lighting) / 3;
-        triangles.push({ v0, v1, v2, z: avgZ, lighting: avgLighting });
+      triCount = vertexCount / 3;
+      for (let i = 0; i < vertexCount; i += 3) {
+        drawTri(i, i + 1, i + 2);
       }
     }
-    
-    // Sort by depth (back to front)
-    triangles.sort((a, b) => a.z - b.z);
-    
-    // Determine if model is low-poly or high-poly based on triangle count
-    // Low-poly: < 1000 triangles, High-poly: >= 1000 triangles
-    const isLowPoly = triangles.length < 1000;
-    const alpha = isLowPoly ? 1.0 : 0.95; // Solid for low-poly, slightly transparent for high-poly
-    
-    console.log(`[Thumbnail] Triangle count: ${triangles.length}, isLowPoly: ${isLowPoly}, alpha: ${alpha}`);
-    
-    // Draw triangles with appropriate transparency
-    for (const tri of triangles) {
-      const { v0, v1, v2 } = tri;
-      
-      const baseColor = { r: 0, g: 136, b: 255 }; // #0088ff
-      const minLight = 0.3;
-      const maxLight = 1.0;
-      
-      // Calculate average lighting for the triangle
-      const avgLight = Math.max(minLight, Math.min(maxLight, (v0.lighting + v1.lighting + v2.lighting) / 3));
-      
-      // Calculate color based on average lighting
-      const r = Math.floor(baseColor.r * avgLight);
-      const g = Math.floor(baseColor.g * avgLight);
-      const b = Math.floor(baseColor.b * avgLight);
-      
-      // Draw filled triangle with appropriate alpha
-      // For low-poly models, use rgb() to ensure no transparency
-      // For high-poly models, use rgba() with slight transparency
-      if (isLowPoly) {
-        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.globalAlpha = 1.0; // Force full opacity for low-poly
-      } else {
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        ctx.globalAlpha = alpha;
-      }
-      
-      ctx.beginPath();
-      ctx.moveTo(v0.x, v0.y);
-      ctx.lineTo(v1.x, v1.y);
-      ctx.lineTo(v2.x, v2.y);
-      ctx.closePath();
-      ctx.fill();
-      
-      // Add subtle edge for definition (only on front-facing bright faces)
-      if (avgLight > 0.6 && tri.z > -0.5) {
-        ctx.strokeStyle = isLowPoly 
-          ? `rgb(${Math.min(255, Math.floor(r * 1.15))}, ${Math.min(255, Math.floor(g * 1.15))}, ${Math.min(255, Math.floor(b * 1.15))})`
-          : `rgba(${Math.min(255, Math.floor(r * 1.15))}, ${Math.min(255, Math.floor(g * 1.15))}, ${Math.min(255, Math.floor(b * 1.15))}, ${alpha * 0.6})`;
-        ctx.lineWidth = 0.5;
-        ctx.globalAlpha = isLowPoly ? 1.0 : alpha * 0.6;
-        ctx.stroke();
-        ctx.globalAlpha = isLowPoly ? 1.0 : alpha;
-      }
+
+    if (triCount > 120000) {
+      console.warn(`[Thumbnail] Large mesh (${triCount} tris); render may take a moment`);
+    } else {
+      console.log(`[Thumbnail] Triangle count: ${triCount}`);
     }
-    
-    // Reset alpha
-    ctx.globalAlpha = 1.0;
-    
-    // Save to file
-    const buffer = canvas.toBuffer('image/png');
+
+    const buffer = PNG.sync.write(png);
     fs.writeFileSync(outputPath, buffer);
     
     // Verify file was written
@@ -379,7 +505,7 @@ async function generateThumbnail(cadFilePath, outputPath, options = {}) {
  * @param {object} options - Options
  */
 async function generatePlaceholderThumbnail(fileName, outputPath, options = {}) {
-  const { width = 800, height = 600 } = options;
+  const { width = 1200, height = 675 } = options;
   
   try {
     const canvas = createCanvas(width, height);
@@ -464,7 +590,7 @@ async function generateThumbnailForDesign(cadFilePath, designId, options = {}) {
   const ext = path.extname(cadFilePath).toLowerCase();
   
   // Ensure thumbnails directory exists
-  const thumbsDir = path.join(process.cwd(), 'storage', 'uploads', 'thumbnails');
+  const thumbsDir = path.join(REPO_ROOT, 'storage', 'uploads', 'thumbnails');
   if (!fs.existsSync(thumbsDir)) {
     fs.mkdirSync(thumbsDir, { recursive: true });
   }
@@ -472,23 +598,25 @@ async function generateThumbnailForDesign(cadFilePath, designId, options = {}) {
   const thumbnailFileName = `${designId}_thumb.png`;
   const thumbnailPath = path.join(thumbsDir, thumbnailFileName);
   const thumbnailUrl = `thumbnails/${thumbnailFileName}`;
+  const renderOpts = { width: 1200, height: 675, ...options };
 
   try {
     // Check if file is viewable and supported
     // isViewable expects extension with dot (e.g., '.stl')
     console.log(`[Thumbnail] Generating for design ${designId}, file: ${cadFilePath}, ext: ${ext}, isViewable: ${isViewable(ext)}`);
-    
+
     if (isViewable(ext)) {
       // Try to generate actual thumbnail for all viewable formats
       try {
         console.log(`[Thumbnail] Attempting 3D render for ${designId}...`);
-        await generateThumbnail(cadFilePath, thumbnailPath, options);
+        await generateThumbnail(cadFilePath, thumbnailPath, renderOpts);
         
         // Verify the thumbnail was actually created and is substantial
         const fs = require('fs');
         if (fs.existsSync(thumbnailPath)) {
           const stats = fs.statSync(thumbnailPath);
-          if (stats.size > 15000) {
+          // PNGs compress well; 15k+ was rejecting valid 3D renders (~6–12KB). Only reject clearly broken files.
+          if (stats.size >= 512) {
             console.log(`[Thumbnail] Successfully generated 3D render for ${designId} (${stats.size} bytes)`);
             return thumbnailUrl;
           } else {
@@ -511,7 +639,7 @@ async function generateThumbnailForDesign(cadFilePath, designId, options = {}) {
         console.warn(`[Thumbnail] Falling back to placeholder for ${designId}`);
         // Fallback to placeholder
         try {
-          await generatePlaceholderThumbnail(cadFilePath, thumbnailPath, options);
+          await generatePlaceholderThumbnail(cadFilePath, thumbnailPath, renderOpts);
           console.log(`[Thumbnail] Placeholder generated successfully for ${designId}`);
         } catch (placeholderError) {
           console.error(`[Thumbnail] Placeholder generation also failed:`, placeholderError.message);
@@ -522,7 +650,7 @@ async function generateThumbnailForDesign(cadFilePath, designId, options = {}) {
     } else {
       console.log(`[Thumbnail] Unsupported format (${ext}), generating placeholder for ${designId}`);
       // Generate placeholder for unsupported formats
-      await generatePlaceholderThumbnail(cadFilePath, thumbnailPath, options);
+      await generatePlaceholderThumbnail(cadFilePath, thumbnailPath, renderOpts);
       return thumbnailUrl;
     }
   } catch (error) {
@@ -530,7 +658,7 @@ async function generateThumbnailForDesign(cadFilePath, designId, options = {}) {
     // Always try to generate placeholder - never return null
     try {
       console.log(`[Thumbnail] Generating placeholder for ${designId}...`);
-      await generatePlaceholderThumbnail(cadFilePath, thumbnailPath, options);
+      await generatePlaceholderThumbnail(cadFilePath, thumbnailPath, renderOpts);
       console.log(`[Thumbnail] Placeholder generated successfully for ${designId}`);
       return thumbnailUrl;
     } catch (fallbackError) {

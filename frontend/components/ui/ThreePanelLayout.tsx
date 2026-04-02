@@ -67,7 +67,7 @@ export function ThreePanelLayout({
       }}
     >
       <div 
-        className="min-h-screen w-screen overflow-hidden flex flex-col md:flex-row"
+        className="min-h-screen w-screen overflow-x-hidden flex flex-col md:flex-row md:items-start"
         style={{ backgroundColor: DS.colors.background.app }}
       >
         {/* MOBILE TOP BAR - Back + Menu (always available on small screens) */}
@@ -111,22 +111,29 @@ export function ThreePanelLayout({
           )}
         </div>
 
-        {/* LEFT PANEL - Navigation Sidebar (desktop) */}
+        {/* LEFT PANEL — fixed to viewport so it stays visible while the page scrolls; spacer reserves width in the flex row */}
         {!hideLeftPanel && (
-          <aside
-            className="hidden md:block flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
-            style={{
-              width: leftWidth,
-              backgroundColor: DS.colors.background.panel,
-              borderRight: `1px solid ${DS.colors.border.subtle}`,
-            }}
-          >
-            {leftPanel}
-          </aside>
+          <>
+            <aside
+              className="hidden md:flex md:flex-col fixed left-0 top-0 z-[25] h-screen max-h-screen flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+              style={{
+                width: leftWidth,
+                backgroundColor: DS.colors.background.panel,
+                borderRight: `1px solid ${DS.colors.border.subtle}`,
+              }}
+            >
+              {leftPanel}
+            </aside>
+            <div
+              className="hidden md:block flex-shrink-0 transition-all duration-300 ease-in-out"
+              style={{ width: leftWidth }}
+              aria-hidden
+            />
+          </>
         )}
 
         {/* CENTER PANEL - Main Workspace */}
-        <main className="flex-1 overflow-hidden flex flex-col min-w-0">
+        <main className="flex-1 min-h-screen min-w-0 overflow-hidden flex flex-col">
           {centerPanel}
         </main>
 

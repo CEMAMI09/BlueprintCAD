@@ -3,6 +3,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { REPO_ROOT } = require("./repoRoot");
 const { getR2Client, uploadToR2, generateUserAssetKey } = require("./r2");
 const { GetObjectCommand } = require("@aws-sdk/client-s3");
 
@@ -30,7 +31,7 @@ function tryLoadThumbnailGenerator() {
 async function generateThumbnailFromR2(r2FilePath, projectId, userId) {
   const s3Client = getR2Client();
   const bucketName = process.env.R2_BUCKET_NAME;
-  const tempDir = path.join(process.cwd(), "temp");
+  const tempDir = path.join(REPO_ROOT, "temp");
   const tempFilePath = path.join(tempDir, `temp_${projectId}_${Date.now()}${path.extname(r2FilePath)}`);
 
   try {
@@ -64,7 +65,7 @@ async function generateThumbnailFromR2(r2FilePath, projectId, userId) {
     // Generate thumbnail - try canvas first, fallback to simple placeholder
     console.log(`[Thumbnail] Generating thumbnail for project ${projectId}...`);
     
-    const thumbsDir = path.join(process.cwd(), "storage", "uploads", "thumbnails");
+    const thumbsDir = path.join(REPO_ROOT, "storage", "uploads", "thumbnails");
     if (!fs.existsSync(thumbsDir)) {
       fs.mkdirSync(thumbsDir, { recursive: true });
     }
@@ -79,10 +80,11 @@ async function generateThumbnailFromR2(r2FilePath, projectId, userId) {
       if (thumbnailGen) {
         try {
           const thumbnailRelativePath = await thumbnailGen(tempFilePath, projectId.toString());
-          const generatedPath = path.join(process.cwd(), "storage", "uploads", thumbnailRelativePath);
+          const generatedPath = path.join(REPO_ROOT, "storage", "uploads", thumbnailRelativePath);
           if (fs.existsSync(generatedPath)) {
             const stats = fs.statSync(generatedPath);
-            if (stats.size > 15000) {
+            // PNGs are often < 15KB; must match generateThumbnail.js threshold
+            if (stats.size >= 512) {
               // Use the generated thumbnail
               thumbnailBuffer = await fs.promises.readFile(generatedPath);
               console.log(`[Thumbnail] Generated 3D thumbnail: ${thumbnailBuffer.length} bytes`);
@@ -94,13 +96,19 @@ async function generateThumbnailFromR2(r2FilePath, projectId, userId) {
                 console.warn("[Thumbnail] Failed to clean up generated thumbnail:", cleanupError);
               }
             }
+          } else {
+            console.warn(
+              `[Thumbnail] Generated PNG not found at ${generatedPath} (REPO_ROOT=${REPO_ROOT}). Falling back to placeholder.`
+            );
           }
         } catch (threeError) {
           console.warn(`[Thumbnail] 3D thumbnail generation failed:`, threeError.message);
           // Fall through to simple placeholder
         }
       } else {
-        console.log(`[Thumbnail] Canvas not available, skipping 3D generation`);
+        console.warn(
+          `[Thumbnail] Full generator not loaded (canvas/three). Install deps and rebuild canvas if needed. Skipping 3D.`
+        );
       }
       
       // If 3D generation failed, use simple placeholder

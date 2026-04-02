@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const { getUserFromRequest } = require("../lib/auth");
-const { getOne, getAll, execute } = require("../lib/db");
+const { getOne, getAll, execute, query } = require("../lib/db");
 
 // GET /api/projects - List projects (with optional filters: username, sort, for_sale, search)
 router.get("/", async (req, res) => {
@@ -29,7 +29,9 @@ router.get("/", async (req, res) => {
         p.created_at,
         p.updated_at,
         p.thumbnail_path,
-        u.username
+        u.username,
+        u.profile_picture,
+        u.tier AS subscription_tier
       FROM projects p
       INNER JOIN users u ON p.user_id = u.id
       WHERE 1=1
@@ -56,9 +58,7 @@ router.get("/", async (req, res) => {
       query += ` AND (p.title ILIKE $${paramIndex} OR p.description ILIKE $${paramIndex} OR p.tags ILIKE $${paramIndex})`;
       const searchTerm = `%${search.trim()}%`;
       params.push(searchTerm);
-      params.push(searchTerm);
-      params.push(searchTerm);
-      paramIndex += 3;
+      paramIndex += 1;
     }
 
     // Only show public projects (unless user is viewing their own)
@@ -119,6 +119,8 @@ router.get("/", async (req, res) => {
       updated_at: p.updated_at,
       thumbnail_path: p.thumbnail_path || null,
       username: p.username,
+      profile_picture: p.profile_picture || null,
+      subscription_tier: p.subscription_tier || null,
     }));
 
     res.json(formattedProjects);
@@ -142,6 +144,68 @@ router.get("/starred", async (req, res) => {
   } catch (error) {
     console.error("GET /api/projects/starred error:", error);
     res.status(500).json({ error: "Failed to fetch starred projects" });
+  }
+});
+
+// DELETE /api/projects/:id - Owner deletes project (must come before GET /:id)
+router.delete("/:id", async (req, res) => {
+  const decoded = getUserFromRequest(req);
+  if (!decoded || !decoded.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { id } = req.params;
+  let project;
+  try {
+    project = await getOne(`SELECT id, user_id FROM projects WHERE id = $1`, [
+      id,
+    ]);
+  } catch (error) {
+    console.error("DELETE /api/projects/:id lookup error:", error);
+    return res.status(500).json({ error: "Failed to delete project" });
+  }
+
+  if (!project) {
+    return res.status(404).json({ error: "Project not found" });
+  }
+
+  if (project.user_id !== decoded.userId) {
+    return res.status(403).json({ error: "Not authorized" });
+  }
+
+  // Optional FK cleanups — each runs in its own autocommit statement. Using a single
+  // transaction caused 25P02 if the first DELETE failed (e.g. wrong column name);
+  // Postgres then rejects all later commands in that transaction.
+  const tryCleanup = async (sql, params) => {
+    try {
+      await query(sql, params);
+    } catch (e) {
+      if (e.code === "42P01" || e.code === "42703") return;
+      console.warn("[DELETE project] optional cleanup skipped:", e.code, e.message);
+    }
+  };
+
+  try {
+    await tryCleanup("DELETE FROM orders WHERE project_id = $1", [id]);
+    await tryCleanup("DELETE FROM cad_files WHERE project_id = $1", [id]);
+
+    const del = await query(
+      `DELETE FROM projects WHERE id = $1 AND user_id = $2`,
+      [id, decoded.userId]
+    );
+
+    if (!del.rowCount) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("DELETE /api/projects/:id error:", error);
+    res.status(500).json({
+      error: "Failed to delete project",
+      detail:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 });
 

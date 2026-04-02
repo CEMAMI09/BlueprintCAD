@@ -1,7 +1,30 @@
+const fs = require("fs");
+const path = require("path");
+const dotenv = require("dotenv");
+
+// Load repo-root .env.local / .env so Express sees DATABASE_URL, JWT_SECRET, R2_* (same as Next).
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
+dotenv.config({ path: path.join(__dirname, "..", ".env.local"), override: true });
+
+// Re-apply DATABASE_* from .env.local so a shell-exported Railway internal URL cannot override the file.
+try {
+  const envLocal = path.join(__dirname, "..", ".env.local");
+  if (fs.existsSync(envLocal)) {
+    const parsed = dotenv.parse(fs.readFileSync(envLocal, "utf8"));
+    if (parsed.DATABASE_PUBLIC_URL) {
+      process.env.DATABASE_PUBLIC_URL = parsed.DATABASE_PUBLIC_URL;
+    }
+    if (parsed.DATABASE_URL) {
+      process.env.DATABASE_URL = parsed.DATABASE_URL;
+    }
+  }
+} catch (err) {
+  console.warn("[env] Could not re-apply DATABASE_* from .env.local:", err.message);
+}
+
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path = require("path");
 
 const app = express();
 
@@ -10,6 +33,7 @@ const allowedOrigins = [
   "https://www.blueprintcad.io",
   "https://blueprintcad.io",
   "http://localhost:3000",
+  "http://127.0.0.1:3000",
 ];
 
 app.use(cors({
@@ -64,6 +88,7 @@ app.use("/api/users", require("./routes/users"));
 app.use("/api/stats", require("./routes/stats"));
 app.use("/api/upload", require("./routes/upload"));
 app.use("/api/subscriptions", require("./routes/subscriptions"));
+app.use("/api/storefront", require("./routes/storefront"));
 app.use("/api/folders", require("./routes/folders"));
 app.use("/api/projects", require("./routes/projects"));
 app.use("/api/files", require("./routes/files"));

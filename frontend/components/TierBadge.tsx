@@ -1,9 +1,6 @@
 /**
- * TierBadge Component
- * Displays subscription tier badges for users
- * Free → grey badge with "Free" (no crown)
- * Creator → blue badge with crown
- * Studio → purple badge with crown
+ * TierBadge — paid tiers only (Creator, Studio). Free users get no badge.
+ * Tier strings are normalized like the API (enterprise → studio, pro/premium → creator).
  */
 
 'use client';
@@ -18,69 +15,48 @@ interface TierBadgeProps {
   className?: string;
 }
 
-export default function TierBadge({ tier, size = 'sm', className = '' }: TierBadgeProps) {
-  // Normalize tier name
-  const normalizedTier = tier?.toLowerCase() || 'free';
-  
-  // Determine badge style and label
+/** Match backend/lib/subscriptionFeatures.js normalizeTier */
+function normalizeTier(
+  raw: string | null | undefined
+): 'free' | 'creator' | 'studio' {
+  if (raw == null || raw === '') return 'free';
+  const r = String(raw).toLowerCase().trim();
+  const legacy: Record<string, 'creator' | 'studio'> = {
+    enterprise: 'studio',
+    pro: 'creator',
+    premium: 'creator',
+    team: 'studio',
+  };
+  if (legacy[r]) return legacy[r];
+  if (r === 'creator' || r === 'studio' || r === 'free') return r;
+  return 'free';
+}
+
+export default function TierBadge({
+  tier,
+  size = 'sm',
+  className = '',
+}: TierBadgeProps) {
+  const t = normalizeTier(tier);
+  if (t === 'free') return null;
+
   let badgeStyle: React.CSSProperties;
   let label: string;
-  let showCrown: boolean = false;
-  
-  if (normalizedTier === 'free') {
-    // Free tier → grey badge, no crown
-    badgeStyle = {
-      backgroundColor: DS.colors.background.elevated,
-      color: DS.colors.text.secondary,
-      border: `1px solid ${DS.colors.border.default}`,
-    };
-    label = 'Free';
-    showCrown = false;
-  } else if (normalizedTier === 'creator') {
-    // Creator → blue badge with crown
+
+  if (t === 'creator') {
     badgeStyle = {
       backgroundColor: DS.colors.primary.blue,
       color: '#ffffff',
     };
     label = 'Creator';
-    showCrown = true;
-  } else if (normalizedTier === 'studio') {
-    // Studio → purple badge with crown
+  } else {
     badgeStyle = {
-      backgroundColor: '#9333ea', // Purple
+      backgroundColor: '#9333ea',
       color: '#ffffff',
     };
     label = 'Studio';
-    showCrown = true;
-  } else {
-    // Legacy tiers or unknown → map to closest
-    if (normalizedTier === 'premium' || normalizedTier === 'pro') {
-      badgeStyle = {
-        backgroundColor: DS.colors.primary.blue,
-        color: '#ffffff',
-      };
-      label = 'Creator';
-      showCrown = true;
-    } else if (normalizedTier === 'enterprise') {
-      badgeStyle = {
-        backgroundColor: '#9333ea',
-        color: '#ffffff',
-      };
-      label = 'Studio';
-      showCrown = true;
-    } else {
-      // Unknown tier → show as free
-      badgeStyle = {
-        backgroundColor: DS.colors.background.elevated,
-        color: DS.colors.text.secondary,
-        border: `1px solid ${DS.colors.border.default}`,
-      };
-      label = 'Free';
-      showCrown = false;
-    }
   }
 
-  // Size classes
   const sizeClasses = {
     sm: 'text-xs px-2 py-0.5',
     md: 'text-sm px-2.5 py-1',
@@ -99,19 +75,16 @@ export default function TierBadge({ tier, size = 'sm', className = '' }: TierBad
       style={badgeStyle}
       title={`${label} tier`}
     >
-      {showCrown && (
-        <Crown 
-          size={iconSizes[size]} 
-          style={{ 
-            color: badgeStyle.color, 
-            fill: 'none', 
-            stroke: badgeStyle.color,
-            strokeWidth: 2 
-          }}
-        />
-      )}
+      <Crown
+        size={iconSizes[size]}
+        style={{
+          color: badgeStyle.color,
+          fill: 'none',
+          stroke: badgeStyle.color,
+          strokeWidth: 2,
+        }}
+      />
       {label}
     </span>
   );
 }
-

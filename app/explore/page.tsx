@@ -7,7 +7,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   ThreePanelLayout,
   CenterPanel,
@@ -21,11 +20,11 @@ import SubscriptionGate from '@/frontend/components/SubscriptionGate';
 import UpgradeModal from '@/frontend/components/UpgradeModal';
 import TierBadge from '@/frontend/components/TierBadge';
 import ShareLinkModal from '@/frontend/components/ShareLinkModal';
+import { mapProjectsToDesigns, type Design } from '@/frontend/lib/mapProjectsToDesigns';
+import { ExploreDesignGrid } from '@/frontend/components/ExploreDesignGrid';
 import {
   Download,
   Star,
-  Eye,
-  Heart,
   DollarSign,
   TrendingUp,
   Clock,
@@ -33,31 +32,7 @@ import {
   List,
   User,
   Users,
-  Share2,
 } from 'lucide-react';
-
-interface Design {
-  id: string;
-  title: string;
-  author: string;
-  authorAvatar: string;
-  authorProfilePicture?: string | null;
-  authorSubscriptionTier?: string | null;
-  thumbnail: string;
-  thumbnailUrl?: string | null;
-  stars: number;
-  downloads: number;
-  views: number;
-  price: number | null;
-  tags: string[];
-  createdAt: string;
-  description: string;
-  files: number;
-  comments: number;
-  liked: boolean;
-  fileUrl?: string | null;
-  fileType?: string | null;
-}
 
 interface UserResult {
   id: number;
@@ -81,45 +56,6 @@ export default function ExplorePage() {
   const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedDesignForShare, setSelectedDesignForShare] = useState<Design | null>(null);
-
-  // Helper function to map projects to designs
-  const mapProjectsToDesigns = (projects: any[]): Design[] => {
-    return projects.map((p: any) => {
-      let thumbnailUrl = null;
-      if (p.thumbnail_path) {
-        const thumbnailPath = String(p.thumbnail_path);
-        // Use the full R2 key with the thumbnails proxy route
-        // Add cache-busting query parameter to ensure fresh images
-        thumbnailUrl = `/api/thumbnails/${encodeURIComponent(thumbnailPath)}?t=${Date.now()}`;
-      }
-      return {
-        id: p.id.toString(),
-        title: p.title || p.name,
-        author: p.username,
-        authorAvatar: p.username?.substring(0, 2).toUpperCase() || 'UN',
-        authorProfilePicture: p.profile_picture || null,
-        authorSubscriptionTier: p.subscription_tier || null,
-        // ProjectCard uses project.thumbnail as the image URL
-        // Fallback to box emoji if no thumbnail URL is available
-        thumbnail: thumbnailUrl || '📦',
-        thumbnailUrl, // keep for any other consumers
-        stars: p.likes || 0,
-        downloads: p.downloads || 0,
-        views: p.views || 0,
-        price: p.for_sale ? (p.price || 0) : null,
-        tags: p.tags ? (typeof p.tags === 'string' ? p.tags.split(',') : p.tags) : [],
-        createdAt: p.created_at,
-        description: p.description || '',
-        files: p.file_count || 0,
-        comments: p.comment_count || 0,
-        liked: false,
-        fileUrl: p.file_path && p.file_type && ['stl','obj','fbx','gltf','glb','ply','dae','collada'].includes(p.file_type.toLowerCase().replace('.', ''))
-          ? `/api/files/${encodeURIComponent(String(p.file_path))}`
-          : null,
-        fileType: p.file_type ? (p.file_type.startsWith('.') ? p.file_type : `.${p.file_type}`) : null,
-      };
-    });
-  };
 
   // Fetch users based on search query
   const fetchUsers = async (search: string) => {
@@ -491,222 +427,18 @@ export default function ExplorePage() {
                         title="No designs found"
                         description={`No designs match "${searchQuery}"`}
                       />
-                    ) : viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {designs.map((design) => {
-                            return (
-                              <Link href={`/project/${design.id}`} key={design.id} style={{ textDecoration: 'none' }}>
-                                <Card hover padding="none" style={{ cursor: 'pointer' }} className="h-full flex flex-col">
-                                  {/* Thumbnail */}
-                                  <div className="aspect-video rounded-t-lg overflow-hidden flex-shrink-0 relative" style={{ backgroundColor: DS.colors.background.panel, minHeight: '180px' }}>
-                                    {design.thumbnailUrl ? (
-                                      <img
-                                        key={`thumb-${design.id}-${design.thumbnailUrl}`}
-                                        src={design.thumbnailUrl.startsWith('/api/') 
-                                          ? `${process.env.NEXT_PUBLIC_API_URL || ''}${design.thumbnailUrl}`
-                                          : design.thumbnailUrl}
-                                        alt={design.title}
-                                        className="design-thumbnail"
-                                        loading="lazy"
-                                        style={{ 
-                                          width: '100%',
-                                          height: '100%',
-                                          objectFit: 'cover',
-                                          display: 'block'
-                                        }}
-                                        onError={(e) => {
-                                          console.error(`[Explore] Failed to load thumbnail for ${design.id}:`, design.thumbnailUrl, 'Error:', e);
-                                          const img = e.currentTarget;
-                                          img.style.display = 'none';
-                                          const container = img.parentElement;
-                                          if (container) {
-                                            let fallback = container.querySelector('.thumbnail-fallback') as HTMLElement;
-                                            if (!fallback) {
-                                              fallback = document.createElement('div');
-                                              fallback.className = 'thumbnail-fallback flex flex-col items-center justify-center w-full h-full absolute inset-0';
-                                              fallback.style.zIndex = '1';
-                                              fallback.innerHTML = `<span class="text-5xl mb-2">${design.thumbnail}</span><span class="text-xs">No thumbnail available</span>`;
-                                              container.appendChild(fallback);
-                                            }
-                                            fallback.style.display = 'flex';
-                                          }
-                                        }}
-                                        onLoad={() => {
-                                          console.log(`[Explore] Successfully loaded thumbnail for ${design.id}:`, design.thumbnailUrl);
-                                        }}
-                                      />
-                                    ) : (
-                                      <div className="flex flex-col items-center justify-center w-full h-full">
-                                        <span className="text-5xl mb-2">{design.thumbnail}</span>
-                                        <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>No thumbnail available</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  {/* Card Content */}
-                                  <div className="p-4 flex flex-col flex-grow min-h-[140px]">
-                                    <div className="flex items-start justify-between mb-2">
-                                      <h3
-                                        className="font-semibold text-base line-clamp-1 flex-1"
-                                        style={{ color: DS.colors.text.primary }}
-                                      >
-                                        {design.title}
-                                      </h3>
-                                      {design.liked && <Heart size={16} fill={DS.colors.accent.error} style={{ color: DS.colors.accent.error }} className="flex-shrink-0 ml-2" />}
-                                    </div>
-                                    <div className="flex items-center gap-2 mb-3">
-                                      <div
-                                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                        style={{ 
-                                          backgroundColor: design.authorProfilePicture ? 'transparent' : DS.colors.primary.blue, 
-                                          color: '#ffffff' 
-                                        }}
-                                      >
-                                        {design.authorProfilePicture ? (
-                                          <img
-                                            src={`/api/users/profile-picture/${design.authorProfilePicture}`}
-                                            alt={design.author}
-                                            className="w-full h-full rounded-full object-cover"
-                                            onError={(e) => {
-                                              e.currentTarget.style.display = 'none';
-                                              const parent = e.currentTarget.parentElement;
-                                              if (parent) {
-                                                parent.style.backgroundColor = DS.colors.primary.blue;
-                                                parent.textContent = design.authorAvatar;
-                                              }
-                                            }}
-                                          />
-                                        ) : (
-                                          design.authorAvatar
-                                        )}
-                                      </div>
-                                      <span className="text-sm truncate" style={{ color: DS.colors.text.secondary }}>
-                                        {design.author}
-                                      </span>
-                                      <TierBadge tier={design.authorSubscriptionTier} size="sm" />
-                                    </div>
-                                    <div className="flex items-center gap-4 text-sm mb-3" style={{ color: DS.colors.text.tertiary }}>
-                                      <div className="flex items-center gap-1">
-                                        <Star size={14} />
-                                        {design.stars}
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <Download size={14} />
-                                        {design.downloads}
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <Eye size={14} />
-                                        {design.views}
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center justify-between mt-auto">
-                                      <div className="flex flex-wrap gap-2">
-                                        {design.tags.slice(0, 2).map((tag) => (
-                                          <Badge key={tag} variant="default" size="sm">
-                                            {tag}
-                                          </Badge>
-                                        ))}
-                                        {design.price !== null && (
-                                          <Badge variant="primary" size="sm">
-                                            ${design.price}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setSelectedDesignForShare(design);
-                                          setShowShareModal(true);
-                                        }}
-                                        className="p-2 rounded-lg hover:bg-gray-800 transition"
-                                        style={{ color: DS.colors.text.secondary }}
-                                        title="Share design"
-                                      >
-                                        <Share2 size={16} />
-                                      </button>
-                                    </div>
-                                  </div>
-                                </Card>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {designs.map((design) => {
-                            return (
-                              <Link 
-                                href={`/project/${design.id}`} 
-                                key={design.id} 
-                                style={{ textDecoration: 'none', display: 'block' }}
-                              >
-                                <Card
-                                  hover
-                                  padding="md"
-                                  style={{ cursor: 'pointer' }}
-                                >
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-24 h-24 rounded-lg flex-shrink-0 overflow-hidden" style={{ backgroundColor: DS.colors.background.panelHover }}>
-                                      {design.thumbnailUrl ? (
-                                        <img
-                                          src={design.thumbnailUrl.startsWith('/api/') 
-                                            ? `${process.env.NEXT_PUBLIC_API_URL || ''}${design.thumbnailUrl}`
-                                            : design.thumbnailUrl}
-                                          alt={design.title}
-                                          className="w-full h-full object-cover"
-                                          loading="lazy"
-                                          onError={(e) => {
-                                            e.currentTarget.style.display = 'none';
-                                          }}
-                                        />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-2xl">
-                                          {design.thumbnail}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-start justify-between mb-2">
-                                        <h3 className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                                          {design.title}
-                                        </h3>
-                                        {design.price !== null && (
-                                          <span className="text-xl font-bold ml-4" style={{ color: DS.colors.primary.blue }}>
-                                            ${design.price}
-                                          </span>
-                                        )}
-                                      </div>
-                                      <p className="text-sm mb-3 line-clamp-2" style={{ color: DS.colors.text.secondary }}>
-                                        {design.description}
-                                      </p>
-                                      <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.secondary }}>
-                                        {design.tags.slice(0, 2).map((tag) => (
-                                          <Badge key={tag} variant="default" size="sm">
-                                            {tag}
-                                          </Badge>
-                                        ))}
-                                        <span className="flex items-center gap-1">
-                                          <Star size={14} style={{ color: DS.colors.accent.warning }} />
-                                          {design.stars}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                          <Download size={14} />
-                                          {design.downloads} downloads
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                          <Eye size={14} />
-                                          {design.views} views
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </Card>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      )
-                    }
+                    ) : (
+                      <ExploreDesignGrid
+                        designs={designs}
+                        viewMode={viewMode}
+                        showShareButton
+                        showAuthorTierBadge
+                        onShare={(d) => {
+                          setSelectedDesignForShare(d);
+                          setShowShareModal(true);
+                        }}
+                      />
+                    )}
                   </div>
                 )}
 
@@ -738,185 +470,14 @@ export default function ExplorePage() {
                 title="No designs found"
                 description="Be the first to upload a design to the community!"
               />
-            ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {designs.map((design) => {
-                    return (
-                      <Link href={`/project/${design.id}`} key={design.id} style={{ textDecoration: 'none' }}>
-                        <Card hover padding="none" style={{ cursor: 'pointer' }} className="h-full flex flex-col">
-                          {/* Thumbnail */}
-                          <div className="aspect-video rounded-t-lg overflow-hidden flex-shrink-0 relative" style={{ backgroundColor: DS.colors.background.panel }}>
-                            {design.thumbnailUrl ? (
-                              <img
-                                src={design.thumbnailUrl.startsWith('/api/') 
-                                  ? `${process.env.NEXT_PUBLIC_API_URL || ''}${design.thumbnailUrl}`
-                                  : design.thumbnailUrl}
-                                alt={design.title}
-                                className="design-thumbnail w-full h-full object-cover"
-                                loading="lazy"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  const fallback = e.currentTarget.nextElementSibling;
-                                  if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                                }}
-                              />
-                            ) : null}
-                            <div 
-                              className="flex flex-col items-center justify-center w-full h-full"
-                              style={{ display: design.thumbnailUrl ? 'none' : 'flex' }}
-                            >
-                              <span className="text-5xl mb-2">{design.thumbnail}</span>
-                              <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>No thumbnail available</span>
-                            </div>
-                          </div>
-                          {/* Card Content */}
-                          <div className="p-4 flex flex-col flex-grow min-h-[140px]">
-                            <div className="flex items-start justify-between mb-2">
-                              <h3
-                                className="font-semibold text-base line-clamp-1 flex-1"
-                                style={{ color: DS.colors.text.primary }}
-                              >
-                                {design.title}
-                              </h3>
-                              {design.liked && <Heart size={16} fill={DS.colors.accent.error} style={{ color: DS.colors.accent.error }} className="flex-shrink-0 ml-2" />}
-                            </div>
-                            <div className="flex items-center gap-2 mb-3">
-                              <div
-                                className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                style={{ 
-                                  backgroundColor: design.authorProfilePicture ? 'transparent' : DS.colors.primary.blue, 
-                                  color: '#ffffff' 
-                                }}
-                              >
-                                {design.authorProfilePicture ? (
-                                  <img
-                                    src={`/api/users/profile-picture/${design.authorProfilePicture}`}
-                                    alt={design.author}
-                                    className="w-full h-full rounded-full object-cover"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                      const parent = e.currentTarget.parentElement;
-                                      if (parent) {
-                                        parent.style.backgroundColor = DS.colors.primary.blue;
-                                        parent.textContent = design.authorAvatar;
-                                      }
-                                    }}
-                                  />
-                                ) : (
-                                  design.authorAvatar
-                                )}
-                              </div>
-                              <span className="text-sm truncate" style={{ color: DS.colors.text.secondary }}>
-                                {design.author}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm mb-3" style={{ color: DS.colors.text.tertiary }}>
-                              <div className="flex items-center gap-1">
-                                <Star size={14} />
-                                {design.stars}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Download size={14} />
-                                {design.downloads}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Eye size={14} />
-                                {design.views}
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-auto">
-                              {design.tags.slice(0, 2).map((tag) => (
-                                <Badge key={tag} variant="default" size="sm">
-                                  {tag}
-                                </Badge>
-                              ))}
-                              {design.price !== null && (
-                                <Badge variant="primary" size="sm">
-                                  ${design.price}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {designs.map((design) => {
-                    return (
-                      <Link 
-                        href={`/project/${design.id}`} 
-                        key={design.id} 
-                        style={{ textDecoration: 'none', display: 'block' }}
-                      >
-                        <Card
-                          hover
-                          padding="md"
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-24 h-24 rounded-lg flex-shrink-0 overflow-hidden" style={{ backgroundColor: DS.colors.background.panelHover }}>
-                              {design.thumbnailUrl ? (
-                                <img
-                                  src={design.thumbnailUrl.startsWith('/api/') 
-                                    ? `${process.env.NEXT_PUBLIC_API_URL || ''}${design.thumbnailUrl}`
-                                    : design.thumbnailUrl}
-                                  alt={design.title}
-                                  className="w-full h-full object-cover"
-                                  loading="lazy"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-2xl">
-                                  {design.thumbnail}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between mb-2">
-                                <h3 className="font-semibold" style={{ color: DS.colors.text.primary }}>
-                                  {design.title}
-                                </h3>
-                                {design.price !== null && (
-                                  <span className="text-xl font-bold ml-4" style={{ color: DS.colors.primary.blue }}>
-                                    ${design.price}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-sm mb-3 line-clamp-2" style={{ color: DS.colors.text.secondary }}>
-                                {design.description}
-                              </p>
-                              <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.secondary }}>
-                                {design.tags.slice(0, 2).map((tag) => (
-                                  <Badge key={tag} variant="default" size="sm">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                                <span className="flex items-center gap-1">
-                                  <Star size={14} style={{ color: DS.colors.accent.warning }} />
-                                  {design.stars}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Download size={14} />
-                                  {design.downloads} downloads
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Eye size={14} />
-                                  {design.views} views
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+            ) : (
+              <ExploreDesignGrid
+                designs={designs}
+                viewMode={viewMode}
+                showShareButton={false}
+                showAuthorTierBadge={false}
+              />
+            )}
               </>
             )}
             </div>

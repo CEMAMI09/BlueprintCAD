@@ -17,22 +17,22 @@ import {
   PanelContent,
 } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
-import { Button, Card, Badge, SearchBar } from '@/components/ui/UIComponents';
+import { Button, Card, Badge, SearchBar, EmptyState } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import { mapProjectsToDesigns, type Design } from '@/frontend/lib/mapProjectsToDesigns';
+import { ExploreDesignGrid } from '@/frontend/components/ExploreDesignGrid';
+import ShareLinkModal from '@/frontend/components/ShareLinkModal';
+import { industryLabel } from '@/frontend/lib/storefront-industries';
 import {
   Store,
   Star,
   DollarSign,
-  ShoppingCart,
   UserPlus,
   UserMinus,
   MessageCircle,
   TrendingUp,
   Calendar,
-  Award,
   CheckCircle,
-  Search,
-  Filter,
   Grid3x3,
   List,
   Github,
@@ -40,24 +40,10 @@ import {
   Instagram,
   Youtube,
   Globe,
+  Clock,
+  Download,
+  Factory,
 } from 'lucide-react';
-
-interface Product {
-  id: number;
-  title: string;
-  description: string;
-  price: number;
-  thumbnail_path: string | null;
-  sales_count: number;
-  average_rating: number;
-  review_count: number;
-  created_at: string;
-  available_licenses: Array<{
-    type: string;
-    name: string;
-    price: number;
-  }>;
-}
 
 interface Storefront {
   id: number;
@@ -82,6 +68,7 @@ interface Storefront {
   license_summary: string | null;
   pinned_products: number[] | null;
   featured_projects: number[] | null;
+  focused_industry?: string | null;
 }
 
 interface Review {
@@ -112,14 +99,17 @@ export default function PublicStorefrontPage() {
   
   const [storefront, setStorefront] = useState<Storefront | null>(null);
   const [owner, setOwner] = useState<StorefrontOwner | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'newest' | 'best_sellers' | 'price' | 'rating'>('newest');
+  const [designSearchQuery, setDesignSearchQuery] = useState('');
+  const [designFilter, setDesignFilter] = useState('trending');
+  const [designs, setDesigns] = useState<Design[]>([]);
+  const [designsLoading, setDesignsLoading] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedDesignForShare, setSelectedDesignForShare] = useState<Design | null>(null);
   const [activeSection, setActiveSection] = useState<'products' | 'about' | 'reviews'>('products');
 
   useEffect(() => {
@@ -132,12 +122,11 @@ export default function PublicStorefrontPage() {
 
   const fetchStorefront = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront/${username}`);
+      const res = await fetch(`/api/storefront/${encodeURIComponent(username)}`);
       if (res.ok) {
         const data = await res.json();
         setStorefront(data.storefront);
         setOwner(data.owner);
-        setProducts(data.products || []);
         setReviews(data.reviews || []);
         setFollowing(data.following || false);
       } else if (res.status === 404) {
@@ -184,41 +173,54 @@ export default function PublicStorefrontPage() {
     router.push(`/messages?with=${username}&storefront=true`);
   };
 
-  const handleBuy = (product: Product, licenseType?: string) => {
-    const checkoutData = {
-      type: 'digital',
-      projectId: product.id,
-      title: product.title,
-      price: licenseType 
-        ? product.available_licenses.find(l => l.type === licenseType)?.price || product.price
-        : product.price,
-      licenseType: licenseType || product.available_licenses[0]?.type,
-      sellerUsername: username,
-    };
-    
-    sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-    router.push('/checkout');
+  const fetchDesigns = async (filterId: string = designFilter, search: string = designSearchQuery) => {
+    if (!username) return;
+    try {
+      setDesignsLoading(true);
+      const params = new URLSearchParams();
+      params.append('username', username);
+      if (filterId === 'free') {
+        params.append('for_sale', 'false');
+      } else if (filterId === 'premium') {
+        params.append('for_sale', 'true');
+      } else if (filterId === 'recent') {
+        params.append('sort', 'recent');
+      } else if (filterId === 'popular') {
+        params.append('sort', 'popular');
+      } else if (filterId === 'trending') {
+        params.append('sort', 'trending');
+      }
+      if (search.trim()) {
+        params.append('search', search.trim());
+      }
+      const url = `/api/projects?${params.toString()}`;
+      const apiUrl = url.startsWith('/api/')
+        ? `${process.env.NEXT_PUBLIC_API_URL || ''}${url}`
+        : url;
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const projects = await response.json();
+        setDesigns(mapProjectsToDesigns(projects));
+      } else {
+        setDesigns([]);
+      }
+    } catch (e) {
+      console.error('Storefront designs fetch failed:', e);
+      setDesigns([]);
+    } finally {
+      setDesignsLoading(false);
+    }
   };
 
-  const filteredAndSortedProducts = products
-    .filter(p => 
-      searchQuery === '' || 
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'best_sellers':
-          return (b.sales_count || 0) - (a.sales_count || 0);
-        case 'price':
-          return a.price - b.price;
-        case 'rating':
-          return (b.average_rating || 0) - (a.average_rating || 0);
-        case 'newest':
-        default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-    });
+  useEffect(() => {
+    if (!storefront || !username) return;
+    const delay = designSearchQuery.trim() === '' ? 0 : 300;
+    const t = setTimeout(() => {
+      fetchDesigns(designFilter, designSearchQuery);
+    }, delay);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storefront, username, designFilter, designSearchQuery]);
 
   if (loading) {
     return (
@@ -313,10 +315,23 @@ export default function PublicStorefrontPage() {
     );
   }
 
-  const pinnedProducts = products.filter(p => storefront.pinned_products?.includes(p.id));
-  const regularProducts = products.filter(p => !storefront.pinned_products?.includes(p.id));
+  const pinnedIds = storefront.pinned_products ?? [];
+  const pinnedIdSet = new Set(pinnedIds.map((id) => String(id)));
+  const pinnedDesigns = pinnedIds
+    .map((id) => designs.find((d) => d.id === String(id)))
+    .filter((d): d is Design => !!d);
+  const restDesigns = designs.filter((d) => !pinnedIdSet.has(d.id));
+
+  const designFilters = [
+    { id: 'trending', label: 'Trending', icon: TrendingUp },
+    { id: 'recent', label: 'Recent', icon: Clock },
+    { id: 'popular', label: 'Popular', icon: Star },
+    { id: 'free', label: 'Free', icon: Download },
+    { id: 'premium', label: 'Premium', icon: DollarSign },
+  ];
 
   return (
+    <>
     <ThreePanelLayout
       leftPanel={<GlobalNavSidebar />}
       centerPanel={
@@ -351,6 +366,12 @@ export default function PublicStorefrontPage() {
                   {storefront.tagline && (
                     <p className="text-white/90 text-lg">{storefront.tagline}</p>
                   )}
+                  {industryLabel(storefront.focused_industry) && (
+                    <div className="mt-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm text-white/95 bg-white/15 backdrop-blur-sm">
+                      <Factory size={14} className="opacity-90" />
+                      <span>{industryLabel(storefront.focused_industry)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -367,7 +388,7 @@ export default function PublicStorefrontPage() {
                   color: activeSection === 'products' ? DS.colors.text.primary : DS.colors.text.secondary,
                 }}
               >
-                Products
+                Designs
               </button>
               <button
                 onClick={() => setActiveSection('about')}
@@ -395,83 +416,121 @@ export default function PublicStorefrontPage() {
           <PanelContent className="p-6">
             {activeSection === 'products' && (
               <>
-                {/* Search and Sort */}
-                <div className="flex gap-4 mb-6">
-                  <div className="flex-1">
-                    <SearchBar
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search products..."
-                    />
+                <div className="flex flex-col gap-4 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                    <div className="flex-1 min-w-0">
+                      <SearchBar
+                        placeholder="Search designs..."
+                        onSearch={(q) => setDesignSearchQuery(q)}
+                        fullWidth
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('grid')}
+                        className="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200"
+                        style={{
+                          backgroundColor: viewMode === 'grid' ? storefront.primary_color : DS.colors.background.elevated,
+                          color: viewMode === 'grid' ? '#ffffff' : DS.colors.text.primary,
+                          border:
+                            viewMode === 'grid' ? 'none' : `1px solid ${DS.colors.border.default}`,
+                        }}
+                        aria-label="Grid view"
+                      >
+                        <Grid3x3 size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('list')}
+                        className="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200"
+                        style={{
+                          backgroundColor: viewMode === 'list' ? storefront.primary_color : DS.colors.background.elevated,
+                          color: viewMode === 'list' ? '#ffffff' : DS.colors.text.primary,
+                          border:
+                            viewMode === 'list' ? 'none' : `1px solid ${DS.colors.border.default}`,
+                        }}
+                        aria-label="List view"
+                      >
+                        <List size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                      icon={viewMode === 'grid' ? <List size={18} /> : <Grid3x3 size={18} />}
-                    />
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as any)}
-                      className="px-4 py-2 rounded-lg border"
-                      style={{
-                        backgroundColor: DS.colors.background.card,
-                        borderColor: DS.colors.border.default,
-                        color: DS.colors.text.primary,
-                      }}
-                    >
-                      <option value="newest">Newest</option>
-                      <option value="best_sellers">Best Sellers</option>
-                      <option value="price">Price: Low to High</option>
-                      <option value="rating">Highest Rated</option>
-                    </select>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {designFilters.map((f) => {
+                      const Icon = f.icon;
+                      const active = designFilter === f.id;
+                      return (
+                        <button
+                          key={f.id}
+                          type="button"
+                          className="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+                          style={{
+                            backgroundColor: active ? storefront.primary_color : DS.colors.background.elevated,
+                            color: active ? '#ffffff' : DS.colors.text.secondary,
+                          }}
+                          onClick={() => setDesignFilter(f.id)}
+                        >
+                          <Icon size={16} />
+                          {f.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Pinned Products */}
-                {pinnedProducts.length > 0 && (
-                  <div className="mb-8">
-                    <h2 className="text-xl font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                      Pinned Products
+                {pinnedDesigns.length > 0 && (
+                  <div className="mb-10">
+                    <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
+                      Featured
                     </h2>
-                    <div className={viewMode === 'grid' ? 'grid grid-cols-3 gap-4' : 'space-y-4'}>
-                      {pinnedProducts.map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          viewMode={viewMode}
-                          onBuy={handleBuy}
-                          primaryColor={storefront.primary_color}
-                        />
-                      ))}
-                    </div>
+                    <ExploreDesignGrid
+                      designs={pinnedDesigns}
+                      viewMode={viewMode}
+                      showShareButton
+                      showAuthorTierBadge
+                      onShare={(d) => {
+                        setSelectedDesignForShare(d);
+                        setShowShareModal(true);
+                      }}
+                    />
                   </div>
                 )}
 
-                {/* Regular Products */}
                 <div>
-                  {pinnedProducts.length > 0 && (
-                    <h2 className="text-xl font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
-                      All Products
+                  {pinnedDesigns.length > 0 && restDesigns.length > 0 && (
+                    <h2 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
+                      {designSearchQuery.trim() ? 'Matching designs' : 'All designs'}
                     </h2>
                   )}
-                  {filteredAndSortedProducts.length === 0 ? (
-                    <div className="text-center py-12" style={{ color: DS.colors.text.secondary }}>
-                      No products found
+                  {designsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center">
+                        <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-3" />
+                        <p style={{ color: DS.colors.text.secondary }}>Loading designs...</p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className={viewMode === 'grid' ? 'grid grid-cols-3 gap-4' : 'space-y-4'}>
-                      {filteredAndSortedProducts.map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          viewMode={viewMode}
-                          onBuy={handleBuy}
-                          primaryColor={storefront.primary_color}
-                        />
-                      ))}
-                    </div>
+                  ) : restDesigns.length === 0 && pinnedDesigns.length === 0 ? (
+                    <EmptyState
+                      icon={<Grid3x3 size={48} />}
+                      title="No designs yet"
+                      description={
+                        designSearchQuery.trim()
+                          ? `No designs match "${designSearchQuery}"`
+                          : 'This creator has not published any public designs yet.'
+                      }
+                    />
+                  ) : restDesigns.length === 0 && pinnedDesigns.length > 0 ? null : (
+                    <ExploreDesignGrid
+                      designs={restDesigns}
+                      viewMode={viewMode}
+                      showShareButton
+                      showAuthorTierBadge
+                      onShare={(d) => {
+                        setSelectedDesignForShare(d);
+                        setShowShareModal(true);
+                      }}
+                    />
                   )}
                 </div>
               </>
@@ -479,6 +538,20 @@ export default function PublicStorefrontPage() {
 
             {activeSection === 'about' && (
               <div className="space-y-6">
+                {industryLabel(storefront.focused_industry) && (
+                  <Card padding="lg">
+                    <h3 className="text-lg font-semibold mb-3" style={{ color: DS.colors.text.primary }}>
+                      Store focus
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <Factory size={18} style={{ color: storefront.primary_color }} />
+                      <span style={{ color: DS.colors.text.secondary }}>
+                        {industryLabel(storefront.focused_industry)}
+                      </span>
+                    </div>
+                  </Card>
+                )}
+
                 {storefront.description && (
                   <Card padding="lg">
                     <h3 className="text-lg font-semibold mb-3" style={{ color: DS.colors.text.primary }}>
@@ -718,141 +791,19 @@ export default function PublicStorefrontPage() {
         </RightPanel>
       }
     />
+    {selectedDesignForShare && (
+      <ShareLinkModal
+        isOpen={showShareModal}
+        onClose={() => {
+          setShowShareModal(false);
+          setSelectedDesignForShare(null);
+        }}
+        entityType="project"
+        entityId={Number(selectedDesignForShare.id)}
+        entityName={selectedDesignForShare.title}
+        isPublic={true}
+      />
+    )}
+    </>
   );
 }
-
-function ProductCard({ product, viewMode, onBuy, primaryColor }: {
-  product: Product;
-  viewMode: 'grid' | 'list';
-  onBuy: (product: Product, licenseType?: string) => void;
-  primaryColor: string;
-}) {
-  const [showLicenseModal, setShowLicenseModal] = useState(false);
-
-  if (viewMode === 'list') {
-    return (
-      <Card padding="md" hover>
-        <div className="flex gap-4">
-          <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
-            {product.thumbnail_path ? (
-              <img
-                src={(() => {
-                  const base = process.env.NEXT_PUBLIC_API_URL || '';
-                  const thumbnailPath = String(product.thumbnail_path);
-                  return `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}`;
-                })()}
-                alt={product.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: '#1a1a1a' }}>
-                <span className="text-4xl">📦</span>
-              </div>
-            )}
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold mb-1" style={{ color: DS.colors.text.primary }}>
-              {product.title}
-            </h3>
-            <p className="text-sm mb-2 line-clamp-2" style={{ color: DS.colors.text.secondary }}>
-              {product.description}
-            </p>
-            <div className="flex items-center gap-4 text-sm mb-3">
-              <div className="flex items-center gap-1">
-                <Star size={14} fill="#fbbf24" style={{ color: '#fbbf24' }} />
-                <span style={{ color: DS.colors.text.secondary }}>
-                  {product.average_rating.toFixed(1)} ({product.review_count})
-                </span>
-              </div>
-              <div style={{ color: DS.colors.text.secondary }}>
-                {product.sales_count} sales
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg" style={{ color: DS.colors.text.primary }}>
-                ${product.price.toFixed(2)}
-              </span>
-              {product.available_licenses.length > 1 && (
-                <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                  (Multiple licenses available)
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex-shrink-0">
-            <Button
-              variant="primary"
-              onClick={() => {
-                if (product.available_licenses.length > 1) {
-                  setShowLicenseModal(true);
-                } else {
-                  onBuy(product, product.available_licenses[0]?.type);
-                }
-              }}
-            >
-              Buy Now
-            </Button>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-  return (
-    <Card padding="none" hover className="cursor-pointer" onClick={() => window.location.href = `/project/${product.id}`}>
-      <div className="aspect-video rounded-t-lg overflow-hidden relative" style={{ backgroundColor: '#1a1a1a' }}>
-        {product.thumbnail_path ? (
-          <img
-            src={(() => {
-              const base = process.env.NEXT_PUBLIC_API_URL || '';
-              const thumbnailPath = String(product.thumbnail_path);
-              return `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}`;
-            })()}
-            alt={product.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-5xl">📦</span>
-          </div>
-        )}
-      </div>
-      <div className="p-4">
-        <h3 className="font-semibold mb-1" style={{ color: DS.colors.text.primary }}>
-          {product.title}
-        </h3>
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex items-center gap-1">
-            <Star size={12} fill="#fbbf24" style={{ color: '#fbbf24' }} />
-            <span className="text-xs" style={{ color: DS.colors.text.secondary }}>
-              {product.average_rating.toFixed(1)}
-            </span>
-          </div>
-          <span className="text-xs" style={{ color: DS.colors.text.secondary }}>
-            • {product.sales_count} sales
-          </span>
-        </div>
-        <div className="flex items-center justify-between mt-3">
-          <span className="font-bold" style={{ color: DS.colors.text.primary }}>
-            ${product.price.toFixed(2)}
-          </span>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (product.available_licenses.length > 1) {
-                setShowLicenseModal(true);
-              } else {
-                onBuy(product, product.available_licenses[0]?.type);
-              }
-            }}
-          >
-            Buy
-          </Button>
-        </div>
-      </div>
-    </Card>
-  );
-}
-

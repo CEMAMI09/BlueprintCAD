@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/context/AuthContext';
 import {
   ThreePanelLayout,
   CenterPanel,
@@ -16,51 +18,63 @@ import {
   Store,
   Palette,
   Image as ImageIcon,
-  Save,
   Eye,
 } from 'lucide-react';
+import { STOREFRONT_INDUSTRIES, industryLabel } from '@/frontend/lib/storefront-industries';
+
+/** Same-origin API (proxied to Express in app/api/storefront/route.ts) — avoids broken absolute URLs. */
+const STOREFRONT_API = '/api/storefront';
 
 export default function StorefrontPage() {
+  const router = useRouter();
+  const { user: authUser } = useAuth();
   const [storefront, setStorefront] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(false);
-  const [userSubscription, setUserSubscription] = useState<any>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [formData, setFormData] = useState({
     storeName: '',
     description: '',
     bannerImage: null as File | null,
+    /** Saved image URLs (R2) when no new file is selected */
+    bannerImageUrl: '',
+    logoImageUrl: '',
     primaryColor: '#3b82f6',
     secondaryColor: '#8b5cf6',
     accentColor: '#10b981',
     logo: null as File | null,
     customDomain: '',
     featuredProjects: [] as number[],
+    focusedIndustry: '',
   });
 
+  const [bannerBlobUrl, setBannerBlobUrl] = useState<string | null>(null);
+  const [logoBlobUrl, setLogoBlobUrl] = useState<string | null>(null);
+
   useEffect(() => {
-    fetchSubscriptionStatus();
     fetchStorefront();
   }, []);
 
-  const fetchSubscriptionStatus = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setUserSubscription(data);
-      }
-    } catch (error) {
-      console.error('Error fetching subscription:', error);
+  useEffect(() => {
+    if (!formData.bannerImage) {
+      setBannerBlobUrl(null);
+      return;
     }
-  };
+    const u = URL.createObjectURL(formData.bannerImage);
+    setBannerBlobUrl(u);
+    return () => URL.revokeObjectURL(u);
+  }, [formData.bannerImage]);
+
+  useEffect(() => {
+    if (!formData.logo) {
+      setLogoBlobUrl(null);
+      return;
+    }
+    const u = URL.createObjectURL(formData.logo);
+    setLogoBlobUrl(u);
+    return () => URL.revokeObjectURL(u);
+  }, [formData.logo]);
 
   const fetchStorefront = async () => {
     try {
@@ -70,25 +84,31 @@ export default function StorefrontPage() {
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(STOREFRONT_API, {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
 
       if (res.ok) {
         const data = await res.json();
         setStorefront(data);
         if (data) {
-          setFormData({
-            storeName: data.store_name || '',
-            description: data.description || '',
-            bannerImage: null,
-            primaryColor: data.primary_color || '#3b82f6',
-            secondaryColor: data.secondary_color || '#8b5cf6',
-            accentColor: data.accent_color || '#10b981',
-            logo: null,
-            customDomain: data.custom_domain || '',
-            featuredProjects: data.featured_projects || [],
-          });
+          setFormData((prev) => ({
+            storeName: data.store_name ?? prev.storeName,
+            description: data.description ?? prev.description,
+            bannerImage: prev.bannerImage,
+            logo: prev.logo,
+            bannerImageUrl: data.banner_image || prev.bannerImageUrl || '',
+            logoImageUrl: data.logo || prev.logoImageUrl || '',
+            primaryColor: data.primary_color || prev.primaryColor || '#3b82f6',
+            secondaryColor: data.secondary_color || prev.secondaryColor || '#8b5cf6',
+            accentColor: data.accent_color || prev.accentColor || '#10b981',
+            customDomain: data.custom_domain ?? prev.customDomain,
+            featuredProjects: Array.isArray(data.featured_projects)
+              ? data.featured_projects
+              : prev.featuredProjects || [],
+            focusedIndustry: data.focused_industry ?? prev.focusedIndustry,
+          }));
         }
       }
     } catch (error) {
@@ -111,6 +131,7 @@ export default function StorefrontPage() {
       formDataToSend.append('accent_color', formData.accentColor);
       formDataToSend.append('custom_domain', formData.customDomain);
       formDataToSend.append('featured_projects', JSON.stringify(formData.featuredProjects));
+      formDataToSend.append('focused_industry', formData.focusedIndustry || '');
       
       if (formData.bannerImage) {
         formDataToSend.append('banner_image', formData.bannerImage);
@@ -119,18 +140,56 @@ export default function StorefrontPage() {
         formDataToSend.append('logo', formData.logo);
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/storefront`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` },
+      const res = await fetch(STOREFRONT_API, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
         body: formDataToSend,
+        credentials: 'include',
       });
 
       if (res.ok) {
         const data = await res.json();
         setStorefront(data);
-        alert('Storefront updated successfully!');
+        setFormData((prev) => ({
+          ...prev,
+          storeName: data.store_name ?? prev.storeName,
+          description: data.description ?? prev.description,
+          primaryColor: data.primary_color ?? prev.primaryColor,
+          secondaryColor: data.secondary_color ?? prev.secondaryColor,
+          accentColor: data.accent_color ?? prev.accentColor,
+          customDomain: data.custom_domain ?? prev.customDomain,
+          featuredProjects: data.featured_projects ?? prev.featuredProjects,
+          focusedIndustry: data.focused_industry ?? prev.focusedIndustry,
+          bannerImage: null,
+          logo: null,
+          bannerImageUrl: data.banner_image || prev.bannerImageUrl,
+          logoImageUrl: data.logo || prev.logoImageUrl,
+        }));
+        const uname =
+          data.username ||
+          authUser?.username ||
+          (() => {
+            try {
+              const u = localStorage.getItem('user');
+              if (u) return JSON.parse(u)?.username as string | undefined;
+            } catch {
+              /* ignore */
+            }
+            return undefined;
+          })();
+        if (uname) {
+          router.push(`/${encodeURIComponent(uname)}/store`);
+        } else {
+          alert('Store created. Open your profile to view your storefront.');
+        }
       } else {
-        alert('Failed to update storefront');
+        const errBody = await res.json().catch(() => ({}));
+        console.error('Storefront save failed:', res.status, errBody);
+        alert(
+          errBody.error ||
+            errBody.detail ||
+            `Failed to update storefront (${res.status})`
+        );
       }
     } catch (error) {
       console.error('Error saving storefront:', error);
@@ -150,7 +209,7 @@ export default function StorefrontPage() {
         leftPanel={<GlobalNavSidebar />}
         centerPanel={
           <CenterPanel>
-            <PanelHeader title="Storefront Customization" />
+            <PanelHeader title="Configure your store" />
             <PanelContent>
               <div className="flex items-center justify-center py-12">
                 <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -175,7 +234,7 @@ export default function StorefrontPage() {
           centerPanel={
             <CenterPanel>
               <PanelHeader 
-                title="Storefront Customization"
+                title="Configure your store"
                 actions={
                   <div className="flex gap-2">
                     <Button
@@ -189,50 +248,17 @@ export default function StorefrontPage() {
                       variant="primary"
                       onClick={handleSave}
                       disabled={saving}
-                      icon={<Save size={18} />}
+                      icon={<Store size={18} />}
                     >
-                      {saving ? 'Saving...' : 'Save Changes'}
+                      {saving ? 'Creating…' : 'Create store'}
                     </Button>
                   </div>
                 }
               />
               <PanelContent className="!pt-12 !pb-12">
                 <div className="max-w-4xl mx-auto space-y-6 px-6" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-                  {preview ? (
-                    <Card padding="lg">
-                      <div className="space-y-4">
-                        <div 
-                          className="w-full h-48 rounded-lg flex items-center justify-center"
-                          style={{ backgroundColor: formData.primaryColor }}
-                        >
-                          {formData.bannerImage ? (
-                            <img 
-                              src={URL.createObjectURL(formData.bannerImage)} 
-                              alt="Banner" 
-                              className="w-full h-full object-cover rounded-lg"
-                            />
-                          ) : (
-                            <p style={{ color: 'white' }}>Banner Preview</p>
-                          )}
-                        </div>
-                        <div className="text-center">
-                          {formData.logo && (
-                            <img 
-                              src={URL.createObjectURL(formData.logo)} 
-                              alt="Logo" 
-                              className="w-24 h-24 mx-auto rounded-full mb-4"
-                            />
-                          )}
-                          <h2 className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
-                            {formData.storeName || 'Your Store Name'}
-                          </h2>
-                          <p className="mt-2" style={{ color: DS.colors.text.secondary }}>
-                            {formData.description || 'Store description'}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-                  ) : (
+                  {/* Keep file inputs mounted — toggling display:none instead of unmounting prevents the browser from clearing chosen files. */}
+                  <div className={preview ? 'hidden' : 'block space-y-6'}>
                     <>
                       <Card padding="lg">
                         <h3 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
@@ -246,7 +272,9 @@ export default function StorefrontPage() {
                             <input
                               type="text"
                               value={formData.storeName}
-                              onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
+                              onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, storeName: e.target.value }))
+                              }
                               className="w-full px-4 py-2 rounded-lg border"
                               style={{
                                 backgroundColor: DS.colors.background.card,
@@ -263,7 +291,9 @@ export default function StorefrontPage() {
                             <textarea
                               rows={4}
                               value={formData.description}
-                              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                              onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, description: e.target.value }))
+                              }
                               className="w-full px-4 py-2 rounded-lg border"
                               style={{
                                 backgroundColor: DS.colors.background.card,
@@ -272,6 +302,32 @@ export default function StorefrontPage() {
                               }}
                               placeholder="Tell customers about your store..."
                             />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
+                              Focused industry
+                            </label>
+                            <p className="text-xs mb-2" style={{ color: DS.colors.text.tertiary }}>
+                              Helps visitors understand what you design and sell most.
+                            </p>
+                            <select
+                              value={formData.focusedIndustry}
+                              onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, focusedIndustry: e.target.value }))
+                              }
+                              className="w-full px-4 py-2 rounded-lg border"
+                              style={{
+                                backgroundColor: DS.colors.background.card,
+                                borderColor: DS.colors.border.default,
+                                color: DS.colors.text.primary,
+                              }}
+                            >
+                              {STOREFRONT_INDUSTRIES.map((opt) => (
+                                <option key={opt.value || 'general'} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       </Card>
@@ -290,7 +346,7 @@ export default function StorefrontPage() {
                               accept="image/*"
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
-                                if (file) setFormData({ ...formData, logo: file });
+                                if (file) setFormData((prev) => ({ ...prev, logo: file }));
                               }}
                               className="w-full px-4 py-2 rounded-lg border"
                               style={{
@@ -299,6 +355,18 @@ export default function StorefrontPage() {
                                 color: DS.colors.text.primary,
                               }}
                             />
+                            {(logoBlobUrl || formData.logoImageUrl) && (
+                              <div className="mt-2 flex items-center gap-3">
+                                <img
+                                  src={logoBlobUrl || formData.logoImageUrl}
+                                  alt=""
+                                  className="h-14 w-14 rounded-full object-cover border border-[#333]"
+                                />
+                                <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
+                                  Current logo preview
+                                </span>
+                              </div>
+                            )}
                           </div>
                           <div>
                             <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
@@ -309,7 +377,7 @@ export default function StorefrontPage() {
                               accept="image/*"
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
-                                if (file) setFormData({ ...formData, bannerImage: file });
+                                if (file) setFormData((prev) => ({ ...prev, bannerImage: file }));
                               }}
                               className="w-full px-4 py-2 rounded-lg border"
                               style={{
@@ -318,6 +386,15 @@ export default function StorefrontPage() {
                                 color: DS.colors.text.primary,
                               }}
                             />
+                            {(bannerBlobUrl || formData.bannerImageUrl) && (
+                              <div className="mt-2">
+                                <img
+                                  src={bannerBlobUrl || formData.bannerImageUrl}
+                                  alt=""
+                                  className="max-h-28 w-full max-w-md rounded-lg object-cover border border-[#333]"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       </Card>
@@ -335,14 +412,18 @@ export default function StorefrontPage() {
                               <input
                                 type="color"
                                 value={formData.primaryColor}
-                                onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({ ...prev, primaryColor: e.target.value }))
+                                }
                                 className="w-16 h-10 rounded border"
                                 style={{ borderColor: DS.colors.border.default }}
                               />
                               <input
                                 type="text"
                                 value={formData.primaryColor}
-                                onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({ ...prev, primaryColor: e.target.value }))
+                                }
                                 className="flex-1 px-3 py-2 rounded-lg border"
                                 style={{
                                   backgroundColor: DS.colors.background.card,
@@ -360,14 +441,18 @@ export default function StorefrontPage() {
                               <input
                                 type="color"
                                 value={formData.secondaryColor}
-                                onChange={(e) => setFormData({ ...formData, secondaryColor: e.target.value })}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({ ...prev, secondaryColor: e.target.value }))
+                                }
                                 className="w-16 h-10 rounded border"
                                 style={{ borderColor: DS.colors.border.default }}
                               />
                               <input
                                 type="text"
                                 value={formData.secondaryColor}
-                                onChange={(e) => setFormData({ ...formData, secondaryColor: e.target.value })}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({ ...prev, secondaryColor: e.target.value }))
+                                }
                                 className="flex-1 px-3 py-2 rounded-lg border"
                                 style={{
                                   backgroundColor: DS.colors.background.card,
@@ -385,14 +470,18 @@ export default function StorefrontPage() {
                               <input
                                 type="color"
                                 value={formData.accentColor}
-                                onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({ ...prev, accentColor: e.target.value }))
+                                }
                                 className="w-16 h-10 rounded border"
                                 style={{ borderColor: DS.colors.border.default }}
                               />
                               <input
                                 type="text"
                                 value={formData.accentColor}
-                                onChange={(e) => setFormData({ ...formData, accentColor: e.target.value })}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({ ...prev, accentColor: e.target.value }))
+                                }
                                 className="flex-1 px-3 py-2 rounded-lg border"
                                 style={{
                                   backgroundColor: DS.colors.background.card,
@@ -405,7 +494,8 @@ export default function StorefrontPage() {
                         </div>
                       </Card>
 
-                      {userSubscription?.tier === 'enterprise' && (
+                      {(storefront?.tier === 'enterprise' ||
+                        storefront?.tier === 'studio') && (
                         <Card padding="lg">
                           <h3 className="text-lg font-semibold mb-4" style={{ color: DS.colors.text.primary }}>
                             Custom Domain
@@ -417,7 +507,9 @@ export default function StorefrontPage() {
                             <input
                               type="text"
                               value={formData.customDomain}
-                              onChange={(e) => setFormData({ ...formData, customDomain: e.target.value })}
+                              onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, customDomain: e.target.value }))
+                              }
                               className="w-full px-4 py-2 rounded-lg border"
                               style={{
                                 backgroundColor: DS.colors.background.card,
@@ -433,7 +525,48 @@ export default function StorefrontPage() {
                         </Card>
                       )}
                     </>
-                  )}
+                  </div>
+
+                  <div className={preview ? 'block' : 'hidden'}>
+                    <Card padding="lg">
+                      <div className="space-y-4">
+                        <div
+                          className="w-full h-48 rounded-lg flex items-center justify-center overflow-hidden"
+                          style={{ backgroundColor: formData.primaryColor }}
+                        >
+                          {bannerBlobUrl || formData.bannerImageUrl ? (
+                            <img
+                              src={bannerBlobUrl || formData.bannerImageUrl}
+                              alt="Banner preview"
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <p style={{ color: 'white' }}>Banner Preview</p>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          {(logoBlobUrl || formData.logoImageUrl) && (
+                            <img
+                              src={logoBlobUrl || formData.logoImageUrl}
+                              alt="Logo preview"
+                              className="w-24 h-24 mx-auto rounded-full mb-4 object-cover border-2 border-white/20"
+                            />
+                          )}
+                          <h2 className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
+                            {formData.storeName || 'Your Store Name'}
+                          </h2>
+                          <p className="mt-2" style={{ color: DS.colors.text.secondary }}>
+                            {formData.description || 'Store description'}
+                          </p>
+                          {industryLabel(formData.focusedIndustry) && (
+                            <p className="mt-2 text-sm" style={{ color: DS.colors.text.tertiary }}>
+                              {industryLabel(formData.focusedIndustry)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
                 </div>
               </PanelContent>
             </CenterPanel>
@@ -445,7 +578,7 @@ export default function StorefrontPage() {
         <UpgradeModal
           isOpen={showUpgradeModal}
           onClose={() => setShowUpgradeModal(false)}
-          currentTier={userSubscription?.tier || 'free'}
+          currentTier={storefront?.tier || 'free'}
           featureName="storefrontCustomization"
           message="Storefront customization requires Creator subscription or higher"
         />

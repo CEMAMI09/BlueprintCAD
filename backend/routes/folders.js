@@ -1,4 +1,5 @@
 // backend/routes/folders.js
+const path = require("path");
 const express = require("express");
 const router = express.Router();
 const { getUserFromRequest } = require("../lib/auth");
@@ -60,6 +61,8 @@ router.post("/", async (req, res) => {
       folder_id = null,
       dimensions = null,
       licenses = [],
+      thumbnail_mode = "auto",
+      custom_thumbnail_base64,
     } = req.body;
 
     if (!title || !file_path) {
@@ -99,6 +102,67 @@ router.post("/", async (req, res) => {
 
     const project = result.rows[0];
 
+    let thumbnailPath = null;
+    let skipAutoThumbnail = false;
+
+    // Optional: user-uploaded cover image (PNG/JPEG/WebP), stored in R2 like generated thumbs
+    if (thumbnail_mode === "custom" && custom_thumbnail_base64) {
+      try {
+        const { uploadToR2, generateUserAssetKey } = require("../lib/r2");
+        let buffer;
+        let mime = "image/png";
+        const raw = String(custom_thumbnail_base64).trim();
+        if (raw.startsWith("data:")) {
+          const m = raw.match(/^data:([^;]+);base64,(.+)$/s);
+          if (m) {
+            mime = m[1].split(";")[0].trim();
+            buffer = Buffer.from(m[2], "base64");
+          } else {
+            throw new Error("Invalid data URL");
+          }
+        } else {
+          buffer = Buffer.from(raw, "base64");
+        }
+        if (!buffer || buffer.length < 32) {
+          throw new Error("Image data too small");
+        }
+        if (buffer.length > 5 * 1024 * 1024) {
+          throw new Error("Cover image must be 5MB or smaller");
+        }
+        const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+        if (!allowed.includes(mime)) {
+          mime = "image/png";
+        }
+        const ext =
+          mime.includes("jpeg") || mime === "image/jpg"
+            ? "jpg"
+            : mime.includes("webp")
+              ? "webp"
+              : "png";
+        const key = generateUserAssetKey(
+          decoded.userId,
+          "thumbnail",
+          `project_${project.id}_cover.${ext}`
+        );
+        const { key: uploadedKey } = await uploadToR2(buffer, key, mime);
+        await execute(`UPDATE projects SET thumbnail_path = $1 WHERE id = $2`, [
+          uploadedKey,
+          project.id,
+        ]);
+        thumbnailPath = uploadedKey;
+        skipAutoThumbnail = true;
+        console.log(
+          `[Thumbnail] Custom cover image stored for project ${project.id}: ${uploadedKey}`
+        );
+      } catch (customErr) {
+        console.error(
+          `[Thumbnail] Custom cover upload failed for project ${project.id}:`,
+          customErr.message
+        );
+        // Continue with auto generation
+      }
+    }
+
     // Link the CAD file to this project if we can find it by filepath
     if (file_path) {
       try {
@@ -114,9 +178,12 @@ router.post("/", async (req, res) => {
       }
     }
 
-    // Generate thumbnail asynchronously (don't block response)
-    let thumbnailPath = null;
-    if (file_path && file_type) {
+    // Generate thumbnail asynchronously (don't block response) unless user supplied a cover image
+    const canGenerateThumb =
+      file_path &&
+      (file_type || path.extname(file_path || "")) &&
+      !skipAutoThumbnail;
+    if (canGenerateThumb) {
       console.log(`[Thumbnail] Starting thumbnail generation for project ${project.id}, file: ${file_path}`);
       // Use setImmediate to ensure this runs asynchronously and doesn't block
       setImmediate(async () => {
@@ -160,7 +227,9 @@ router.post("/", async (req, res) => {
         }
       });
     } else {
-      console.log(`[Thumbnail] Skipping thumbnail generation - file_path: ${file_path}, file_type: ${file_type}`);
+      console.log(
+        `[Thumbnail] Skipping thumbnail generation - file_path: ${file_path}, file_type: ${file_type}`
+      );
     }
 
     // Return project (thumbnail will be null initially, updated later)
@@ -174,7 +243,7 @@ router.post("/", async (req, res) => {
       is_public: project.is_public,
       for_sale: project.for_sale,
       price: project.price,
-      thumbnail_path: thumbnailPath, // Will be null initially, updated asynchronously
+      thumbnail_path: thumbnailPath,
       created_at: project.created_at,
       updated_at: project.updated_at,
     });

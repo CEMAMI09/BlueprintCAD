@@ -7,7 +7,7 @@ import ThreePreview from '@/components/ThreePreview';
 import { Folder } from '@/frontend/types';
 import { ThreePanelLayout, LeftPanel, CenterPanel, RightPanel, PanelHeader, PanelContent } from '@/components/ui/ThreePanelLayout';
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
-import { Upload as UploadIcon, Globe, Lock, DollarSign, ChevronRight, ChevronDown, Folder as FolderIcon } from 'lucide-react';
+import { Upload as UploadIcon, Globe, Lock, DollarSign, ChevronRight, ChevronDown, Folder as FolderIcon, Image as ImageIcon } from 'lucide-react';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import SubscriptionGate from '@/frontend/components/SubscriptionGate';
 import UpgradeModal from '@/frontend/components/UpgradeModal';
@@ -88,6 +88,10 @@ export default function Upload() {
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
   const [showLicenseModal, setShowLicenseModal] = useState(false);
   const [licenseSelections, setLicenseSelections] = useState<LicenseSelection[]>([]);
+  /** auto = server renders from CAD; custom = user uploads PNG/JPEG/WebP cover */
+  const [thumbnailMode, setThumbnailMode] = useState<'auto' | 'custom'>('auto');
+  const [customThumbnailFile, setCustomThumbnailFile] = useState<File | null>(null);
+  const [customThumbPreview, setCustomThumbPreview] = useState<string | null>(null);
 
   // Check subscription feature access
   const checkSubscription = async (feature: string, onAllowed: () => void) => {
@@ -173,7 +177,7 @@ const fetchTags = async (searchTerm?: string) => {
 const fetchFolders = async () => {
   try {
     // Fetch all folders (including subfolders) using the all=true parameter
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders`, {
+    const res = await fetch(`/api/folders`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -205,7 +209,7 @@ const fetchFolders = async () => {
           // If folder not found, try to fetch it directly (might be a subfolder we don't have access to)
           console.warn('[Upload] Folder not found in user folders, fetching directly:', folderIdNum);
           try {
-            const folderRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders/${folderIdNum}`, {
+            const folderRes = await fetch(`/api/folders/${folderIdNum}`, {
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
               }
@@ -310,6 +314,11 @@ const fetchFolders = async () => {
       return;
     }
 
+    if (thumbnailMode === 'custom' && !customThumbnailFile) {
+      setError('Choose a cover image (PNG, JPEG, or WebP) or switch to automatic thumbnail.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -317,7 +326,7 @@ const fetchFolders = async () => {
       const fileFormData = new FormData();
       fileFormData.append('file', file);
 
-      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cad/upload`, {
+      const uploadRes = await fetch(`/api/cad/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -353,8 +362,17 @@ const fetchFolders = async () => {
         }
       }
 
-      // Don't send thumbnail_path - let the API generate it automatically
-      const projectData = {
+      let custom_thumbnail_base64: string | undefined;
+      if (thumbnailMode === 'custom' && customThumbnailFile) {
+        custom_thumbnail_base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Failed to read cover image'));
+          reader.readAsDataURL(customThumbnailFile);
+        });
+      }
+
+      const projectData: Record<string, unknown> = {
         ...formData,
         tags: tagsToSave,
         file_path: filePath,
@@ -362,10 +380,12 @@ const fetchFolders = async () => {
         dimensions: dimensions || null,
         price: formData.for_sale ? parseFloat(formData.price) || null : null,
         folder_id: selectedFolderId || null,
-        licenses: formData.for_sale ? licenseSelections.filter(l => l.enabled) : []
+        licenses: formData.for_sale ? licenseSelections.filter(l => l.enabled) : [],
+        thumbnail_mode: thumbnailMode,
+        ...(custom_thumbnail_base64 ? { custom_thumbnail_base64 } : {}),
       };
 
-      const projectRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/folders`, {
+      const projectRes = await fetch(`/api/folders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -386,7 +406,9 @@ const fetchFolders = async () => {
         thumbnail_path: project.thumbnail_path,
         file_path: project.file_path,
         hasThumbnail: !!project.thumbnail_path,
-        thumbnailUrl: project.thumbnail_path ? `${process.env.NEXT_PUBLIC_API_URL || ''}/api/thumbnails/${encodeURIComponent(project.thumbnail_path)}` : null
+        thumbnailUrl: project.thumbnail_path
+          ? `/api/thumbnails/${encodeURIComponent(project.thumbnail_path)}`
+          : null
       });
       
       if (!project.thumbnail_path) {
@@ -395,11 +417,11 @@ const fetchFolders = async () => {
         console.log('[Upload] Thumbnail path:', project.thumbnail_path);
       }
       
-      // Wait a moment for thumbnail generation to complete, then redirect
-      // The thumbnail generation happens asynchronously in the API
+      // Brief delay so async 3D thumbnail can finish; custom covers already have thumbnail_path
       setTimeout(() => {
+        setLoading(false);
         router.push(`/project/${project.id}`);
-      }, 1000);
+      }, thumbnailMode === 'custom' ? 200 : 1200);
     } catch (err: any) {
       setError(err.message || 'Upload failed. Please try again.');
       setLoading(false);
@@ -632,6 +654,86 @@ const fetchFolders = async () => {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Cover / thumbnail */}
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <ImageIcon className="w-5 h-5 text-gray-400" />
+                  <label className="block text-sm font-medium">Project cover</label>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  Grids and explore use this image. Auto uses a 3D render aligned to fit the model; upload your own for a
+                  branded or exact screenshot.
+                </p>
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="thumb-mode"
+                      className="mt-1"
+                      checked={thumbnailMode === 'auto'}
+                      onChange={() => {
+                        setThumbnailMode('auto');
+                        setCustomThumbnailFile(null);
+                        setCustomThumbPreview(null);
+                      }}
+                    />
+                    <span>
+                      <span className="text-sm text-white font-medium">Generate from 3D model</span>
+                      <span className="block text-xs text-gray-500">
+                        Renders an isometric-style preview (fits the whole model in frame).
+                      </span>
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="thumb-mode"
+                      className="mt-1"
+                      checked={thumbnailMode === 'custom'}
+                      onChange={() => setThumbnailMode('custom')}
+                    />
+                    <span>
+                      <span className="text-sm text-white font-medium">Upload cover image</span>
+                      <span className="block text-xs text-gray-500">PNG, JPEG, or WebP — max 5MB. 16:9 works best.</span>
+                    </span>
+                  </label>
+                </div>
+                {thumbnailMode === 'custom' && (
+                  <div className="pt-2 space-y-2">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      className="text-sm text-gray-400 file:mr-3 file:rounded file:border-0 file:bg-gray-700 file:px-3 file:py-1.5 file:text-sm file:text-white"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) {
+                          setCustomThumbnailFile(null);
+                          setCustomThumbPreview(null);
+                          return;
+                        }
+                        if (f.size > 5 * 1024 * 1024) {
+                          setError('Cover image must be 5MB or smaller.');
+                          return;
+                        }
+                        setError('');
+                        setCustomThumbnailFile(f);
+                        const url = URL.createObjectURL(f);
+                        setCustomThumbPreview((prev) => {
+                          if (prev) URL.revokeObjectURL(prev);
+                          return url;
+                        });
+                      }}
+                    />
+                    {customThumbPreview && (
+                      <div className="mt-2 rounded-lg overflow-hidden border border-gray-700 max-w-md aspect-video bg-black/40">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={customThumbPreview} alt="Cover preview" className="w-full h-full object-contain" />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Project Details */}

@@ -38,14 +38,54 @@ export default function SubscriptionGate({
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`);
+      const authHeaders: HeadersInit = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/check`, {
+        headers: authHeaders,
+        credentials: 'include',
+      });
       if (!res.ok) {
         setHasAccess(false);
         return;
       }
 
       const data = await res.json();
-      const featureValue = data.features[feature];
+      const featureValue = data.features?.[feature];
+
+      // Older API responses without `features`: infer paid access from tier
+      if (data.features == null && data.tier != null) {
+        const t = String(data.tier).toLowerCase();
+        const paid = t === 'creator' || t === 'studio' || t === 'enterprise';
+        const needsCreator =
+          feature === 'storefrontCustomization' ||
+          feature === 'fileVersioning' ||
+          feature === 'manufacturingOrders';
+        if (needsCreator) {
+          setHasAccess(paid);
+          if (!paid) {
+            setCheckResult({
+              allowed: false,
+              reason: 'feature_not_available',
+              requiredTier: requiredTier || getRequiredTier(feature),
+            });
+          }
+          return;
+        }
+        setHasAccess(true);
+        return;
+      }
+
+      if (featureValue === undefined) {
+        setHasAccess(false);
+        setCheckResult({
+          allowed: false,
+          reason: 'feature_not_available',
+          requiredTier: requiredTier || getRequiredTier(feature),
+        });
+        return;
+      }
 
       // Check if feature is available
       if (featureValue === false || featureValue === 0) {
@@ -61,7 +101,13 @@ export default function SubscriptionGate({
       // If it's a limit-based feature, check usage
       if (typeof featureValue === 'number' && featureValue > 0) {
         // Check current usage via canPerformAction
-        const actionRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/can-action?feature=${feature}`);
+        const actionRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/subscriptions/can-action?feature=${encodeURIComponent(feature)}`,
+          {
+            headers: authHeaders,
+            credentials: 'include',
+          }
+        );
         if (actionRes.ok) {
           const actionData = await actionRes.json();
           setHasAccess(actionData.allowed);

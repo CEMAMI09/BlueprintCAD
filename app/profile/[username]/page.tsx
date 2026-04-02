@@ -38,6 +38,9 @@ import {
   Youtube,
   ShoppingBag,
   Store,
+  Trash2,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import TierBadge from '@/frontend/components/TierBadge';
 
@@ -57,6 +60,10 @@ export default function ProfilePage() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [storage, setStorage] = useState<{ used: number; limit: number; remaining: number; percentUsed: number } | null>(null);
   const [activeTab, setActiveTab] = useState(searchParams?.get('tab') || 'projects');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkActionBusy, setBulkActionBusy] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -201,9 +208,9 @@ export default function ProfilePage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects?username=${username}`, { 
+      const res = await fetch(`/api/projects?username=${encodeURIComponent(username)}`, {
         headers,
-        cache: 'no-store' 
+        cache: 'no-store',
       });
       if (res.ok) {
         const data = await res.json();
@@ -215,6 +222,132 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
+    }
+  };
+
+  useEffect(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, [username, activeTab]);
+
+  const toggleProjectSelected = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllProjects = () => {
+    setSelectedIds(new Set(projects.map((p) => Number(p.id))));
+  };
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const openDeleteModal = () => {
+    if (selectedIds.size === 0) return;
+    setDeleteModalOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setDeleteModalOpen(false);
+      router.push('/login');
+      return;
+    }
+    setBulkActionBusy(true);
+    const ids = [...selectedIds];
+    let failed = 0;
+    let firstError = '';
+    try {
+      for (const id of ids) {
+        const res = await fetch(`/api/projects/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          failed++;
+          if (!firstError) {
+            try {
+              const body = await res.json();
+              firstError =
+                (body && (body.error || body.detail || body.message)) || '';
+            } catch {
+              firstError = res.statusText || `HTTP ${res.status}`;
+            }
+          }
+        }
+      }
+      setDeleteModalOpen(false);
+      exitSelectionMode();
+      await fetchUserProjects();
+      if (failed > 0) {
+        alert(
+          firstError
+            ? `Could not delete ${failed} project${failed === 1 ? '' : 's'}: ${firstError}`
+            : `Could not delete ${failed} project${failed === 1 ? '' : 's'}.`
+        );
+      }
+    } catch {
+      alert('Something went wrong while deleting projects.');
+    } finally {
+      setBulkActionBusy(false);
+    }
+  };
+
+  const handleBulkDownload = async () => {
+    if (selectedIds.size === 0) return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+    setBulkActionBusy(true);
+    const headers: HeadersInit = {};
+    headers['Authorization'] = `Bearer ${token}`;
+    const ids = [...selectedIds];
+    let failed = 0;
+    try {
+      for (const id of ids) {
+        const proj = projects.find((p) => Number(p.id) === id);
+        if (!proj?.file_path) {
+          failed++;
+          continue;
+        }
+        try {
+          const res = await fetch(`/api/projects/${id}/download`, { headers });
+          if (!res.ok) {
+            failed++;
+            continue;
+          }
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download =
+            String(proj.file_path).split('/').pop() || `project-${id}`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          await new Promise((r) => setTimeout(r, 280));
+        } catch {
+          failed++;
+        }
+      }
+      if (failed > 0) {
+        alert(`Could not download ${failed} file${failed === 1 ? '' : 's'}.`);
+      }
+    } catch {
+      alert('Something went wrong while downloading.');
+    } finally {
+      setBulkActionBusy(false);
     }
   };
 
@@ -371,6 +504,7 @@ export default function ProfilePage() {
   }
 
   return (
+    <>
     <ThreePanelLayout
       leftPanel={<GlobalNavSidebar />}
       centerPanel={
@@ -433,7 +567,7 @@ export default function ProfilePage() {
                             {profile.display_name || username}
                           </h1>
                           <div className="flex items-center gap-2" style={{ marginTop: '-8px' }}>
-                            <TierBadge tier={profile.subscription_tier} size="md" />
+                            <TierBadge tier={profile.subscription_tier ?? profile.tier} size="md" />
                           </div>
                         </div>
                         <p className="text-base" style={{ color: DS.colors.text.secondary }}>
@@ -701,6 +835,68 @@ export default function ProfilePage() {
               <div className="mt-6">
                 {activeTab === 'projects' && (
                   <>
+                    {isOwnProfile && projects.length > 0 && (
+                      <div
+                        className="flex flex-wrap items-center gap-2 mb-4"
+                        style={{ color: DS.colors.text.secondary }}
+                      >
+                        {!selectionMode ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setSelectionMode(true)}
+                          >
+                            Select
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={selectAllProjects}
+                              disabled={bulkActionBusy}
+                            >
+                              Select all
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={exitSelectionMode}
+                              disabled={bulkActionBusy}
+                            >
+                              Cancel
+                            </Button>
+                            {selectedIds.size > 0 && (
+                              <>
+                                <Button
+                                  type="button"
+                                  variant="danger"
+                                  size="sm"
+                                  onClick={openDeleteModal}
+                                  disabled={bulkActionBusy}
+                                >
+                                  <Trash2 size={14} className="inline mr-1 -mt-0.5" />
+                                  Delete ({selectedIds.size})
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={handleBulkDownload}
+                                  disabled={bulkActionBusy}
+                                >
+                                  <Download size={14} className="inline mr-1 -mt-0.5" />
+                                  Download ({selectedIds.size})
+                                </Button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                     {projects.length === 0 ? (
                       <EmptyState
                         icon={<Grid size={48} />}
@@ -712,16 +908,47 @@ export default function ProfilePage() {
                         {projects.map((project) => (
                           <Card
                             key={project.id}
-                            hover
+                            hover={!selectionMode}
                             padding="none"
-                            onClick={() => router.push(`/project/${project.id}`)}
-                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              if (selectionMode) {
+                                toggleProjectSelected(Number(project.id));
+                              } else {
+                                router.push(`/project/${project.id}`);
+                              }
+                            }}
+                            style={{ cursor: selectionMode ? 'default' : 'pointer' }}
                           >
                             {/* Thumbnail */}
                             <div 
                               className="w-full h-48 rounded-t-lg overflow-hidden relative"
                               style={{ backgroundColor: DS.colors.background.panel }}
                             >
+                              {isOwnProfile && selectionMode && (
+                                <button
+                                  type="button"
+                                  className="absolute top-3 left-3 z-20 flex h-9 w-9 items-center justify-center rounded-md border shadow-sm"
+                                  style={{
+                                    borderColor: 'rgba(255,255,255,0.35)',
+                                    backgroundColor: 'rgba(0,0,0,0.45)',
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleProjectSelected(Number(project.id));
+                                  }}
+                                  aria-label={
+                                    selectedIds.has(Number(project.id))
+                                      ? 'Deselect project'
+                                      : 'Select project'
+                                  }
+                                >
+                                  {selectedIds.has(Number(project.id)) ? (
+                                    <CheckSquare size={20} style={{ color: '#fff' }} />
+                                  ) : (
+                                    <Square size={20} style={{ color: 'rgba(255,255,255,0.9)' }} />
+                                  )}
+                                </button>
+                              )}
                               {project.thumbnail_path ? (
                                 <img
                                   src={(() => {
@@ -983,5 +1210,60 @@ export default function ProfilePage() {
         </CenterPanel>
       }
     />
+
+    {deleteModalOpen && (
+      <div
+        className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.55)' }}
+        onClick={() => {
+          if (!bulkActionBusy) setDeleteModalOpen(false);
+        }}
+        role="presentation"
+      >
+        <div
+          className="max-w-md w-full"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+        <Card
+          padding="lg"
+          className="w-full shadow-2xl"
+        >
+          <h3
+            className="text-lg font-semibold mb-2"
+            style={{ color: DS.colors.text.primary }}
+          >
+            Delete {selectedIds.size === 1 ? 'this project' : 'these projects'}?
+          </h3>
+          <p className="text-sm mb-6" style={{ color: DS.colors.text.secondary }}>
+            {selectedIds.size === 1
+              ? 'This cannot be undone. The project and its files will be permanently removed from your account.'
+              : `You are about to permanently delete ${selectedIds.size} projects. This cannot be undone.`}
+          </p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => !bulkActionBusy && setDeleteModalOpen(false)}
+              disabled={bulkActionBusy}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              loading={bulkActionBusy}
+              onClick={confirmBulkDelete}
+            >
+              Delete
+            </Button>
+          </div>
+        </Card>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
