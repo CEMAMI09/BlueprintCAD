@@ -25,6 +25,13 @@ router.get("/dashboard", async (req, res) => {
       [decoded.userId]
     );
 
+    // Sum of project page views (same column as profile / project page / explore)
+    const viewsSum = await getOne(
+      `SELECT COALESCE(SUM(COALESCE(p.views, 0)), 0)::bigint AS total_views
+       FROM projects p WHERE p.user_id = $1`,
+      [decoded.userId]
+    );
+
     // Calculate storage used
     const storageResult = await getOne(
       "SELECT COALESCE(SUM(file_size), 0)::bigint as storage_used FROM cad_files WHERE user_id = $1",
@@ -54,6 +61,7 @@ router.get("/dashboard", async (req, res) => {
     res.json({
       total_projects: projectsCount?.count || 0,
       total_files: filesCount?.count || 0,
+      total_views: Number(viewsSum?.total_views) || 0,
       storage_used: storageUsed,
       storage_max: maxStorage,
       storage_percentage: maxStorage === -1 ? 0 : (storageUsed / maxStorage) * 100,

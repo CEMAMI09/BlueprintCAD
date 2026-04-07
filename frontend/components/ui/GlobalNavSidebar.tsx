@@ -13,13 +13,12 @@ import { useLayout } from './ThreePanelLayout';
 import { useAuth } from '@/app/context/AuthContext';
 import { apiFetch } from '@/lib/apiClient';
 import {
-  Home,
+  LayoutDashboard,
   Compass,
   ShoppingCart,
   MessageSquare,
   Calculator,
   Folder,
-  Box,
   Mail,
   Bell,
   User,
@@ -29,6 +28,7 @@ import {
   ChevronRight,
   LogOut,
 } from 'lucide-react';
+import { LUCIDE_STROKE } from '@/components/ui/StatKpiIcon';
 
 interface NavItem {
   id: string;
@@ -39,7 +39,7 @@ interface NavItem {
 }
 
 const baseNavItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
   { id: 'explore', label: 'Explore', icon: Compass, href: '/explore' },
   { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart, href: '/marketplace' },
   { id: 'forums', label: 'Forums', icon: MessageSquare, href: '/forum' },
@@ -214,7 +214,7 @@ export function GlobalNavSidebar() {
                   }
                 }}
               >
-                <Icon size={20} className="flex-shrink-0" />
+                <Icon size={20} strokeWidth={LUCIDE_STROKE} className="flex-shrink-0" />
                 {!leftPanelCollapsed && (
                   <>
                     <span className="flex-1 text-sm font-medium">{item.label}</span>
@@ -271,7 +271,7 @@ export function GlobalNavSidebar() {
               e.currentTarget.style.color = DS.colors.text.secondary;
             }}
           >
-            <LogOut size={20} />
+            <LogOut size={20} strokeWidth={LUCIDE_STROKE} />
             {!leftPanelCollapsed && (
               <span className="text-sm font-medium">Logout</span>
             )}
@@ -301,10 +301,10 @@ export function GlobalNavSidebar() {
           }}
         >
           {leftPanelCollapsed ? (
-            <ChevronRight size={20} />
+            <ChevronRight size={20} strokeWidth={LUCIDE_STROKE} />
           ) : (
             <>
-              <ChevronLeft size={20} />
+              <ChevronLeft size={20} strokeWidth={LUCIDE_STROKE} />
               <span className="text-sm font-medium">Collapse</span>
             </>
           )}

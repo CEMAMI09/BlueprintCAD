@@ -369,8 +369,8 @@ router.get("/:username", async (req, res) => {
         profile_private,
         created_at 
       FROM users 
-      WHERE username = $1`,
-      [username]
+      WHERE LOWER(username) = LOWER($1)`,
+      [String(username).trim()]
     );
 
     if (!user) {

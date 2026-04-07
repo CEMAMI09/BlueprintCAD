@@ -5,16 +5,22 @@ const { Pool } = require('pg');
 let pool = null;
 
 /**
- * Resolves which connection string to use. Order:
- * 1) DATABASE_PUBLIC_URL — use in .env.local when your shell still exports Railway's internal URL
- * 2) DATABASE_URL
+ * Resolves which connection string to use. Order (first non-empty wins for local dev):
+ * 1) DATABASE_PUBLIC_URL
+ * 2) POSTGRES_PUBLIC_URL / RAILWAY_DATABASE_PUBLIC_URL (common Railway / template aliases)
+ * 3) DATABASE_URL
  *
  * postgres.railway.internal only resolves inside Railway's network. When running the API on your
  * laptop, use the public URL from Railway → Postgres → Connect (or set DATABASE_PUBLIC_URL).
  */
 function getDatabaseUrl() {
-  const pub = process.env.DATABASE_PUBLIC_URL;
-  const primary = process.env.DATABASE_URL;
+  const pub =
+    (process.env.DATABASE_PUBLIC_URL && String(process.env.DATABASE_PUBLIC_URL).trim()) ||
+    (process.env.POSTGRES_PUBLIC_URL && String(process.env.POSTGRES_PUBLIC_URL).trim()) ||
+    (process.env.RAILWAY_DATABASE_PUBLIC_URL &&
+      String(process.env.RAILWAY_DATABASE_PUBLIC_URL).trim()) ||
+    '';
+  const primary = process.env.DATABASE_URL ? String(process.env.DATABASE_URL).trim() : '';
   const url = pub || primary;
 
   if (!url) {
@@ -24,10 +30,14 @@ function getDatabaseUrl() {
   const onRailway = !!process.env.RAILWAY_ENVIRONMENT;
   if (url.includes('railway.internal') && !onRailway) {
     throw new Error(
-      '[db] DATABASE_URL uses postgres.railway.internal, which does not work on your laptop. ' +
-        'Paste the public connection string from Railway → Postgres → Connect into DATABASE_URL, ' +
-        'or set DATABASE_PUBLIC_URL to that URL. If your terminal still shows the old host, ' +
-        'unset DATABASE_URL in the shell or add DATABASE_PUBLIC_URL in .env.local.'
+      '[db] Your active DB URL uses *.railway.internal — that only works inside Railway, not on your PC.\n' +
+        '  Fix: In Railway open Postgres → Connect → copy the PUBLIC connection string.\n' +
+        '  Add a line to repo-root .env.local:\n' +
+        '    DATABASE_PUBLIC_URL=postgresql://USER:PASSWORD@PUBLIC_HOST:PORT/railway\n' +
+        '  (DATABASE_PUBLIC_URL is used before DATABASE_URL when both are set.)\n' +
+        '  Or replace DATABASE_URL in .env.local with that public URL.\n' +
+        '  If your shell still exports an internal DATABASE_URL, run:  Remove-Item Env:DATABASE_URL  (PowerShell) ' +
+        'or unset DATABASE_URL in the terminal before npm run dev:api.'
     );
   }
 
@@ -121,5 +131,6 @@ module.exports = {
   getOne,
   getAll,
   execute,
+  getDatabaseUrl,
 };
 

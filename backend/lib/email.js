@@ -243,7 +243,7 @@ async function testEmailConfig() {
  * @param {string} username - User's username
  * @param {string} token - Verification token
  */
-async function sendVerificationEmail(email, username, token) {
+async function sendVerificationEmail(email, username, token, verificationCode) {
   const transport = getTransporter();
   
   if (!transport) {
@@ -251,7 +251,21 @@ async function sendVerificationEmail(email, username, token) {
     throw new Error('Email service not configured');
   }
 
+  if (!FROM_EMAIL) {
+    throw new Error('SMTP_FROM or SMTP_USER must be set for outgoing mail');
+  }
+
   const verificationUrl = `${APP_URL}/verify-email?token=${token}`;
+  const codeBlock =
+    verificationCode != null
+      ? `
+              <p style="margin:16px 0 8px 0;"><strong>Or enter this code on the verification page:</strong></p>
+              <div style="text-align:center;font-size:28px;letter-spacing:8px;font-family:ui-monospace,monospace;font-weight:700;color:#2F80ED;padding:16px;background:#f0f4ff;border-radius:8px;border:1px solid #cfe2ff;">
+                ${String(verificationCode)}
+              </div>
+              <p style="font-size:13px;color:#666;margin-top:8px;">This code expires in 24 hours, same as the link.</p>
+`
+      : '';
   
   const mailOptions = {
     from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
@@ -287,7 +301,7 @@ async function sendVerificationEmail(email, username, token) {
               
               <p>Or copy and paste this link into your browser:</p>
               <p style="word-break: break-all; color: #3b82f6;">${verificationUrl}</p>
-              
+              ${codeBlock}
               <div class="warning">
                 <strong>⏱️ This link expires in 24 hours</strong><br>
                 If you didn't create an account with Blueprint, you can safely ignore this email.
@@ -308,8 +322,8 @@ Thanks for signing up for Blueprint! To get started, please verify your email ad
 
 Verify your email by clicking this link:
 ${verificationUrl}
-
-This link expires in 24 hours.
+${verificationCode != null ? `\n\nOr enter this 6-digit code on the site: ${verificationCode}\n` : ''}
+This link and code expire in 24 hours.
 
 If you didn't create an account with Blueprint, you can safely ignore this email.
 

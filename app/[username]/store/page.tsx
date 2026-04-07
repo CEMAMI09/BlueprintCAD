@@ -43,7 +43,19 @@ import {
   Clock,
   Download,
   Factory,
+  Pencil,
+  LayoutDashboard,
+  Link2,
+  Check,
 } from 'lucide-react';
+
+function normalizeUsernameParam(u: string | undefined) {
+  try {
+    return decodeURIComponent(String(u || '')).trim().toLowerCase();
+  } catch {
+    return String(u || '').trim().toLowerCase();
+  }
+}
 
 interface Storefront {
   id: number;
@@ -111,6 +123,7 @@ export default function PublicStorefrontPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedDesignForShare, setSelectedDesignForShare] = useState<Design | null>(null);
   const [activeSection, setActiveSection] = useState<'products' | 'about' | 'reviews'>('products');
+  const [storeLinkCopied, setStoreLinkCopied] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -171,6 +184,17 @@ export default function PublicStorefrontPage() {
     }
 
     router.push(`/messages?with=${username}&storefront=true`);
+  };
+
+  const handleCopyStoreLink = async () => {
+    try {
+      const url = typeof window !== 'undefined' ? window.location.href : '';
+      await navigator.clipboard.writeText(url);
+      setStoreLinkCopied(true);
+      window.setTimeout(() => setStoreLinkCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
   };
 
   const fetchDesigns = async (filterId: string = designFilter, search: string = designSearchQuery) => {
@@ -241,7 +265,9 @@ export default function PublicStorefrontPage() {
 
   if (!storefront) {
     // If it's the user's own storefront, show configuration option
-    const isOwnStorefront = currentUser?.username === username;
+    const isOwnStorefront =
+      !!currentUser &&
+      normalizeUsernameParam(currentUser.username) === normalizeUsernameParam(username);
     if (isOwnStorefront) {
       return (
         <ThreePanelLayout
@@ -314,6 +340,11 @@ export default function PublicStorefrontPage() {
       />
     );
   }
+
+  const isOwnStorefront =
+    Boolean(owner && currentUser) &&
+    (Number(currentUser.id) === Number(owner.id) ||
+      normalizeUsernameParam(currentUser.username) === normalizeUsernameParam(username));
 
   const pinnedIds = storefront.pinned_products ?? [];
   const pinnedIdSet = new Set(pinnedIds.map((id) => String(id)));
@@ -764,29 +795,60 @@ export default function PublicStorefrontPage() {
       }
       rightPanel={
         <RightPanel>
-          <PanelHeader title="Actions" />
-          <PanelContent className="p-6 space-y-4">
-            <Button
-              variant={following ? "secondary" : "primary"}
-              fullWidth
-              onClick={handleFollow}
-              icon={following ? <UserMinus size={18} /> : <UserPlus size={18} />}
-            >
-              {following ? 'Unfollow' : 'Follow'}
-            </Button>
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={handleContact}
-              icon={<MessageCircle size={18} />}
-            >
-              Contact Seller
-            </Button>
-            <Link href={`/profile/${username}`}>
-              <Button variant="ghost" fullWidth>
-                View Profile
-              </Button>
-            </Link>
+          <PanelHeader title={isOwnStorefront ? 'Your store' : 'Seller'} />
+          <PanelContent className="p-6 flex flex-col gap-3">
+            {isOwnStorefront ? (
+              <>
+                <Link href="/storefront" className="block w-full">
+                  <Button variant="primary" fullWidth icon={<Pencil size={18} />}>
+                    Edit storefront
+                  </Button>
+                </Link>
+                <Link href="/dashboard" className="block w-full">
+                  <Button variant="secondary" fullWidth icon={<LayoutDashboard size={18} />}>
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  fullWidth
+                  onClick={handleCopyStoreLink}
+                  icon={storeLinkCopied ? <Check size={18} /> : <Link2 size={18} />}
+                >
+                  {storeLinkCopied ? 'Link copied' : 'Copy store link'}
+                </Button>
+                <Link href={`/profile/${username}`} className="block w-full">
+                  <Button variant="ghost" fullWidth>
+                    My profile
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant={following ? 'secondary' : 'primary'}
+                  fullWidth
+                  onClick={handleFollow}
+                  icon={following ? <UserMinus size={18} /> : <UserPlus size={18} />}
+                >
+                  {following ? 'Unfollow' : 'Follow'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={handleContact}
+                  icon={<MessageCircle size={18} />}
+                >
+                  Contact seller
+                </Button>
+                <Link href={`/profile/${username}`} className="block w-full">
+                  <Button variant="ghost" fullWidth>
+                    View profile
+                  </Button>
+                </Link>
+              </>
+            )}
           </PanelContent>
         </RightPanel>
       }

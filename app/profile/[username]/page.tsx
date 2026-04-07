@@ -128,6 +128,13 @@ export default function ProfilePage() {
     }
   }, [username]);
 
+  // Re-fetch projects when auth context is ready so /api/projects can attribute "own profile" correctly
+  useEffect(() => {
+    if (username && currentUser?.username) {
+      fetchUserProjects();
+    }
+  }, [username, currentUser?.username]);
+
   useEffect(() => {
     if (username && currentUser) {
       checkFollowStatus();

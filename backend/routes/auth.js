@@ -71,15 +71,18 @@ router.post("/register", async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // Create verification token and send email (don't block registration if email fails)
+    // Create verification token + 6-digit code and send email (don't block registration if email fails)
     try {
-      const verificationToken = await createVerificationToken(userId, email);
+      const { token: verificationToken, code: verificationCode } = await createVerificationToken(
+        userId,
+        email
+      );
       const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
       
       // Check rate limit
       const rateLimit = await checkVerificationRateLimit(userId, email, 'send');
       if (rateLimit.allowed) {
-        await sendVerificationEmail(email, username, verificationToken);
+        await sendVerificationEmail(email, username, verificationToken, verificationCode);
         await recordVerificationAttempt(userId, email, 'send', ipAddress);
         console.log(`Verification email sent to ${email} for user ${userId}`);
       } else {
@@ -146,6 +149,7 @@ router.post("/login", async (req, res) => {
       id: user.id,
       username: user.username,
       email: user.email,
+      email_verified: user.email_verified === true,
     };
 
     const token = generateToken(userObj);
@@ -246,16 +250,15 @@ router.post("/setup-password", async (req, res) => {
   }
 });
 
-// POST /api/auth/verify-email - Verify email with token
+// POST /api/auth/verify-email - Verify email with link token or 6-digit code
 router.post("/verify-email", async (req, res) => {
   try {
-    const { token } = req.body || {};
-
-    if (!token) {
-      return res.status(400).json({ error: "Verification token is required" });
+    const raw = req.body?.token ?? req.body?.code;
+    if (!raw || String(raw).trim() === "") {
+      return res.status(400).json({ error: "Verification token or code is required" });
     }
 
-    const result = await verifyEmailToken(token);
+    const result = await verifyEmailToken(String(raw).trim());
 
     if (!result.success) {
       return res.status(400).json({ error: result.error || "Invalid or expired token" });
@@ -305,19 +308,28 @@ router.post("/resend-verification", async (req, res) => {
       });
     }
 
-    // Create new verification token
-    const verificationToken = await createVerificationToken(user.userId, dbUser.email);
-    
-    // Send verification email
-    await sendVerificationEmail(dbUser.email, dbUser.username, verificationToken);
-    await recordVerificationAttempt(user.userId, dbUser.email, 'send', ipAddress);
+    const { token: verificationToken, code: verificationCode } = await createVerificationToken(
+      user.userId,
+      dbUser.email
+    );
+
+    await sendVerificationEmail(dbUser.email, dbUser.username, verificationToken, verificationCode);
+    try {
+      await recordVerificationAttempt(user.userId, dbUser.email, 'send', ipAddress);
+    } catch (attemptErr) {
+      console.error("Resend: recordVerificationAttempt (non-fatal):", attemptErr.message);
+    }
 
     return res.json({ 
       message: "Verification email sent successfully. Please check your inbox." 
     });
   } catch (error) {
     console.error("Resend verification error:", error);
-    return res.status(500).json({ error: "Failed to resend verification email" });
+    const detail =
+      process.env.NODE_ENV === "development" && error && error.message
+        ? error.message
+        : "Failed to resend verification email";
+    return res.status(500).json({ error: detail });
   }
 });
 

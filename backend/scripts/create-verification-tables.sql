@@ -44,6 +44,18 @@ CREATE INDEX IF NOT EXISTS idx_verification_tokens_user ON verification_tokens(u
 CREATE INDEX IF NOT EXISTS idx_verification_tokens_identifier ON verification_tokens(identifier);
 CREATE INDEX IF NOT EXISTS idx_verification_tokens_expires ON verification_tokens(expires);
 
+-- 6-digit code (optional; added by app migration if table already existed)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'verification_tokens' AND column_name = 'verification_code'
+  ) THEN
+    ALTER TABLE verification_tokens ADD COLUMN verification_code VARCHAR(6);
+  END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS idx_verification_tokens_code ON verification_tokens(verification_code);
+
 -- Create email_verification_attempts table for rate limiting
 CREATE TABLE IF NOT EXISTS email_verification_attempts (
   id SERIAL PRIMARY KEY,

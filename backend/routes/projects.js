@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const { getUserFromRequest } = require("../lib/auth");
 const { getOne, getAll, execute, query } = require("../lib/db");
+const { ensureProjectViewEventsTable } = require("../lib/analyticsSchema");
 
 // GET /api/projects - List projects (with optional filters: username, sort, for_sale, search)
 router.get("/", async (req, res) => {
@@ -39,10 +40,10 @@ router.get("/", async (req, res) => {
     const params = [];
     let paramIndex = 1;
 
-    // Filter by username if provided
+    // Filter by username if provided (case-insensitive — URLs may not match DB casing)
     if (username) {
-      query += ` AND u.username = $${paramIndex}`;
-      params.push(username);
+      query += ` AND LOWER(u.username) = LOWER($${paramIndex})`;
+      params.push(String(username).trim());
       paramIndex++;
     }
 
@@ -61,19 +62,27 @@ router.get("/", async (req, res) => {
       paramIndex += 1;
     }
 
+    // Treat NULL is_public as public (matches schema default); strict true-only hid legacy/unclear rows
+    const publicOnlyClause = ` AND COALESCE(p.is_public, true) = true`;
+
     // Only show public projects (unless user is viewing their own)
-    if (username && decoded && decoded.userId) {
-      // Check if viewing own profile - allow private projects
-      const user = await getOne("SELECT id FROM users WHERE username = $1", [username]);
-      if (user && user.id === decoded.userId) {
-        // User viewing their own profile - show all projects
+    if (username && decoded && decoded.userId != null) {
+      // Check if viewing own profile - allow private projects (normalize ids — pg/jwt types can differ)
+      const user = await getOne(
+        "SELECT id FROM users WHERE LOWER(username) = LOWER($1)",
+        [String(username).trim()]
+      );
+      const profileUserId = user?.id != null ? Number(user.id) : NaN;
+      const sessionUserId = Number(decoded.userId);
+      if (user && profileUserId === sessionUserId && !Number.isNaN(profileUserId)) {
+        // User viewing their own profile - show all projects (public + private)
       } else {
         // Viewing someone else's profile - only public
-        query += ` AND p.is_public = true`;
+        query += publicOnlyClause;
       }
     } else {
-      // General listing - only public projects
-      query += ` AND p.is_public = true`;
+      // Not authenticated as this profile, or no username filter context — only public projects
+      query += publicOnlyClause;
     }
 
     // Add sorting
@@ -147,6 +156,71 @@ router.get("/starred", async (req, res) => {
   }
 });
 
+// POST /api/projects/:id/view - Record a page view (must come before GET /:id)
+router.post("/:id/view", async (req, res) => {
+  try {
+    const decoded = getUserFromRequest(req);
+    const { id } = req.params;
+    const shareToken = req.query.share || req.body?.share;
+
+    const project = await getOne(
+      `SELECT p.id, p.user_id, p.is_public, COALESCE(p.views, 0)::int AS views
+       FROM projects p WHERE p.id = $1`,
+      [id]
+    );
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    const isOwner =
+      decoded != null &&
+      decoded.userId != null &&
+      Number(decoded.userId) === Number(project.user_id);
+    const isPublic =
+      project.is_public === true || project.is_public === 1;
+
+    if (!isPublic && !isOwner && !shareToken) {
+      return res.status(403).json({ error: "Project is private" });
+    }
+
+    if (isOwner) {
+      return res.json({
+        views: Number(project.views) || 0,
+        counted: false,
+      });
+    }
+
+    const updateResult = await execute(
+      `UPDATE projects SET views = COALESCE(views, 0) + 1 WHERE id = $1 RETURNING views`,
+      [id]
+    );
+
+    const newViews =
+      updateResult.rows?.[0]?.views != null
+        ? Number(updateResult.rows[0].views)
+        : (Number(project.views) || 0) + 1;
+
+    try {
+      await ensureProjectViewEventsTable();
+      await query(
+        `INSERT INTO project_view_events (project_id, viewer_user_id) VALUES ($1, $2)`,
+        [
+          Number(id),
+          decoded?.userId != null ? Number(decoded.userId) : null,
+        ]
+      );
+    } catch (e) {
+      console.warn("[views] project_view_events insert:", e.message);
+    }
+
+    return res.json({ views: newViews, counted: true });
+  } catch (error) {
+    console.error("POST /api/projects/:id/view error:", error);
+    res.status(500).json({ error: "Failed to record view" });
+  }
+});
+
 // DELETE /api/projects/:id - Owner deletes project (must come before GET /:id)
 router.delete("/:id", async (req, res) => {
   const decoded = getUserFromRequest(req);
@@ -169,7 +243,7 @@ router.delete("/:id", async (req, res) => {
     return res.status(404).json({ error: "Project not found" });
   }
 
-  if (project.user_id !== decoded.userId) {
+  if (Number(project.user_id) !== Number(decoded.userId)) {
     return res.status(403).json({ error: "Not authorized" });
   }
 
@@ -264,33 +338,18 @@ router.get("/:id", async (req, res) => {
 
     console.log(`GET /api/projects/${id} - Project found: ${project.title} (user_id: ${project.user_id})`);
 
-    // Check if user can view this project
-    const isOwner = decoded && decoded.userId === project.user_id;
+    // Check if user can view this project (normalize ids — JWT vs pg types can differ)
+    const isOwner =
+      decoded != null &&
+      decoded.userId != null &&
+      Number(decoded.userId) === Number(project.user_id);
     const isPublic = project.is_public === true || project.is_public === 1;
 
     if (!isPublic && !isOwner && !shareToken) {
       return res.status(403).json({ error: "Project is private" });
     }
 
-    // Increment view count if not owner (or if no auth - anonymous views)
-    if (!isOwner) {
-      try {
-        const updateResult = await execute(
-          `UPDATE projects SET views = COALESCE(views, 0) + 1 WHERE id = $1 RETURNING views`,
-          [id]
-        );
-        if (updateResult.rows && updateResult.rows[0]) {
-          project.views = updateResult.rows[0].views;
-          console.log(`[Views] Incremented views for project ${id}: ${project.views}`);
-        }
-      } catch (viewError) {
-        console.error("Failed to increment view count:", viewError);
-        // Don't fail the request if view increment fails
-      }
-    } else {
-      // For owners, just ensure views is set
-      project.views = project.views || 0;
-    }
+    project.views = project.views != null ? Number(project.views) : 0;
 
     // Get CAD file info if linked
     let cadFile = null;

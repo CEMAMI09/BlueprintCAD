@@ -20,7 +20,6 @@ import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Card, Button, Badge } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import {
-  TrendingUp,
   Folder,
   GitBranch,
   DollarSign,
@@ -29,11 +28,11 @@ import {
   Star,
   Clock,
   Users,
-  HardDrive,
-  Crown,
   Upload,
   BarChart3,
+  Package,
 } from 'lucide-react';
+import { StatKpiIcon, LUCIDE_STROKE } from '@/components/ui/StatKpiIcon';
 import Link from 'next/link';
 import TierBadge from '@/frontend/components/TierBadge';
 
@@ -74,7 +73,7 @@ export default function DashboardPage() {
           totalProjects: statsData.total_projects ?? 0,
           activeVersions: statsData.total_files ?? 0,
           totalEarnings: '0', // Earnings not implemented yet
-          totalViews: statsData.total_files ?? 0,
+          totalViews: statsData.total_views ?? 0,
         });
         // Set storage from stats
         if (statsData) {
@@ -149,17 +148,19 @@ export default function DashboardPage() {
   };
 
   // Default stats while loading
-  const displayStats = stats ? [
-    { label: 'Total Projects', value: stats.totalProjects.toString(), icon: Folder, color: DS.colors.primary.blue },
-    { label: 'Active Versions', value: stats.activeVersions.toString(), icon: GitBranch, color: DS.colors.accent.success },
-    { label: 'Total Earnings', value: formatEarnings(stats.totalEarnings), icon: DollarSign, color: DS.colors.accent.cyan },
-    { label: 'Total Views', value: formatNumber(stats.totalViews), icon: Eye, color: DS.colors.accent.purple },
-  ] : [
-    { label: 'Total Projects', value: '0', icon: Folder, color: DS.colors.primary.blue },
-    { label: 'Active Versions', value: '0', icon: GitBranch, color: DS.colors.accent.success },
-    { label: 'Total Earnings', value: '$0', icon: DollarSign, color: DS.colors.accent.cyan },
-    { label: 'Total Views', value: '0', icon: Eye, color: DS.colors.accent.purple },
-  ];
+  const displayStats = stats
+    ? [
+        { label: 'Total Projects', value: stats.totalProjects.toString(), icon: Folder },
+        { label: 'Active Versions', value: stats.activeVersions.toString(), icon: GitBranch },
+        { label: 'Total Earnings', value: formatEarnings(stats.totalEarnings), icon: DollarSign },
+        { label: 'Total Views', value: formatNumber(stats.totalViews), icon: Eye },
+      ]
+    : [
+        { label: 'Total Projects', value: '0', icon: Folder },
+        { label: 'Active Versions', value: '0', icon: GitBranch },
+        { label: 'Total Earnings', value: '$0', icon: DollarSign },
+        { label: 'Total Views', value: '0', icon: Eye },
+      ];
 
   return (
     <ThreePanelLayout
@@ -180,7 +181,7 @@ export default function DashboardPage() {
                 <Link href="/dashboard/analytics">
                   <Button 
                     variant="ghost" 
-                    icon={<BarChart3 size={18} />} 
+                    icon={<BarChart3 size={20} strokeWidth={LUCIDE_STROKE} />} 
                     className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
                   >
                     Analytics
@@ -188,7 +189,7 @@ export default function DashboardPage() {
                 </Link>
                 <Button 
                   variant="ghost" 
-                  icon={<Upload size={18} />} 
+                  icon={<Upload size={20} strokeWidth={LUCIDE_STROKE} />} 
                   onClick={() => router.push('/upload')}
                   className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
                 >
@@ -211,14 +212,9 @@ export default function DashboardPage() {
                 const Icon = stat.icon;
                 return (
                   <Card key={index} hover padding="md">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: `${stat.color}22` }}
-                      >
-                        <Icon size={24} style={{ color: stat.color }} />
-                      </div>
-                      <div>
+                    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
+                      <StatKpiIcon icon={Icon} />
+                      <div className="min-w-0 flex-1">
                         <p className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
                           {stat.value}
                         </p>
@@ -292,14 +288,14 @@ export default function DashboardPage() {
                                   </p>
                                   <div className="flex items-center gap-4 mt-2">
                                     <div className="flex items-center gap-2">
-                                      <Clock size={14} style={{ color: DS.colors.text.tertiary }} />
+                                      <Clock size={14} strokeWidth={LUCIDE_STROKE} style={{ color: DS.colors.text.tertiary }} />
                                       <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
                                         {formatTime(activity.timestamp || activity.created_at)}
                                       </span>
                                     </div>
                                     {activity.views !== undefined && (
                                       <div className="flex items-center gap-1">
-                                        <Eye size={14} style={{ color: DS.colors.text.tertiary }} />
+                                        <Eye size={14} strokeWidth={LUCIDE_STROKE} style={{ color: DS.colors.text.tertiary }} />
                                         <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
                                           {formatNumber(activity.views)}
                                         </span>
@@ -307,7 +303,7 @@ export default function DashboardPage() {
                                     )}
                                     {activity.likes !== undefined && (
                                       <div className="flex items-center gap-1">
-                                        <Star size={14} style={{ color: DS.colors.text.tertiary }} />
+                                        <Star size={14} strokeWidth={LUCIDE_STROKE} style={{ color: DS.colors.text.tertiary }} />
                                         <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
                                           {formatNumber(activity.likes)}
                                         </span>
@@ -385,9 +381,10 @@ export default function DashboardPage() {
                                   let fallback = container.querySelector('.thumbnail-fallback') as HTMLElement;
                                   if (!fallback) {
                                     fallback = document.createElement('div');
-                                    fallback.className = 'thumbnail-fallback flex flex-col items-center justify-center w-full h-full absolute inset-0';
+                                    fallback.className = 'thumbnail-fallback flex flex-col items-center justify-center w-full h-full absolute inset-0 gap-2 text-[#6B7280]';
                                     fallback.style.zIndex = '1';
-                                    fallback.innerHTML = '<span class="text-5xl mb-2">📦</span><span class="text-xs">No thumbnail available</span>';
+                                    fallback.innerHTML =
+                                      '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg><span class="text-xs">No thumbnail available</span>';
                                     container.appendChild(fallback);
                                   }
                                   fallback.style.display = 'flex';
@@ -398,8 +395,8 @@ export default function DashboardPage() {
                               }}
                             />
                           ) : (
-                            <div className="flex flex-col items-center justify-center w-full h-full">
-                              <span className="text-5xl mb-2">📦</span>
+                            <div className="flex flex-col items-center justify-center w-full h-full gap-2">
+                              <Package size={40} strokeWidth={LUCIDE_STROKE} style={{ color: DS.colors.text.tertiary }} />
                               <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>No thumbnail available</span>
                             </div>
                           )}
@@ -421,11 +418,11 @@ export default function DashboardPage() {
                           )}
                           <div className="flex items-center gap-4 text-sm" style={{ color: DS.colors.text.tertiary }}>
                             <div className="flex items-center gap-1">
-                              <Star size={14} />
+                              <Star size={14} strokeWidth={LUCIDE_STROKE} />
                               {formatNumber(design.likes || design.stars || 0)}
                             </div>
                             <div className="flex items-center gap-1">
-                              <Eye size={14} />
+                              <Eye size={14} strokeWidth={LUCIDE_STROKE} />
                               {formatNumber(design.views || 0)}
                             </div>
                           </div>
@@ -495,7 +492,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Folder size={16} style={{ color: DS.colors.text.tertiary }} />
+                    <Folder size={16} strokeWidth={LUCIDE_STROKE} style={{ color: DS.colors.text.tertiary }} />
                     <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
                       Projects
                     </span>
@@ -506,7 +503,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Users size={16} style={{ color: DS.colors.text.tertiary }} />
+                    <Users size={16} strokeWidth={LUCIDE_STROKE} style={{ color: DS.colors.text.tertiary }} />
                     <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
                       Followers
                     </span>
@@ -517,7 +514,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Star size={16} style={{ color: DS.colors.text.tertiary }} />
+                    <Star size={16} strokeWidth={LUCIDE_STROKE} style={{ color: DS.colors.text.tertiary }} />
                     <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
                       Total Stars
                     </span>

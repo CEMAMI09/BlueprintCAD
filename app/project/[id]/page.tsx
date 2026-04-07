@@ -108,11 +108,46 @@ export default function ProjectDetail() {
 
   useEffect(() => {
     if (id) {
-      fetchProject(); // This will increment views if user is not the owner
+      fetchProject();
       fetchLikeState(); // Fetches starred state
       checkPurchaseStatus();
     }
   }, [id]);
+
+  // Record one view per tab session; lock sessionStorage before fetch so Strict Mode cannot fire twice
+  useEffect(() => {
+    if (!id || !project?.id) return;
+    const key = `project_view_recorded_${id}`;
+    if (typeof sessionStorage === 'undefined') return;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+
+    const shareToken =
+      searchParams?.get('share') ||
+      sessionStorage.getItem('shareToken');
+    const qs = shareToken ? `?share=${encodeURIComponent(shareToken)}` : '';
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/projects/${encodeURIComponent(id)}/view${qs}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+        });
+        if (!res.ok) {
+          sessionStorage.removeItem(key);
+          return;
+        }
+        const data = await res.json();
+        if (typeof data.views === 'number') {
+          setProject((p) => (p ? { ...p, views: data.views } : p));
+        }
+      } catch {
+        sessionStorage.removeItem(key);
+      }
+    })();
+  }, [id, project?.id, searchParams]);
 
   useEffect(() => {
     if (project?.folder_id) {
@@ -227,7 +262,6 @@ export default function ProjectDetail() {
           shouldHideDownload: !!(data.shareLinkAccess && data.shareLinkData?.download_blocked)
         });
         setProject(data);
-        // View count is automatically incremented by backend when non-owner views project
         console.log(`[Project] Loaded project ${data.id} with ${data.views} views`);
           // Debug: log project file info for 3D viewer
           // eslint-disable-next-line no-console

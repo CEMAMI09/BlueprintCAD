@@ -1,0 +1,46 @@
+"filename", "language", "JSON", "JavaScript", "TypeScript JSX", "TypeScript", "MS SQL", "comment", "blank", "total"
+"c:\Users\codye\forge\app\[username]\store\page.tsx", "TypeScript JSX", 0, 0, -43, 0, 0, -2, -4, -49
+"c:\Users\codye\forge\app\api\cad\upload\route.ts", "TypeScript", 0, 0, 0, 31, 0, 1, 3, 35
+"c:\Users\codye\forge\app\api\folders\[id]\route.ts", "TypeScript", 0, 0, 0, 31, 0, 0, 3, 34
+"c:\Users\codye\forge\app\api\folders\route.ts", "TypeScript", 0, 0, 0, 54, 0, 0, 4, 58
+"c:\Users\codye\forge\app\api\projects\[id]\download\route.ts", "TypeScript", 0, 0, 0, 43, 0, 0, 5, 48
+"c:\Users\codye\forge\app\api\projects\[id]\route.ts", "TypeScript", 0, 0, 0, 67, 0, 0, 4, 71
+"c:\Users\codye\forge\app\api\projects\[id]\view\route.ts", "TypeScript", 0, 0, 0, 38, 0, 0, 3, 41
+"c:\Users\codye\forge\app\api\projects\route.ts", "TypeScript", 0, 0, 0, 28, 0, 0, 3, 31
+"c:\Users\codye\forge\app\api\storefront\[username]\route.ts", "TypeScript", 0, 0, 0, 30, 0, 0, 2, 32
+"c:\Users\codye\forge\app\api\storefront\route.ts", "TypeScript", 0, 0, 0, 69, 0, 6, 7, 82
+"c:\Users\codye\forge\app\api\thumbnails\[key]\route.ts", "TypeScript", 0, 0, 0, 40, 0, 3, 3, 46
+"c:\Users\codye\forge\app\coming-soon\page.tsx", "TypeScript JSX", 0, 0, 262, 0, 0, 3, 9, 274
+"c:\Users\codye\forge\app\explore\page.tsx", "TypeScript JSX", 0, 0, -428, 0, 0, -9, -2, -439
+"c:\Users\codye\forge\app\landingpage2\page.tsx", "TypeScript JSX", 0, 0, -3, 0, 0, 1, 0, -2
+"c:\Users\codye\forge\app\messages\page.tsx", "TypeScript JSX", 0, 0, 1, 0, 0, 0, 0, 1
+"c:\Users\codye\forge\app\profile\[username]\page.tsx", "TypeScript JSX", 0, 0, 279, 0, 0, 1, 9, 289
+"c:\Users\codye\forge\app\project\[id]\page.tsx", "TypeScript JSX", 0, 0, 31, 0, 0, 0, 3, 34
+"c:\Users\codye\forge\app\storefront\page.tsx", "TypeScript JSX", 0, 0, 127, 0, 0, 4, 2, 133
+"c:\Users\codye\forge\app\upload\page.tsx", "TypeScript JSX", 0, 0, 98, 0, 0, 1, 3, 102
+"c:\Users\codye\forge\backend\lib\db.js", "JavaScript", 0, 39, 0, 0, 0, 10, 6, 55
+"c:\Users\codye\forge\backend\lib\generateThumbnail.js", "JavaScript", 0, 143, 0, 0, 0, -20, 5, 128
+"c:\Users\codye\forge\backend\lib\generateThumbnailR2.js", "JavaScript", 0, 7, 0, 0, 0, 1, 0, 8
+"c:\Users\codye\forge\backend\lib\repoRoot.js", "JavaScript", 0, 3, 0, 0, 0, 5, 3, 11
+"c:\Users\codye\forge\backend\lib\subscriptionFeatures.js", "JavaScript", 0, 128, 0, 0, 0, 6, 7, 141
+"c:\Users\codye\forge\backend\routes\folders.js", "JavaScript", 0, 65, 0, 0, 0, 2, 2, 69
+"c:\Users\codye\forge\backend\routes\projects.js", "JavaScript", 0, 87, 0, 0, 0, 3, 19, 109
+"c:\Users\codye\forge\backend\routes\stats.js", "JavaScript", 0, 6, 0, 0, 0, 1, 1, 8
+"c:\Users\codye\forge\backend\routes\storefront.js", "JavaScript", 0, 312, 0, 0, 0, 5, 33, 350
+"c:\Users\codye\forge\backend\routes\subscriptions.js", "JavaScript", 0, 95, 0, 0, 0, -3, 9, 101
+"c:\Users\codye\forge\backend\routes\users.js", "JavaScript", 0, 7, 0, 0, 0, 0, 0, 7
+"c:\Users\codye\forge\backend\server.js", "JavaScript", 0, 30, 0, 0, 0, 4, 4, 38
+"c:\Users\codye\forge\db\migrations\015_storefront_focused_industry.sql", "MS SQL", 0, 0, 0, 0, 1, 1, 1, 3
+"c:\Users\codye\forge\design.json", "JSON", 361, 0, 0, 0, 0, 0, 19, 380
+"c:\Users\codye\forge\frontend\components\ExploreDesignGrid.tsx", "TypeScript JSX", 0, 0, 253, 0, 0, 1, 6, 260
+"c:\Users\codye\forge\frontend\components\SubscriptionGate.tsx", "TypeScript JSX", 0, 0, 42, 0, 0, 1, 3, 46
+"c:\Users\codye\forge\frontend\components\TierBadge.tsx", "TypeScript JSX", 0, 0, -17, 0, 0, -10, 0, -27
+"c:\Users\codye\forge\frontend\components\ui\GlobalNavSidebar.tsx", "TypeScript JSX", 0, 0, 3, 0, 0, 0, 0, 3
+"c:\Users\codye\forge\frontend\components\ui\ThreePanelLayout.tsx", "TypeScript JSX", 0, 0, 7, 0, 0, 0, 0, 7
+"c:\Users\codye\forge\frontend\lib\mapProjectsToDesigns.ts", "TypeScript", 0, 0, 0, 74, 0, 3, 3, 80
+"c:\Users\codye\forge\frontend\lib\storefront-industries.ts", "TypeScript", 0, 0, 0, 20, 0, 1, 2, 23
+"c:\Users\codye\forge\lib\serverBackendBase.ts", "TypeScript", 0, 0, 0, 13, 0, 9, 1, 23
+"c:\Users\codye\forge\package-lock.json", "JSON", 180, 0, 0, 0, 0, 0, 0, 180
+"c:\Users\codye\forge\package.json", "JSON", 4, 0, 0, 0, 0, 0, 0, 4
+"c:\Users\codye\forge\vercel.json", "JSON", 9, 0, 0, 0, 0, 0, 0, 9
+"Total", "-", 554, 922, 612, 538, 1, 29, 181, 2837

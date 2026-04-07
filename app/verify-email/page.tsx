@@ -1,45 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
+import { useAuth } from '@/app/context/AuthContext';
+import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+
+type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export default function VerifyEmail() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const { refreshUser } = useAuth();
+  const [status, setStatus] = useState<Status>('loading');
   const [message, setMessage] = useState('');
+  const [code, setCode] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const tokenHandled = useRef(false);
 
-  useEffect(() => {
-    const token = searchParams?.get('token');
-    
-    if (!token) {
-      setStatus('error');
-      setMessage('Invalid verification link. No token provided.');
-      return;
-    }
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-    verifyEmail(token);
-  }, [searchParams]);
-
-  const verifyEmail = async (token: string) => {
+  async function runVerify(body: { token: string } | { code: string }) {
+    setStatus('loading');
+    setMessage('');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify-email`, {
+      const res = await fetch(`${apiUrl}/api/auth/verify-email`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ token }),
+        body: JSON.stringify(body),
       });
-
       const data = await res.json();
-
       if (res.ok) {
         setStatus('success');
-        setMessage(data.message);
-
-        // Update localStorage if user is logged in
+        setMessage(data.message || 'Email verified successfully.');
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
           const user = JSON.parse(storedUser);
@@ -47,89 +41,196 @@ export default function VerifyEmail() {
           localStorage.setItem('user', JSON.stringify(user));
           window.dispatchEvent(new Event('userChanged'));
         }
-
-        // Redirect to home after 3 seconds
-        setTimeout(() => {
-          router.push('/');
-        }, 3000);
+        await refreshUser();
+        setTimeout(() => router.push('/dashboard'), 2500);
       } else {
         setStatus('error');
         setMessage(data.error || 'Verification failed');
       }
-    } catch (error) {
+    } catch {
       setStatus('error');
       setMessage('An error occurred during verification');
     }
+  }
+
+  useEffect(() => {
+    const token = searchParams?.get('token');
+    if (token && !tokenHandled.current) {
+      tokenHandled.current = true;
+      runVerify({ token });
+    } else if (!token) {
+      setStatus('idle');
+      setMessage('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once for link token
+  }, [searchParams]);
+
+  const submitCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const digits = code.replace(/\D/g, '').slice(0, 6);
+    if (digits.length !== 6) {
+      setMessage('Enter the 6-digit code from your email.');
+      setStatus('error');
+      return;
+    }
+    setSubmitting(true);
+    await runVerify({ code: digits });
+    setSubmitting(false);
   };
+
+  const blue = DS.colors.primary.blue;
 
   return (
     <Layout>
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md w-full">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+          <div
+            className="rounded-xl p-8 text-center border"
+            style={{
+              backgroundColor: DS.colors.background.card,
+              borderColor: DS.colors.border.subtle,
+            }}
+          >
+            {status === 'idle' && (
+              <>
+                <h2 className="text-2xl font-bold mb-2" style={{ color: DS.colors.text.primary }}>
+                  Enter verification code
+                </h2>
+                <p className="text-sm mb-6" style={{ color: DS.colors.text.secondary }}>
+                  Paste the 6-digit code from your verification email, or open the link in that email
+                  instead.
+                </p>
+                <form onSubmit={submitCode} className="space-y-4">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="w-full text-center text-2xl tracking-[0.4em] font-mono rounded-lg px-4 py-3 border outline-none"
+                    style={{
+                      backgroundColor: DS.colors.background.panel,
+                      borderColor: DS.colors.border.default,
+                      color: DS.colors.text.primary,
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full py-2.5 rounded-lg font-medium text-white transition disabled:opacity-50"
+                    style={{ backgroundColor: blue }}
+                  >
+                    {submitting ? 'Verifying…' : 'Verify'}
+                  </button>
+                </form>
+                <p className="text-xs mt-4" style={{ color: DS.colors.text.tertiary }}>
+                  Wrong place?{' '}
+                  <a href="/login" style={{ color: blue }}>
+                    Sign in
+                  </a>{' '}
+                  and use &quot;Resend email&quot; from the banner if you need a new code.
+                </p>
+              </>
+            )}
+
             {status === 'loading' && (
               <>
-                <div className="w-16 h-16 mx-auto mb-4 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-                <h2 className="text-2xl font-bold mb-2">Verifying Email...</h2>
-                <p className="text-gray-400">Please wait while we verify your email address</p>
+                <div
+                  className="w-16 h-16 mx-auto mb-4 border-4 rounded-full animate-spin"
+                  style={{ borderColor: `${blue}33`, borderTopColor: blue }}
+                />
+                <h2 className="text-2xl font-bold mb-2" style={{ color: DS.colors.text.primary }}>
+                  Verifying…
+                </h2>
+                <p style={{ color: DS.colors.text.secondary }}>Please wait.</p>
               </>
             )}
 
             {status === 'success' && (
               <>
-                <div className="w-16 h-16 mx-auto mb-4 bg-green-500/10 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div
+                  className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${DS.colors.accent.success}22` }}
+                >
+                  <svg
+                    className="w-8 h-8"
+                    style={{ color: DS.colors.accent.success }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold mb-2 text-green-500">Email Verified!</h2>
-                <p className="text-gray-400 mb-4">{message}</p>
-                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-                  <p className="text-sm text-green-400">
-                    🎉 You can now upload projects, list items for sale, and send team invitations!
-                  </p>
-                </div>
-                <p className="text-sm text-gray-500 mt-4">Redirecting you to the home page...</p>
+                <h2 className="text-2xl font-bold mb-2" style={{ color: DS.colors.accent.success }}>
+                  Email verified
+                </h2>
+                <p style={{ color: DS.colors.text.secondary }}>{message}</p>
+                <p className="text-sm mt-4" style={{ color: DS.colors.text.tertiary }}>
+                  Redirecting to your dashboard…
+                </p>
               </>
             )}
 
             {status === 'error' && (
               <>
-                <div className="w-16 h-16 mx-auto mb-4 bg-red-500/10 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div
+                  className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${DS.colors.accent.error}22` }}
+                >
+                  <svg
+                    className="w-8 h-8"
+                    style={{ color: DS.colors.accent.error }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold mb-2 text-red-500">Verification Failed</h2>
-                <p className="text-gray-400 mb-6">{message}</p>
-                
+                <h2 className="text-2xl font-bold mb-2" style={{ color: DS.colors.accent.error }}>
+                  Verification failed
+                </h2>
+                <p className="mb-6" style={{ color: DS.colors.text.secondary }}>
+                  {message}
+                </p>
                 <div className="space-y-3">
                   <button
-                    onClick={() => router.push('/')}
-                    className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition"
+                    type="button"
+                    onClick={() => {
+                      setStatus('idle');
+                      setMessage('');
+                      setCode('');
+                    }}
+                    className="w-full px-4 py-2 rounded-lg font-medium transition text-white"
+                    style={{ backgroundColor: blue }}
                   >
-                    Go to Home
+                    Try 6-digit code
                   </button>
                   <button
-                    onClick={() => router.push('/login')}
-                    className="w-full px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg font-medium transition"
+                    type="button"
+                    onClick={() => router.push('/')}
+                    className="w-full px-4 py-2 rounded-lg font-medium transition"
+                    style={{
+                      backgroundColor: DS.colors.background.elevated,
+                      color: DS.colors.text.primary,
+                    }}
                   >
-                    Sign In
+                    Home
                   </button>
-                </div>
-
-                <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-left">
-                  <p className="text-sm text-blue-400 mb-2">
-                    <strong>Common issues:</strong>
-                  </p>
-                  <ul className="text-sm text-gray-400 space-y-1 list-disc list-inside">
-                    <li>Link expired (valid for 24 hours)</li>
-                    <li>Link already used</li>
-                    <li>Email already verified</li>
-                  </ul>
-                  <p className="text-sm text-gray-400 mt-3">
-                    Sign in and request a new verification email if needed.
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/login')}
+                    className="w-full px-4 py-2 rounded-lg font-medium transition"
+                    style={{
+                      backgroundColor: DS.colors.background.panel,
+                      color: DS.colors.text.secondary,
+                    }}
+                  >
+                    Sign in
+                  </button>
                 </div>
               </>
             )}

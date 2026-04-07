@@ -9,6 +9,7 @@ import { ReactNode, useState, createContext, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { Menu, X, ArrowLeft } from 'lucide-react';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import { LUCIDE_STROKE } from '@/components/ui/StatKpiIcon';
 
 interface LayoutContextType {
   leftPanelCollapsed: boolean;
@@ -67,7 +68,7 @@ export function ThreePanelLayout({
       }}
     >
       <div 
-        className="min-h-screen w-screen overflow-x-hidden flex flex-col md:flex-row md:items-start"
+        className="min-h-screen w-screen overflow-x-hidden flex flex-col md:flex-row md:items-stretch"
         style={{ backgroundColor: DS.colors.background.app }}
       >
         {/* MOBILE TOP BAR - Back + Menu (always available on small screens) */}
@@ -87,7 +88,7 @@ export function ThreePanelLayout({
               backgroundColor: DS.colors.background.elevated,
             }}
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={16} strokeWidth={LUCIDE_STROKE} />
             <span>Back</span>
           </button>
           <div className="text-sm font-semibold tracking-wide">
@@ -104,7 +105,7 @@ export function ThreePanelLayout({
                 color: DS.colors.text.primary,
               }}
             >
-              <Menu size={20} />
+              <Menu size={20} strokeWidth={LUCIDE_STROKE} />
             </button>
           ) : (
             <div className="w-9 h-9" />
@@ -137,10 +138,10 @@ export function ThreePanelLayout({
           {centerPanel}
         </main>
 
-        {/* RIGHT PANEL - Contextual Information */}
+        {/* RIGHT PANEL - Contextual Information (stretch to full row height = at least viewport) */}
         {!hideRightPanel && rightPanelVisible && rightPanel && (
           <aside
-            className="hidden lg:block flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+            className="hidden lg:flex lg:flex-col flex-shrink-0 min-h-screen h-auto self-stretch transition-all duration-300 ease-in-out overflow-hidden"
             style={{
               width: DS.layout.rightPanel.width,
               backgroundColor: DS.colors.background.panel,
@@ -186,7 +187,7 @@ export function ThreePanelLayout({
                     color: DS.colors.text.primary,
                   }}
                 >
-                  <X size={18} />
+                  <X size={18} strokeWidth={LUCIDE_STROKE} />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto">
@@ -225,7 +226,7 @@ export function CenterPanel({ children, className = '' }: PanelProps) {
 
 export function RightPanel({ children, className = '' }: PanelProps) {
   return (
-    <div className={`h-full flex flex-col overflow-y-auto ${className}`}>
+    <div className={`min-h-full h-full flex-1 flex flex-col overflow-y-auto ${className}`}>
       {children}
     </div>
   );

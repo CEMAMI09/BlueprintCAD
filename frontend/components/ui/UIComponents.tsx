@@ -343,8 +343,10 @@ export function Tabs({ tabs, activeTab, onTabChange }: TabsProps) {
               }
             }}
           >
-            {tab.icon}
-            {tab.label}
+            {tab.icon ? (
+              <span className="inline-flex items-center justify-center shrink-0 leading-none">{tab.icon}</span>
+            ) : null}
+            <span className="leading-tight">{tab.label}</span>
             {tab.badge && (
               <Badge variant="primary" size="sm">
                 {tab.badge}

@@ -11,15 +11,28 @@ try {
   const envLocal = path.join(__dirname, "..", ".env.local");
   if (fs.existsSync(envLocal)) {
     const parsed = dotenv.parse(fs.readFileSync(envLocal, "utf8"));
-    if (parsed.DATABASE_PUBLIC_URL) {
-      process.env.DATABASE_PUBLIC_URL = parsed.DATABASE_PUBLIC_URL;
-    }
     if (parsed.DATABASE_URL) {
       process.env.DATABASE_URL = parsed.DATABASE_URL;
+    }
+    // Public URL last so it wins over a pasted internal DATABASE_URL in the same file
+    const pub =
+      parsed.DATABASE_PUBLIC_URL ||
+      parsed.POSTGRES_PUBLIC_URL ||
+      parsed.RAILWAY_DATABASE_PUBLIC_URL;
+    if (pub) {
+      process.env.DATABASE_PUBLIC_URL = pub;
     }
   }
 } catch (err) {
   console.warn("[env] Could not re-apply DATABASE_* from .env.local:", err.message);
+}
+
+// Validate DB URL early (getPool logs host in development on first init)
+try {
+  const { getPool } = require("./lib/db");
+  getPool();
+} catch (e) {
+  console.error("\n" + e.message + "\n");
 }
 
 const express = require("express");
