@@ -342,7 +342,8 @@ export default function PublicStorefrontPage() {
   }
 
   const isOwnStorefront =
-    Boolean(owner && currentUser) &&
+    !!owner &&
+    !!currentUser &&
     (Number(currentUser.id) === Number(owner.id) ||
       normalizeUsernameParam(currentUser.username) === normalizeUsernameParam(username));
 
