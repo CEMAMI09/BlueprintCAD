@@ -43,10 +43,18 @@ async function sendMailWithSendGridFallback(mailOptions) {
 
   if (process.env.SENDGRID_API_KEY) {
     try {
-      const { sendEmailViaAPI } = require('./sendgrid-api');
+      const { sendEmailViaAPI, isSendGridAuthFailure } = require('./sendgrid-api');
       await sendEmailViaAPI(toAddr, mailOptions.subject, mailOptions.html, mailOptions.text);
       return;
     } catch (apiError) {
+      if (isSendGridAuthFailure(apiError)) {
+        console.error(
+          '[Email] SendGrid returned 401/403 — invalid or revoked API key. Fix SENDGRID_API_KEY; skipping SMTP fallback to avoid long timeouts.'
+        );
+        throw new Error(
+          'Email could not be sent: SendGrid rejected the API key (401). In your host env, set SENDGRID_API_KEY to a valid SendGrid key (same value as SMTP password when using user "apikey"). Remove stray quotes or spaces.'
+        );
+      }
       console.warn('[Email] SendGrid API failed, falling back to SMTP:', apiError.message);
     }
   }
@@ -419,14 +427,22 @@ async function sendMassEmail(email, subject, htmlContent, textContent) {
   // Try SendGrid API first (more reliable, avoids SMTP port blocking)
   if (process.env.SENDGRID_API_KEY) {
     try {
-      const { sendEmailViaAPI } = require('./sendgrid-api');
+      const { sendEmailViaAPI, isSendGridAuthFailure } = require('./sendgrid-api');
       const finalHtml = htmlContent || (textContent ? textToHtml(textContent) : null);
       const finalText = textContent || (htmlContent ? stripHtml(htmlContent) : null);
-      
+
       await sendEmailViaAPI(email, subject, finalHtml, finalText);
       console.log(`[Email] Mass email sent via SendGrid API to: ${email}`);
       return;
     } catch (apiError) {
+      if (isSendGridAuthFailure(apiError)) {
+        console.error(
+          '[Email] SendGrid returned 401/403 — skipping SMTP fallback. Fix SENDGRID_API_KEY.'
+        );
+        throw new Error(
+          'SendGrid rejected the API key (401). Update SENDGRID_API_KEY in your server environment.'
+        );
+      }
       console.warn(`[Email] SendGrid API failed, falling back to SMTP:`, apiError.message);
       // Fall through to SMTP
     }

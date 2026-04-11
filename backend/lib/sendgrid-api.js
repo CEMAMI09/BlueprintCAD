@@ -1,9 +1,19 @@
 // SendGrid REST API client (alternative to SMTP for better reliability)
 const sgMail = require('@sendgrid/mail');
 
-// Initialize SendGrid
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+function getSendGridApiKey() {
+  const raw = process.env.SENDGRID_API_KEY;
+  return typeof raw === 'string' ? raw.trim() : '';
+}
+
+/**
+ * True when SendGrid rejected the request because of a bad or forbidden API key.
+ * In that case SMTP fallback usually wastes a long connection timeout; callers should fail fast.
+ */
+function isSendGridAuthFailure(error) {
+  if (!error) return false;
+  const status = error.response?.status ?? error.code;
+  return status === 401 || status === 403;
 }
 
 /**
@@ -14,9 +24,12 @@ if (process.env.SENDGRID_API_KEY) {
  * @param {string} textContent - Plain text content
  */
 async function sendEmailViaAPI(to, subject, htmlContent, textContent) {
-  if (!process.env.SENDGRID_API_KEY) {
+  const apiKey = getSendGridApiKey();
+  if (!apiKey) {
     throw new Error('SENDGRID_API_KEY environment variable is not set');
   }
+
+  sgMail.setApiKey(apiKey);
 
   const fromEmail = process.env.SMTP_FROM || process.env.SENDGRID_FROM || 'noreply@em554.blueprintcad.io';
   const fromName = process.env.SMTP_FROM_NAME || 'Blueprint';
@@ -38,18 +51,18 @@ async function sendEmailViaAPI(to, subject, htmlContent, textContent) {
     return { success: true };
   } catch (error) {
     console.error(`[SendGrid API] Failed to send email to ${to}:`, error);
-    if (error.response) {
-      console.error('SendGrid API Error Details:', {
-        status: error.response.status,
-        body: error.response.body,
-        headers: error.response.headers,
-      });
-    }
+    const status = error.response?.status ?? error.code;
+    const body = error.response?.body;
+    console.error('SendGrid API Error Details:', {
+      status,
+      body: body != null ? JSON.stringify(body) : undefined,
+    });
     throw error;
   }
 }
 
 module.exports = {
   sendEmailViaAPI,
+  isSendGridAuthFailure,
 };
 

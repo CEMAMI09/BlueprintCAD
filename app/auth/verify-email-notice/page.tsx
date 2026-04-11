@@ -35,6 +35,7 @@ export default function VerifyEmailNotice() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        signal: AbortSignal.timeout(45_000),
       });
 
       const data = await response.json();
@@ -44,8 +45,12 @@ export default function VerifyEmailNotice() {
       }
 
       setResendSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to resend verification email');
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Request timed out. Try again in a moment.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to resend verification email');
+      }
     } finally {
       setResending(false);
     }

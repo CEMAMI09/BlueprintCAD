@@ -325,8 +325,9 @@ router.post("/resend-verification", async (req, res) => {
     });
   } catch (error) {
     console.error("Resend verification error:", error);
+    // Surface actionable email errors in production (e.g. invalid SendGrid key); avoid silent generic failures.
     const detail =
-      process.env.NODE_ENV === "development" && error && error.message
+      error && error.message
         ? error.message
         : "Failed to resend verification email";
     return res.status(500).json({ error: detail });
