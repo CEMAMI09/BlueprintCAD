@@ -35,19 +35,40 @@ function getTransporter() {
 }
 
 /**
+ * Prefer SendGrid REST API when SENDGRID_API_KEY is set (HTTPS; avoids blocked outbound SMTP on many hosts),
+ * then fall back to Nodemailer/SMTP.
+ */
+async function sendMailWithSendGridFallback(mailOptions) {
+  const toAddr = Array.isArray(mailOptions.to) ? mailOptions.to[0] : mailOptions.to;
+
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      const { sendEmailViaAPI } = require('./sendgrid-api');
+      await sendEmailViaAPI(toAddr, mailOptions.subject, mailOptions.html, mailOptions.text);
+      return;
+    } catch (apiError) {
+      console.warn('[Email] SendGrid API failed, falling back to SMTP:', apiError.message);
+    }
+  }
+
+  const transport = getTransporter();
+  if (!transport) {
+    console.error(
+      'Email not configured. Set SENDGRID_API_KEY or SMTP_USER and SMTP_PASS environment variables.'
+    );
+    throw new Error('Email service not configured');
+  }
+
+  await transport.sendMail(mailOptions);
+}
+
+/**
  * Send password reset email
  * @param {string} email - User's email address
  * @param {string} username - User's username
  * @param {string} token - Password reset token
  */
 async function sendPasswordResetEmail(email, username, token) {
-  const transport = getTransporter();
-  
-  if (!transport) {
-    console.error('Email not configured. Set SMTP_USER and SMTP_PASS environment variables.');
-    throw new Error('Email service not configured');
-  }
-
   const resetUrl = `${APP_URL}/reset-password?token=${token}`;
   
   const mailOptions = {
@@ -119,7 +140,7 @@ This is an automated message from Forge. Please do not reply to this email.
   };
 
   try {
-    await transport.sendMail(mailOptions);
+    await sendMailWithSendGridFallback(mailOptions);
     console.log('Password reset email sent to:', email);
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -133,13 +154,6 @@ This is an automated message from Forge. Please do not reply to this email.
  * @param {string} username - User's username
  */
 async function sendUsernameReminderEmail(email, username) {
-  const transport = getTransporter();
-  
-  if (!transport) {
-    console.error('Email not configured. Set SMTP_USER and SMTP_PASS environment variables.');
-    throw new Error('Email service not configured');
-  }
-
   const loginUrl = `${APP_URL}/login`;
   
   const mailOptions = {
@@ -211,7 +225,7 @@ This is an automated message from Forge. Please do not reply to this email.
   };
 
   try {
-    await transport.sendMail(mailOptions);
+    await sendMailWithSendGridFallback(mailOptions);
     console.log('Username reminder email sent to:', email);
   } catch (error) {
     console.error('Error sending username reminder email:', error);
@@ -244,13 +258,6 @@ async function testEmailConfig() {
  * @param {string} token - Verification token
  */
 async function sendVerificationEmail(email, username, token, verificationCode) {
-  const transport = getTransporter();
-  
-  if (!transport) {
-    console.error('Email not configured. Set SMTP_USER and SMTP_PASS environment variables.');
-    throw new Error('Email service not configured');
-  }
-
   if (!FROM_EMAIL) {
     throw new Error('SMTP_FROM or SMTP_USER must be set for outgoing mail');
   }
@@ -334,7 +341,7 @@ This is an automated message from Blueprint. Please do not reply to this email.
   };
 
   try {
-    await transport.sendMail(mailOptions);
+    await sendMailWithSendGridFallback(mailOptions);
     console.log('Verification email sent to:', email);
   } catch (error) {
     console.error('Error sending verification email:', error);
