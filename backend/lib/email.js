@@ -40,19 +40,32 @@ function getTransporter() {
  */
 async function sendMailWithSendGridFallback(mailOptions) {
   const toAddr = Array.isArray(mailOptions.to) ? mailOptions.to[0] : mailOptions.to;
+  const {
+    sendEmailViaAPI,
+    isSendGridAuthFailure,
+    getSendGridFirstErrorMessage,
+  } = require('./sendgrid-api');
 
   if (process.env.SENDGRID_API_KEY) {
     try {
-      const { sendEmailViaAPI, isSendGridAuthFailure } = require('./sendgrid-api');
       await sendEmailViaAPI(toAddr, mailOptions.subject, mailOptions.html, mailOptions.text);
       return;
     } catch (apiError) {
       if (isSendGridAuthFailure(apiError)) {
+        const sgMsg = getSendGridFirstErrorMessage(apiError);
         console.error(
-          '[Email] SendGrid returned 401/403 — invalid or revoked API key. Fix SENDGRID_API_KEY; skipping SMTP fallback to avoid long timeouts.'
+          '[Email] SendGrid returned 401/403 — skipping SMTP fallback. SendGrid says:',
+          sgMsg || apiError.message
         );
+        if (sgMsg && /credit/i.test(sgMsg)) {
+          throw new Error(
+            `SendGrid: ${sgMsg}. Your trial or plan has no sends left — add a payment method or upgrade in the SendGrid dashboard.`
+          );
+        }
         throw new Error(
-          'Email could not be sent: SendGrid rejected the API key (401). In your host env, set SENDGRID_API_KEY to a valid SendGrid key (same value as SMTP password when using user "apikey"). Remove stray quotes or spaces.'
+          sgMsg
+            ? `SendGrid: ${sgMsg}. Check API key and sender authentication in SendGrid.`
+            : 'Email could not be sent: SendGrid rejected the request (401/403). Verify SENDGRID_API_KEY (no quotes or extra spaces).'
         );
       }
       console.warn('[Email] SendGrid API failed, falling back to SMTP:', apiError.message);
@@ -424,10 +437,15 @@ function textToHtml(text) {
  * @param {string} textContent - Plain text email content (will auto-generate HTML if htmlContent not provided)
  */
 async function sendMassEmail(email, subject, htmlContent, textContent) {
+  const {
+    sendEmailViaAPI,
+    isSendGridAuthFailure,
+    getSendGridFirstErrorMessage,
+  } = require('./sendgrid-api');
+
   // Try SendGrid API first (more reliable, avoids SMTP port blocking)
   if (process.env.SENDGRID_API_KEY) {
     try {
-      const { sendEmailViaAPI, isSendGridAuthFailure } = require('./sendgrid-api');
       const finalHtml = htmlContent || (textContent ? textToHtml(textContent) : null);
       const finalText = textContent || (htmlContent ? stripHtml(htmlContent) : null);
 
@@ -436,11 +454,17 @@ async function sendMassEmail(email, subject, htmlContent, textContent) {
       return;
     } catch (apiError) {
       if (isSendGridAuthFailure(apiError)) {
-        console.error(
-          '[Email] SendGrid returned 401/403 — skipping SMTP fallback. Fix SENDGRID_API_KEY.'
-        );
+        const sgMsg = getSendGridFirstErrorMessage(apiError);
+        console.error('[Email] SendGrid 401/403 — skipping SMTP fallback. SendGrid says:', sgMsg || apiError.message);
+        if (sgMsg && /credit/i.test(sgMsg)) {
+          throw new Error(
+            `SendGrid: ${sgMsg}. Add billing or upgrade your SendGrid plan to send mail.`
+          );
+        }
         throw new Error(
-          'SendGrid rejected the API key (401). Update SENDGRID_API_KEY in your server environment.'
+          sgMsg
+            ? `SendGrid: ${sgMsg}`
+            : 'SendGrid rejected the request (401/403). Verify SENDGRID_API_KEY.'
         );
       }
       console.warn(`[Email] SendGrid API failed, falling back to SMTP:`, apiError.message);

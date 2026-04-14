@@ -16,6 +16,24 @@ function isSendGridAuthFailure(error) {
   return status === 401 || status === 403;
 }
 
+/** First human-readable message from SendGrid error body, if present */
+function getSendGridFirstErrorMessage(error) {
+  const body = error.response?.body;
+  if (!body) return null;
+  if (typeof body === 'string') {
+    try {
+      const parsed = JSON.parse(body);
+      return parsed.errors?.[0]?.message || null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof body === 'object' && Array.isArray(body.errors) && body.errors[0]?.message) {
+    return body.errors[0].message;
+  }
+  return null;
+}
+
 /**
  * Send email using SendGrid REST API
  * @param {string} to - Recipient email
@@ -64,5 +82,6 @@ async function sendEmailViaAPI(to, subject, htmlContent, textContent) {
 module.exports = {
   sendEmailViaAPI,
   isSendGridAuthFailure,
+  getSendGridFirstErrorMessage,
 };
 

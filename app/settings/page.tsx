@@ -33,6 +33,23 @@ import {
   X,
 } from 'lucide-react';
 
+/** Must match backend/lib/notificationPreferences.js */
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  emailNotifications: true,
+  pushNotifications: false,
+  commentsOnDesigns: true,
+  newFollowers: true,
+  marketplaceUpdates: true,
+};
+
+type NotificationPreferences = {
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  commentsOnDesigns: boolean;
+  newFollowers: boolean;
+  marketplaceUpdates: boolean;
+};
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
   const [userInfo, setUserInfo] = useState<any>(null);
@@ -45,6 +62,19 @@ export default function SettingsPage() {
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [userSubscription, setUserSubscription] = useState<any>(null);
+  const [notificationPreferences, setNotificationPreferences] =
+    useState<NotificationPreferences>({ ...DEFAULT_NOTIFICATION_PREFERENCES });
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifMessage, setNotifMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [pushPermission, setPushPermission] = useState<'default' | 'granted' | 'denied' | 'unsupported'>('default');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPushPermission(Notification.permission as 'default' | 'granted' | 'denied');
+    } else {
+      setPushPermission('unsupported');
+    }
+  }, []);
 
   useEffect(() => {
     fetchUserInfo();
@@ -65,6 +95,12 @@ export default function SettingsPage() {
         // Initialize social links if not present
         const socialLinks = data.social_links || { github: '', twitter: '', instagram: '', youtube: '' };
         setUserInfo({ ...data, social_links: socialLinks, originalUsername: data.username });
+        if (data.notification_preferences && typeof data.notification_preferences === 'object') {
+          setNotificationPreferences({
+            ...DEFAULT_NOTIFICATION_PREFERENCES,
+            ...data.notification_preferences,
+          });
+        }
         // Set previews for existing images - use the URL from backend if available, otherwise construct proxy URL
         if (data.profile_picture_url) {
           setProfilePicturePreview(data.profile_picture_url);
@@ -163,6 +199,79 @@ export default function SettingsPage() {
       console.error('Error checking username:', error);
     }
     return true;
+  };
+
+  const saveNotificationPreferences = async () => {
+    setNotifSaving(true);
+    setNotifMessage(null);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setNotifMessage({ type: 'error', text: 'You must be logged in.' });
+        return;
+      }
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notification_preferences: notificationPreferences }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNotifMessage({ type: 'error', text: data.error || 'Failed to save notification settings' });
+        return;
+      }
+      if (data.notification_preferences) {
+        setNotificationPreferences({
+          ...DEFAULT_NOTIFICATION_PREFERENCES,
+          ...data.notification_preferences,
+        });
+        setUserInfo((prev: any) => (prev ? { ...prev, notification_preferences: data.notification_preferences } : prev));
+      }
+      setNotifMessage({ type: 'success', text: 'Notification preferences saved.' });
+    } catch {
+      setNotifMessage({ type: 'error', text: 'Failed to save notification settings' });
+    } finally {
+      setNotifSaving(false);
+    }
+  };
+
+  const handlePushToggle = async (enabled: boolean) => {
+    if (!enabled) {
+      setNotificationPreferences((prev) => ({ ...prev, pushNotifications: false }));
+      return;
+    }
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setNotifMessage({
+        type: 'error',
+        text: 'This browser does not support desktop notifications.',
+      });
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      setPushPermission(perm as 'default' | 'granted' | 'denied');
+      if (perm !== 'granted') {
+        setNotificationPreferences((prev) => ({ ...prev, pushNotifications: false }));
+        setNotifMessage({
+          type: 'error',
+          text:
+            perm === 'denied'
+              ? 'Notifications are blocked. Enable them in your browser settings for this site.'
+              : 'Notification permission was not granted.',
+        });
+        return;
+      }
+      setNotificationPreferences((prev) => ({ ...prev, pushNotifications: true }));
+      setNotifMessage({
+        type: 'success',
+        text: 'Browser notifications enabled. Save below to keep this preference on your account.',
+      });
+    } catch {
+      setNotifMessage({ type: 'error', text: 'Could not request notification permission.' });
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -781,26 +890,104 @@ export default function SettingsPage() {
 
                 {activeTab === 'notifications' && (
                   <div className="space-y-6">
+                    {notifMessage && (
+                      <div
+                        className={`p-4 rounded-lg ${
+                          notifMessage.type === 'success'
+                            ? 'bg-green-500/10 border border-green-500/20 text-green-500'
+                            : 'bg-red-500/10 border border-red-500/20 text-red-500'
+                        }`}
+                      >
+                        {notifMessage.text}
+                      </div>
+                    )}
                     <Card padding="lg">
-                      <h3 className="text-xl font-bold mb-6" style={{ color: DS.colors.text.primary }}>
-                        Notification Preferences
+                      <h3 className="text-xl font-bold mb-2" style={{ color: DS.colors.text.primary }}>
+                        Notification preferences
                       </h3>
-                      <div className="space-y-4">
-                        {[
-                          { label: 'Email notifications', description: 'Receive email updates about your activity' },
-                          { label: 'Push notifications', description: 'Get push notifications in your browser' },
-                          { label: 'Comments on your designs', description: 'Notify when someone comments' },
-                          { label: 'New followers', description: 'Notify when someone follows you' },
-                          { label: 'Marketplace updates', description: 'Updates about your listings' },
-                        ].map((item) => (
-                          <div key={item.label} className="flex items-center justify-between py-3 border-b" style={{ borderColor: DS.colors.border.default }}>
-                            <div>
-                              <div className="font-medium" style={{ color: DS.colors.text.primary }}>{item.label}</div>
-                              <div className="text-sm" style={{ color: DS.colors.text.secondary }}>{item.description}</div>
+                      <p className="text-sm mb-6" style={{ color: DS.colors.text.secondary }}>
+                        Choose how we reach you. These are saved to your account and used when we send emails or
+                        in-app alerts (comments, follows, and marketplace activity).
+                      </p>
+                      <div className="space-y-1">
+                        {(
+                          [
+                            {
+                              key: 'emailNotifications' as const,
+                              label: 'Email notifications',
+                              description: 'Security, product updates, and activity summaries by email',
+                            },
+                            {
+                              key: 'pushNotifications' as const,
+                              label: 'Browser notifications',
+                              description: 'Short desktop alerts while using Blueprint (requires browser permission)',
+                            },
+                            {
+                              key: 'commentsOnDesigns' as const,
+                              label: 'Comments on your designs',
+                              description: 'When someone comments on your projects',
+                            },
+                            {
+                              key: 'newFollowers' as const,
+                              label: 'New followers',
+                              description: 'When someone follows your profile',
+                            },
+                            {
+                              key: 'marketplaceUpdates' as const,
+                              label: 'Marketplace updates',
+                              description: 'Sales, listing status, and buyer activity for your storefront',
+                            },
+                          ] as const
+                        ).map((item) => (
+                          <div
+                            key={item.key}
+                            className="flex items-center justify-between py-3 border-b gap-4"
+                            style={{ borderColor: DS.colors.border.default }}
+                          >
+                            <div className="min-w-0">
+                              <div className="font-medium" style={{ color: DS.colors.text.primary }}>
+                                {item.label}
+                              </div>
+                              <div className="text-sm" style={{ color: DS.colors.text.secondary }}>
+                                {item.description}
+                              </div>
+                              {item.key === 'pushNotifications' && pushPermission !== 'unsupported' && (
+                                <div className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
+                                  Browser permission: {pushPermission}
+                                </div>
+                              )}
                             </div>
-                            <input type="checkbox" defaultChecked className="w-5 h-5" />
+                            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                              <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={notificationPreferences[item.key]}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  if (item.key === 'pushNotifications') {
+                                    void handlePushToggle(checked);
+                                  } else {
+                                    setNotificationPreferences((prev) => ({
+                                      ...prev,
+                                      [item.key]: checked,
+                                    }));
+                                  }
+                                }}
+                              />
+                              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                            </label>
                           </div>
                         ))}
+                      </div>
+                      <div className="mt-6 pt-4 border-t" style={{ borderColor: DS.colors.border.default }}>
+                        <Button
+                          variant="primary"
+                          onClick={() => void saveNotificationPreferences()}
+                          disabled={notifSaving}
+                          fullWidth
+                        >
+                          {notifSaving ? 'Saving…' : 'Save notification settings'}
+                        </Button>
                       </div>
                     </Card>
                   </div>

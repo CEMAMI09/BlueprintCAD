@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS users (
   github_id VARCHAR(255) UNIQUE,
   oauth_provider VARCHAR(50), -- 'google', 'github', or null for email/password
   tier VARCHAR(50) DEFAULT 'free',
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  subscription_status VARCHAR(50) DEFAULT 'active',
+  subscription_current_period_end TIMESTAMP,
   profile_picture TEXT,
   bio TEXT,
   location TEXT,
@@ -19,6 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
   social_links JSONB DEFAULT '{}',
   visibility_options JSONB DEFAULT '{"showEmail":false,"showLocation":true,"showWebsite":true,"showSocial":true}',
   profile_private BOOLEAN DEFAULT false,
+  notification_preferences JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMP DEFAULT NOW()
 );
 

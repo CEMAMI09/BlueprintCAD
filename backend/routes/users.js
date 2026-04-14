@@ -4,6 +4,10 @@ const router = express.Router();
 const { getOne, getAll, execute } = require("../lib/db");
 const { getUserFromRequest } = require("../lib/auth");
 const { normalizeTier } = require("../lib/subscriptionFeatures");
+const {
+  mergeNotificationPreferences,
+  sanitizeNotificationPreferencesPatch,
+} = require("../lib/notificationPreferences");
 
 // GET /api/users/me - Get current user
 router.get("/me", async (req, res) => {
@@ -29,6 +33,7 @@ router.get("/me", async (req, res) => {
         social_links,
         visibility_options,
         profile_private,
+        notification_preferences,
         created_at 
       FROM users 
       WHERE id = $1`,
@@ -92,6 +97,10 @@ router.get("/me", async (req, res) => {
     const bannerUrl =
       publicBase && user.banner ? `${publicBase}/${user.banner}` : null;
 
+    let notificationPreferences = mergeNotificationPreferences(
+      user.notification_preferences
+    );
+
     const tierNorm = normalizeTier(user.tier);
     res.json({
       id: user.id,
@@ -109,6 +118,7 @@ router.get("/me", async (req, res) => {
       social_links: socialLinks,
       visibility_options: visibilityOptions,
       profile_private: user.profile_private || false,
+      notification_preferences: notificationPreferences,
       created_at: user.created_at,
       stats: {
         total_projects: stats?.total_projects || 0,
@@ -141,6 +151,7 @@ router.put("/me", async (req, res) => {
       profile_private,
       social_links,
       visibility_options,
+      notification_preferences,
       profile_picture,
       banner,
     } = req.body || {};
@@ -204,6 +215,17 @@ router.put("/me", async (req, res) => {
       updates.push(`visibility_options = $${paramIndex++}`);
       values.push(JSON.stringify(visibility_options));
     }
+    if (notification_preferences !== undefined) {
+      const current = await getOne(
+        `SELECT notification_preferences FROM users WHERE id = $1`,
+        [decoded.userId]
+      );
+      const prev = mergeNotificationPreferences(current?.notification_preferences);
+      const patch = sanitizeNotificationPreferencesPatch(notification_preferences);
+      const next = { ...prev, ...patch };
+      updates.push(`notification_preferences = $${paramIndex++}`);
+      values.push(JSON.stringify(next));
+    }
     if (profile_picture !== undefined) {
       updates.push(`profile_picture = $${paramIndex++}`);
       values.push(profile_picture);
@@ -247,6 +269,7 @@ router.put("/me", async (req, res) => {
         social_links,
         visibility_options,
         profile_private,
+        notification_preferences,
         created_at 
       FROM users 
       WHERE id = $1`,
@@ -286,6 +309,10 @@ router.put("/me", async (req, res) => {
     const bannerUrl =
       publicBase && updatedUser.banner ? `${publicBase}/${updatedUser.banner}` : null;
 
+    const notifMerged = mergeNotificationPreferences(
+      updatedUser.notification_preferences
+    );
+
     const tierNormPut = normalizeTier(updatedUser.tier);
     res.json({
       id: updatedUser.id,
@@ -303,6 +330,7 @@ router.put("/me", async (req, res) => {
       social_links: socialLinks,
       visibility_options: visibilityOptions,
       profile_private: updatedUser.profile_private || false,
+      notification_preferences: notifMerged,
       created_at: updatedUser.created_at,
     });
   } catch (error) {

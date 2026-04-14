@@ -68,6 +68,10 @@ app.use(cors({
 // Required for browser preflight requests
 app.options("*", cors());
 
+// Stripe webhooks must receive the raw request body for signature verification.
+// Mount this BEFORE JSON/body parsing middleware.
+app.use("/api/stripe", require("./routes/stripe"));
+
 // Cookie parser (must come before routes)
 app.use(cookieParser());
 
