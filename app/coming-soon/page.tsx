@@ -1,19 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import {
-  Eye,
-  GitBranch,
-  DollarSign,
-  Mail,
-  CheckCircle2,
-  Loader2,
-  ArrowRight,
-  Gift,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import HeadphonesViewer from '@/app/components/HeadphonesViewer';
-import { apiFetch } from '@/lib/apiClient';
 
 // Design system colors
 const colors = {
@@ -25,26 +15,13 @@ const colors = {
   accentPressed: '#3B66F0',
   accentGlow: 'rgba(79,125,255,0.22)',
   border: 'rgba(255,255,255,0.06)',
-  success: '#22C55E',
 };
 
 export default function ComingSoonPage() {
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
-  
-  // Waitlist form state
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [showNameField, setShowNameField] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
-  const [position, setPosition] = useState<number | null>(null);
-  
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
+
   const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
   const smoothScrollTo = (element: HTMLElement) => {
@@ -68,11 +45,6 @@ export default function ComingSoonPage() {
     };
 
     requestAnimationFrame(step);
-  };
-
-  const scrollToWaitlist = () => {
-    const el = document.getElementById('waitlist');
-    if (el) smoothScrollTo(el);
   };
 
   const scrollToSection = (id: string) => {
@@ -104,74 +76,6 @@ export default function ComingSoonPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleEmailContinue = () => {
-    if (!email || !emailRegex.test(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-    setError('');
-    setShowNameField(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    if (!email || !emailRegex.test(email)) {
-      setError('Please enter a valid email address');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const data = await apiFetch('/api/waitlist', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: email.trim(),
-          name: name.trim() || undefined,
-          source: 'website',
-        }),
-      });
-
-      setSuccess(true);
-      setPosition(data.position || null);
-      setEmail('');
-      setName('');
-      setShowNameField(false);
-      
-      // Reset success message after 5 seconds
-      setTimeout(() => {
-        setSuccess(false);
-        setPosition(null);
-      }, 5000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to join waitlist. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // NOTE: Parallax for the dashboard image was removed – visual now stays fixed while scrolling.
-
-  const pillars = [
-    {
-      icon: Eye,
-      title: 'Interactive 3D previews',
-      description: 'Inspect designs directly in the browser — rotate, explore, and understand before downloading or buying.',
-    },
-    {
-      icon: GitBranch,
-      title: 'Versioning & collaboration',
-      description: 'Organize projects with folders, branches, permissions, and history — without enterprise PLM.',
-    },
-    {
-      icon: DollarSign,
-      title: 'Monetize your designs',
-      description: 'Sell through storefronts, track analytics, and generate AI manufacturing quotes.',
-    },
-  ];
-
   return (
     <div
       className="min-h-screen overflow-x-hidden"
@@ -195,9 +99,16 @@ export default function ComingSoonPage() {
                 className="h-12 md:h-14 w-auto"
               />
             </Link>
-            <div className="flex items-center shrink-0">
-              <button
-                onClick={scrollToWaitlist}
+            <div className="flex items-center gap-3 shrink-0">
+              <Link
+                href="/login"
+                className="px-4 py-2 text-sm font-medium rounded-lg transition-all hover:opacity-90"
+                style={{ color: colors.textPrimary }}
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/register"
                 className="px-4 py-2 text-sm font-medium rounded-lg transition-all"
                 style={{
                   backgroundColor: colors.accent,
@@ -212,8 +123,8 @@ export default function ComingSoonPage() {
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
-                Join waitlist
-              </button>
+                Sign up
+              </Link>
             </div>
           </div>
         </div>
@@ -250,7 +161,6 @@ export default function ComingSoonPage() {
                   { id: 'why-section', label: 'Why' },
                   { id: 'features', label: 'Features' },
                   { id: 'pricing', label: 'Pricing' },
-                  { id: 'waitlist', label: 'Waitlist' },
                 ].map(({ id, label }) => (
                   <button
                     key={id}
@@ -268,10 +178,17 @@ export default function ComingSoonPage() {
                   </button>
                 ))}
               </nav>
-              <div className="flex items-center shrink-0">
-                <button
-                  onClick={scrollToWaitlist}
-                  className="px-4 py-2 text-sm font-medium rounded-lg transition-all"
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <Link
+                  href="/login"
+                  className="px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all hover:opacity-90"
+                  style={{ color: colors.textPrimary }}
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all"
                   style={{
                     backgroundColor: colors.accent,
                     color: '#0B0E14',
@@ -285,8 +202,8 @@ export default function ComingSoonPage() {
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
-                  Join waitlist
-                </button>
+                  Sign up
+                </Link>
               </div>
             </div>
           </div>
@@ -343,9 +260,9 @@ export default function ComingSoonPage() {
               </p>
 
               {/* Hero CTA Button */}
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={scrollToWaitlist}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/register"
                   className="inline-flex items-center gap-2 rounded-lg font-medium transition-all group"
                   style={{
                     backgroundColor: colors.accent,
@@ -363,32 +280,23 @@ export default function ComingSoonPage() {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = 'none';
                   }}
-                  onMouseDown={(e) => {
-                    e.currentTarget.style.backgroundColor = colors.accentPressed;
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                  onMouseUp={(e) => {
-                    e.currentTarget.style.backgroundColor = colors.accentHover;
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
                 >
-                  Join waitlist
+                  Get started free
                   <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
                     <ArrowRight size={18} />
                   </span>
-                </button>
-                
-                {/* Subtle benefit message */}
-                <p
-                  className="text-sm flex items-center gap-1.5"
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center rounded-lg font-medium transition-all px-5 py-3 border"
                   style={{
-                    color: colors.textSecondary,
-                    opacity: 0.7,
+                    color: colors.textPrimary,
+                    borderColor: colors.border,
+                    maxWidth: 'fit-content',
                   }}
                 >
-                  <Gift size={14} style={{ color: colors.accent, opacity: 0.8 }} />
-                  <span>3 months free + Founders badge</span>
-                </p>
+                  Sign in
+                </Link>
               </div>
             </div>
 
@@ -414,12 +322,8 @@ export default function ComingSoonPage() {
                     transform: 'scale(2.0)',
                     transformOrigin: 'top left',
                   }}
-                  onLoad={() => {
-                    setImageLoaded(true);
-                  }}
                   onError={(e) => {
                     console.error('Failed to load dashboard image:', e);
-                    setImageLoaded(true);
                   }}
                   loading="eager"
                   fetchPriority="high"
@@ -572,7 +476,7 @@ export default function ComingSoonPage() {
                     <span className="font-semibold">Creator Storefront</span>
                     <span className="text-emerald-200 text-xs">Live</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div className="rounded-lg bg-black/20 p-3">
                       <p className="text-emerald-200">Monthly revenue</p>
                       <p className="text-lg font-semibold">$4,320</p>
@@ -637,13 +541,13 @@ export default function ComingSoonPage() {
                 <li>3 AI quote estimates / month</li>
                 <li>Sell designs (15% commission)</li>
               </ul>
-              <button
-                onClick={scrollToWaitlist}
+              <Link
+                href="/register"
                 className="mt-auto inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium"
                 style={{ color: colors.textPrimary, borderColor: colors.border, backgroundColor: 'transparent' }}
               >
-                Join waitlist
-              </button>
+                Get started free
+              </Link>
             </div>
 
             {/* Creator - highlighted */}
@@ -676,13 +580,13 @@ export default function ComingSoonPage() {
                 <li>Lower platform fees (5%)</li>
                 <li>More private projects, 50GB storage</li>
               </ul>
-              <button
-                onClick={scrollToWaitlist}
+              <Link
+                href="/register"
                 className="mt-auto inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm"
                 style={{ backgroundColor: colors.accent, color: '#0B0E14' }}
               >
-                Join Creator waitlist
-              </button>
+                Start with Creator
+              </Link>
             </div>
 
             {/* Studio */}
@@ -710,200 +614,14 @@ export default function ComingSoonPage() {
                 <li>API access</li>
               </ul>
               <button
-                onClick={scrollToWaitlist}
-                className="mt-auto inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium"
-                style={{ color: colors.textPrimary, borderColor: colors.border, backgroundColor: 'transparent' }}
+                type="button"
+                disabled
+                className="mt-auto inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium cursor-not-allowed opacity-70"
+                style={{ color: colors.textSecondary, borderColor: colors.border, backgroundColor: 'transparent' }}
               >
-                Talk to sales
+                Coming Soon
               </button>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Waitlist Section */}
-      <section id="waitlist" className="py-12 lg:py-24" style={{ backgroundColor: colors.bgPrimary }}>
-        <div className="max-w-2xl mx-auto px-6 lg:px-20">
-          <div className="text-center mb-12">
-            <h2
-              className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 font-heading"
-              style={{
-                color: colors.textPrimary,
-                fontWeight: 700,
-                letterSpacing: '-0.01em',
-              }}
-            >
-              Join the waitlist
-            </h2>
-            <p
-              className="text-base md:text-lg mb-4"
-              style={{
-                color: colors.textSecondary,
-                lineHeight: '1.6',
-              }}
-            >
-              Be the first to know when we launch. Get early access to BlueprintCAD.
-            </p>
-            
-            {/* Subtle benefit badge */}
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm mb-8"
-              style={{
-                backgroundColor: `${colors.accent}10`,
-                border: `1px solid ${colors.accent}20`,
-                color: colors.textSecondary,
-              }}
-            >
-              <Gift size={14} style={{ color: colors.accent }} />
-              <span>All waitlist members get <strong style={{ color: colors.textPrimary }}>3 months free</strong> Creator subscription + <strong style={{ color: colors.textPrimary }}>Founders badge</strong></span>
-            </div>
-          </div>
-
-          <div className="min-h-[200px] flex items-center justify-center">
-            {success ? (
-              <div
-                className="p-6 rounded-lg border text-center w-full transition-all duration-300"
-                style={{
-                  borderColor: colors.success,
-                  backgroundColor: `${colors.success}10`,
-                }}
-              >
-                <CheckCircle2 size={32} style={{ color: colors.success, margin: '0 auto 12px' }} />
-                <h3
-                  className="text-xl font-bold mb-2 font-heading"
-                  style={{ color: colors.success }}
-                >
-                  You're on the list!
-                </h3>
-                <p style={{ color: colors.textSecondary }}>
-                  {position 
-                    ? `You're #${position} on the waiting list. We'll notify you when we launch!`
-                    : "We'll notify you when we launch!"}
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={showNameField ? handleSubmit : (e) => { e.preventDefault(); handleEmailContinue(); }} className="space-y-4 w-full transition-all duration-300">
-              {/* Email field - always shown */}
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError('');
-                }}
-                placeholder="Enter your email"
-                className="w-full px-4 py-3 rounded-lg border transition-all"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.03)',
-                  borderColor: error ? '#EF4444' : colors.border,
-                  color: colors.textPrimary,
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.accent;
-                  e.currentTarget.style.outline = 'none';
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.accentGlow}`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = error ? '#EF4444' : colors.border;
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-                required
-              />
-              
-              {/* Name field - appears after email is entered */}
-              {showNameField && (
-                <div
-                  style={{
-                    animation: 'fadeInSlideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                      setError('');
-                    }}
-                    placeholder="Your name (optional)"
-                    className="w-full px-4 py-3 rounded-lg border transition-all"
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.03)',
-                      borderColor: colors.border,
-                      color: colors.textPrimary,
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = colors.accent;
-                      e.currentTarget.style.outline = 'none';
-                      e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.accentGlow}`;
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = colors.border;
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                    autoFocus
-                  />
-                </div>
-              )}
-              
-              {/* Submit button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full px-6 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
-                style={{
-                  backgroundColor: colors.accent,
-                  color: '#0B0E14',
-                  height: '48px',
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.backgroundColor = colors.accentHover;
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.boxShadow = `0 4px 12px ${colors.accentGlow}`;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = colors.accent;
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-                onMouseDown={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.backgroundColor = colors.accentPressed;
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }
-                }}
-                onMouseUp={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.backgroundColor = colors.accentHover;
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }
-                }}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Joining...
-                  </>
-                ) : (
-                  <>
-                    {showNameField ? 'Submit' : 'Continue'}
-                    {!showNameField && (
-                      <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
-                        <ArrowRight size={18} />
-                      </span>
-                    )}
-                  </>
-                )}
-              </button>
-              
-                {error && (
-                  <p className="text-sm text-center" style={{ color: '#EF4444' }}>
-                    {error}
-                  </p>
-                )}
-              </form>
-            )}
           </div>
         </div>
       </section>

@@ -131,9 +131,7 @@ export default function Navbar() {
                 <Link href="/marketplace" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-t-lg text-sm">
                   🛒 Marketplace
                 </Link>
-                <Link href="/forum" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-sm">
-                  💬 Forum
-                </Link>
+                {/* Forum link hidden for initial launch — route remains accessible via direct URL */}
                 <Link href="/issues" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-b-lg text-sm">
                   🆘 Support
                 </Link>
@@ -180,9 +178,7 @@ export default function Navbar() {
                     <Link href={`/profile/${user.username}`} className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-t-lg text-sm">
                       👤 Profile
                     </Link>
-                    <Link href="/folders" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-sm">
-                      📁 My Folders
-                    </Link>
+                    {/* Folders link hidden for initial launch — route remains accessible via direct URL */}
                     <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-b-lg text-sm">
                       🚪 Logout
                     </button>
@@ -231,9 +227,7 @@ export default function Navbar() {
               <Link href="/marketplace" className="text-gray-300 hover:text-white transition py-2">
                 Marketplace
               </Link>
-              <Link href="/forum" className="text-gray-300 hover:text-white transition py-2">
-                Forum
-              </Link>
+              {/* Forum link hidden for initial launch */}
               <Link href="/issues" className="text-gray-300 hover:text-white transition py-2">
                 Support
               </Link>
@@ -241,9 +235,7 @@ export default function Navbar() {
               {user && (
                 <>
                   <div className="text-gray-400 text-xs font-semibold uppercase pt-2">Account</div>
-                  <Link href="/folders" className="text-gray-300 hover:text-white transition py-2 pl-4">
-                    My Folders
-                  </Link>
+                  {/* Folders link hidden for initial launch */}
                   <Link href="/messages" className="text-gray-300 hover:text-white transition py-2 pl-4">
                     Messages {unreadMessageCount > 0 && `(${unreadMessageCount})`}
                   </Link>

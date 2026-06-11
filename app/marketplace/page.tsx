@@ -193,7 +193,7 @@ export default function MarketplacePage() {
                     size="md"
                     icon={<svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12' /></svg>}
                     iconPosition="left"
-                    className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                    className="btn-ghost-themed"
                   >
                     Upload Design
                   </Button>
@@ -495,18 +495,19 @@ export default function MarketplacePage() {
 
                 {/* All Listings */}
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-w-0 w-full">
                     {filteredListings.map((listing) => (
-                      <Link href={`/project/${listing.id}`} key={listing.id} style={{ textDecoration: 'none' }}>
+                      <Link href={`/project/${listing.id}`} key={listing.id} style={{ textDecoration: 'none' }} className="min-w-0 w-full">
                         <Card
                           hover
                           padding="none"
+                          className="min-w-0 w-full overflow-hidden"
                           style={{
                             cursor: 'pointer',
                             borderColor: selectedListing?.id === listing.id ? DS.colors.primary.blue : DS.colors.border.default,
                           }}
                         >
-                          <div className="aspect-video rounded-t-lg overflow-hidden relative" style={{ backgroundColor: DS.colors.background.panel, minHeight: '180px' }}>
+                          <div className="design-thumbnail-container rounded-t-lg" style={{ backgroundColor: DS.colors.background.panel }}>
                             {listing.thumbnailUrl ? (
                               <img
                                 key={`thumb-${listing.id}-${listing.thumbnailUrl}`}
@@ -514,12 +515,6 @@ export default function MarketplacePage() {
                                 alt={listing.title}
                                 className="design-thumbnail"
                                 loading="lazy"
-                                style={{ 
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover',
-                                  display: 'block'
-                                }}
                                 onError={(e) => {
                                   console.error(`[Marketplace] Failed to load thumbnail for ${listing.id}:`, listing.thumbnailUrl, e);
                                   const img = e.currentTarget;
@@ -699,13 +694,12 @@ export default function MarketplacePage() {
             <PanelContent>
               <div className="space-y-6">
                 {/* Preview */}
-                <div className="rounded-lg overflow-hidden" style={{ backgroundColor: DS.colors.background.panelHover }}>
+                <div className="design-thumbnail-container rounded-lg max-h-[400px]" style={{ backgroundColor: DS.colors.background.panelHover }}>
                   {selectedListing.thumbnailUrl ? (
                     <img
                       src={selectedListing.thumbnailUrl}
                       alt={selectedListing.title}
-                      className="design-thumbnail w-full h-full object-cover"
-                      style={{ maxHeight: '400px' }}
+                      className="design-thumbnail"
                       loading="lazy"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';

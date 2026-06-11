@@ -13,6 +13,7 @@ import { Button, Card, Badge } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { Check, X, Crown, Zap, Building2, Store, Users, TrendingUp } from 'lucide-react';
 import TierBadge from '@/frontend/components/TierBadge';
+import { STUDIO_TIER_PURCHASE_ENABLED } from '@/lib/launch-flags';
 
 const TIERS = {
   free: {
@@ -116,6 +117,7 @@ export default function SubscriptionPage() {
   };
 
   const handleUpgrade = async (tier: string) => {
+    if (tier === 'studio' && !STUDIO_TIER_PURCHASE_ENABLED) return;
     setUpgrading(tier);
     try {
       const token = localStorage.getItem('token');
@@ -282,9 +284,15 @@ export default function SubscriptionPage() {
                         {formatStorage(subscription.storage.used * 1024 * 1024 * 1024)} / {formatStorage(subscription.storage.limit * 1024 * 1024 * 1024)}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-800 rounded-full h-2">
+                    <div
+                      className="w-full rounded-full h-2.5 overflow-hidden"
+                      style={{
+                        backgroundColor: 'var(--ds-progress-track)',
+                        border: `1px solid ${DS.colors.border.default}`,
+                      }}
+                    >
                       <div
-                        className="h-2 rounded-full transition-all"
+                        className="h-full rounded-full transition-all"
                         style={{
                           width: `${Math.min(subscription.storage.percentUsed || 0, 100)}%`,
                           backgroundColor: (subscription.storage.percentUsed || 0) > 90 
@@ -298,8 +306,10 @@ export default function SubscriptionPage() {
               )}
 
               {/* Available Plans */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {Object.entries(TIERS).map(([tierKey, tierInfo]) => {
+              <div className={`grid grid-cols-1 gap-6 mb-8 ${STUDIO_TIER_PURCHASE_ENABLED ? 'md:grid-cols-3' : 'md:grid-cols-2 max-w-3xl mx-auto'}`}>
+                {Object.entries(TIERS)
+                  .filter(([tierKey]) => STUDIO_TIER_PURCHASE_ENABLED || tierKey !== 'studio')
+                  .map(([tierKey, tierInfo]) => {
                   const Icon = tierInfo.icon;
                   const isCurrent = tierKey === frontendTier;
                   const tierOrder = ['free', 'creator', 'studio'];
@@ -387,6 +397,14 @@ export default function SubscriptionPage() {
                             disabled
                           >
                             Free Plan
+                          </Button>
+                        ) : tierKey === 'studio' && !STUDIO_TIER_PURCHASE_ENABLED ? (
+                          <Button
+                            variant="secondary"
+                            fullWidth
+                            disabled
+                          >
+                            Coming Soon
                           </Button>
                         ) : (
                           <Button

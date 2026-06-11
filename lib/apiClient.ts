@@ -36,11 +36,7 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
     ...options,
   });
 
-  // Handle 401 Unauthorized - redirect to login
   if (res.status === 401) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
     throw new Error("Unauthorized");
   }
 

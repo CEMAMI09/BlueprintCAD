@@ -76,22 +76,67 @@ export default function ThreadDetail() {
   }, []);
 
   useEffect(() => {
-    if (id) {
-      fetchThread();
-    }
+    if (!id) return;
+
+    let cancelled = false;
+
+    const loadThread = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers: HeadersInit = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const [threadRes, viewRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/${id}`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/${id}/view`, {
+            method: 'POST',
+            headers,
+          }),
+        ]);
+
+        if (cancelled) return;
+
+        if (threadRes.ok) {
+          const data = await threadRes.json();
+          if (viewRes.ok) {
+            const viewData = await viewRes.json();
+            data.views = viewData.views ?? data.views;
+          }
+          setThread(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch thread:', err);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadThread();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const fetchThread = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/${id}`);
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/${id}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setThread(data);
       }
     } catch (err) {
       console.error('Failed to fetch thread:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -469,9 +514,9 @@ export default function ThreadDetail() {
       rightPanel={
         <RightPanel>
           <PanelHeader title="Thread Info" />
-          <PanelContent>
-            <div className="space-y-4">
-              <Card padding="md" style={{ borderRadius: 0 }}>
+          <PanelContent className="p-4 sm:p-6">
+            <div className="space-y-4 min-w-0">
+              <Card padding="md" className="!rounded-xl">
                 <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
                   Statistics
                 </h3>
@@ -495,7 +540,7 @@ export default function ThreadDetail() {
                 </div>
               </Card>
 
-              <Card padding="md" style={{ borderRadius: 0 }}>
+              <Card padding="md" className="!rounded-xl">
                 <h3 className="font-semibold mb-3 text-sm" style={{ color: DS.colors.text.primary }}>
                   Author
                 </h3>

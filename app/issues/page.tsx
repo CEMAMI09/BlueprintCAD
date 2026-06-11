@@ -498,7 +498,7 @@ export default function IssuesPage() {
           <div className="space-y-6">
             {/* Filters */}
             <div className="bg-gray-800 rounded-lg shadow-xl p-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
                   <select
@@ -566,8 +566,8 @@ export default function IssuesPage() {
               ) : (
                 adminIssues.map((issue) => (
                   <div key={issue.id} className="bg-gray-800 rounded-lg shadow-xl p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 mb-2">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getSeverityBadgeColor(issue.severity)}`}>
                             {issue.severity.toUpperCase()}
@@ -593,7 +593,7 @@ export default function IssuesPage() {
                             <img 
                               src={issue.screenshot_path} 
                               alt="Issue screenshot" 
-                              className="max-w-sm rounded-lg border cursor-pointer hover:opacity-80"
+                              className="w-full max-w-full sm:max-w-sm rounded-lg border cursor-pointer hover:opacity-80"
                               onClick={() => window.open(issue.screenshot_path, '_blank')}
                             />
                           </div>
@@ -604,7 +604,7 @@ export default function IssuesPage() {
                         </p>
                       </div>
                       
-                      <div className="ml-6 space-y-3 min-w-[200px]">
+                      <div className="sm:ml-6 space-y-3 w-full sm:w-auto sm:min-w-[200px] flex-shrink-0">
                         <div>
                           <label className="block text-xs font-medium text-gray-300 mb-1">Status</label>
                           <select

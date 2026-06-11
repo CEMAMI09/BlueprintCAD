@@ -265,7 +265,7 @@ export default function AnalyticsPage() {
                 }
               />
               <PanelContent>
-                <div className="px-8 pt-8 pb-8 space-y-6 max-w-7xl mx-auto">
+                <div className="px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8 space-y-6 max-w-7xl mx-auto">
                   {error && (
                     <div
                       className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm"

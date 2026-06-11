@@ -26,4 +26,30 @@ async function ensureProjectViewEventsTable() {
   }
 }
 
-module.exports = { ensureProjectViewEventsTable };
+let likesEnsured = false;
+
+async function ensureProjectLikesTable() {
+  if (likesEnsured) return;
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS project_likes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (user_id, project_id)
+      )
+    `);
+    await query(
+      `CREATE INDEX IF NOT EXISTS idx_project_likes_user ON project_likes (user_id, created_at DESC)`
+    );
+    await query(
+      `CREATE INDEX IF NOT EXISTS idx_project_likes_project ON project_likes (project_id)`
+    );
+    likesEnsured = true;
+  } catch (e) {
+    console.warn("[analyticsSchema] ensureProjectLikesTable:", e.message);
+  }
+}
+
+module.exports = { ensureProjectViewEventsTable, ensureProjectLikesTable };

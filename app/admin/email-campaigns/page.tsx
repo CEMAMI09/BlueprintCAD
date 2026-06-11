@@ -205,7 +205,7 @@ export default function EmailCampaignsPage() {
 
             {/* Stats */}
             {activeTab === 'waitlist' && waitlistStats && (
-              <div className="grid grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <Card padding="md">
                   <div className="text-sm" style={{ color: DS.colors.text.secondary }}>Total</div>
                   <div className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>

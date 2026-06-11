@@ -7,56 +7,56 @@ export const DesignSystem = {
   colors: {
     // Primary palette
     primary: {
-      blue: '#2F80ED',
-      blueHover: '#1E6FDB',
-      blueActive: '#1A5FC4',
-      blueLight: '#4A9FF5',
-      blueDark: '#1A5FC4',
+      blue: 'var(--ds-primary-blue)',
+      blueHover: 'var(--ds-primary-blue-hover)',
+      blueActive: 'var(--ds-primary-blue-active)',
+      blueLight: 'var(--ds-primary-blue-light)',
+      blueDark: 'var(--ds-primary-blue-dark)',
     },
     
     // Backgrounds
     background: {
-      app: '#0A0A0A',
-      panel: '#141414',
-      panelLight: '#181818',
-      panelHover: '#1F1F1F',
-      card: '#1A1A1A',
-      elevated: '#222222',
+      app: 'var(--ds-bg-app)',
+      panel: 'var(--ds-bg-panel)',
+      panelLight: 'var(--ds-bg-panel-light)',
+      panelHover: 'var(--ds-bg-panel-hover)',
+      card: 'var(--ds-bg-card)',
+      elevated: 'var(--ds-bg-elevated)',
     },
     
     // Accent colors
     accent: {
-      cyan: '#00E5FF',
-      cyanDark: '#00C4D6',
-      success: '#10B981',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      purple: '#8B5CF6',
+      cyan: 'var(--ds-accent-cyan)',
+      cyanDark: 'var(--ds-accent-cyan-dark)',
+      success: 'var(--ds-accent-success)',
+      warning: 'var(--ds-accent-warning)',
+      error: 'var(--ds-accent-error)',
+      purple: 'var(--ds-accent-purple)',
     },
     
     // Text colors
     text: {
-      primary: '#E0E0E0',
-      secondary: '#A0A0A0',
-      tertiary: '#6B7280',
-      disabled: '#4B5563',
-      inverse: '#1F1F1F',
+      primary: 'var(--ds-text-primary)',
+      secondary: 'var(--ds-text-secondary)',
+      tertiary: 'var(--ds-text-tertiary)',
+      disabled: 'var(--ds-text-disabled)',
+      inverse: 'var(--ds-text-inverse)',
     },
     
     // Border colors
     border: {
-      subtle: '#2A2A2A',
-      default: '#333333',
-      strong: '#404040',
-      focus: '#2F80ED',
+      subtle: 'var(--ds-border-subtle)',
+      default: 'var(--ds-border-default)',
+      strong: 'var(--ds-border-strong)',
+      focus: 'var(--ds-border-focus)',
     },
     
     // Status colors
     status: {
-      online: '#10B981',
-      away: '#F59E0B',
-      busy: '#EF4444',
-      offline: '#6B7280',
+      online: 'var(--ds-accent-success)',
+      away: 'var(--ds-accent-warning)',
+      busy: 'var(--ds-accent-error)',
+      offline: 'var(--ds-text-tertiary)',
     },
   },
   

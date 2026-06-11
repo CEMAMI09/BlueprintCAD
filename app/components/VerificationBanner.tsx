@@ -62,43 +62,43 @@ export default function VerificationBanner() {
 
   return (
     <div
-      className="border-b"
+      className="flex-shrink-0 border-b w-full min-w-0"
       style={{
         backgroundColor: `${blue}14`,
         borderColor: `${blue}40`,
       }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+      <div className="w-full min-w-0 px-4 sm:px-6 py-3">
+        <div className="flex flex-col gap-3 min-[480px]:flex-row min-[480px]:items-start min-[480px]:justify-between">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
             <div
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
               style={{ backgroundColor: `${blue}22`, color: blue }}
             >
               <Mail className="h-5 w-5" strokeWidth={1.75} />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium" style={{ color: DS.colors.text.primary }}>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium leading-snug" style={{ color: DS.colors.text.primary }}>
                 Verify your email to unlock all features.
               </p>
-              <p className="text-sm mt-0.5" style={{ color: DS.colors.text.secondary }}>
+              <p className="text-sm mt-0.5 leading-snug break-words" style={{ color: DS.colors.text.secondary }}>
                 {message ? (
                   <span style={{ color: message.type === 'success' ? blue : DS.colors.accent.error }}>
                     {message.text}
                   </span>
                 ) : (
-                  <>We sent a link and a 6-digit code to <strong className="font-medium">{user.email}</strong>.</>
+                  <>We sent a link and a 6-digit code to <strong className="font-medium break-all">{user.email}</strong>.</>
                 )}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 self-end min-[480px]:self-auto pl-12 min-[480px]:pl-0">
             <button
               type="button"
               onClick={handleResend}
               disabled={loading}
-              className="px-4 py-1.5 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 whitespace-nowrap"
               style={{
                 backgroundColor: blue,
                 color: '#ffffff',

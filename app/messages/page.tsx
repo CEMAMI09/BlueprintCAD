@@ -37,6 +37,7 @@ import {
   Store,
   Hash,
   Plus,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface Conversation {
@@ -493,7 +494,7 @@ function MessagesPageContent() {
           <CenterPanel>
             {/* Tabs - Fixed at top */}
             <div
-              className="flex-shrink-0 flex border-b"
+              className="flex-shrink-0 flex border-b overflow-x-auto"
               style={{
                 borderColor: DS.colors.border.default,
                 backgroundColor: DS.colors.background.panel,
@@ -504,7 +505,7 @@ function MessagesPageContent() {
                   setActiveTab('direct');
                   setSelectedConversation(null);
                 }}
-                className="px-6 py-3 font-medium text-sm transition-colors relative hover:opacity-80"
+                className="px-3 sm:px-6 py-3 font-medium text-sm transition-colors relative hover:opacity-80 whitespace-nowrap flex-shrink-0"
                 style={{
                   color: activeTab === 'direct' ? DS.colors.text.primary : DS.colors.text.secondary,
                   borderBottom:
@@ -522,7 +523,7 @@ function MessagesPageContent() {
                   setActiveTab('channels');
                   setSelectedConversation(null);
                 }}
-                className="px-6 py-3 font-medium text-sm transition-colors relative hover:opacity-80"
+                className="px-3 sm:px-6 py-3 font-medium text-sm transition-colors relative hover:opacity-80 whitespace-nowrap flex-shrink-0"
                 style={{
                   color: activeTab === 'channels' ? DS.colors.text.primary : DS.colors.text.secondary,
                   borderBottom:
@@ -540,7 +541,7 @@ function MessagesPageContent() {
                   setActiveTab('storefront');
                   setSelectedConversation(null);
                 }}
-                className="px-6 py-3 font-medium text-sm transition-colors relative hover:opacity-80"
+                className="px-3 sm:px-6 py-3 font-medium text-sm transition-colors relative hover:opacity-80 whitespace-nowrap flex-shrink-0"
                 style={{
                   color: activeTab === 'storefront' ? DS.colors.text.primary : DS.colors.text.secondary,
                   borderBottom:
@@ -558,7 +559,9 @@ function MessagesPageContent() {
             <div className="flex-1 flex overflow-hidden">
               {/* Thread List - LEFT SIDE INSIDE CENTER PANEL */}
               <div
-                className="w-80 flex-shrink-0 flex flex-col border-r overflow-hidden"
+                className={`${
+                  selectedConversation ? 'hidden md:flex' : 'flex'
+                } w-full md:w-80 flex-shrink-0 flex-col border-r overflow-hidden`}
                 style={{ borderColor: DS.colors.border.default }}
               >
                 <div className="p-4 space-y-3">
@@ -776,15 +779,7 @@ function MessagesPageContent() {
                             title="Storefront not configured"
                             description="Set up your storefront to receive messages from potential customers"
                           />
-                          <div className="mt-6">
-                            <Button
-                              variant="primary"
-                              icon={<Store size={18} />}
-                              onClick={() => router.push('/storefront')}
-                            >
-                              Configure Storefront
-                            </Button>
-                          </div>
+                          {/* Configure Storefront hidden for initial launch */}
                         </div>
                       )}
                     </>
@@ -793,15 +788,31 @@ function MessagesPageContent() {
               </div>
 
               {/* Conversation - CENTER */}
-              <div className="flex-1 flex flex-col">
+              <div
+                className={`${
+                  selectedConversation ? 'flex' : 'hidden md:flex'
+                } flex-1 flex-col min-w-0`}
+              >
                 {activeTab === 'direct' && selectedConversation ? (
                   <>
                     {/* Conversation Header */}
                     <div
-                      className="p-4 border-b flex items-center justify-between"
+                      className="p-4 border-b flex items-center justify-between gap-2 min-w-0"
                       style={{ borderColor: DS.colors.border.default }}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedConversation(null)}
+                          className="md:hidden inline-flex items-center justify-center w-8 h-8 rounded-md flex-shrink-0"
+                          aria-label="Back to conversations"
+                          style={{
+                            backgroundColor: DS.colors.background.panelHover,
+                            color: DS.colors.text.primary,
+                          }}
+                        >
+                          <ArrowLeft size={18} />
+                        </button>
                         <div
                           className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
                           style={{
@@ -829,8 +840,8 @@ function MessagesPageContent() {
                             selectedConversation.user.username.substring(0, 2).toUpperCase()
                           )}
                         </div>
-                        <div>
-                          <h3 className="font-semibold" style={{ color: DS.colors.text.primary }}>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold truncate" style={{ color: DS.colors.text.primary }}>
                             @{selectedConversation.user.username}
                           </h3>
                           <span className="text-sm" style={{ color: DS.colors.text.secondary }}>
@@ -850,13 +861,13 @@ function MessagesPageContent() {
                       {messages.map((message) => (
                         <div key={message.id} className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}>
                           <div
-                            className="max-w-md px-4 py-3 rounded-lg"
+                            className="max-w-[85vw] sm:max-w-md px-4 py-3 rounded-lg"
                             style={{
                               backgroundColor: message.isOwn ? DS.colors.primary.blue : DS.colors.background.card,
                               color: message.isOwn ? '#ffffff' : DS.colors.text.primary,
                             }}
                           >
-                            <p className="whitespace-pre-wrap">{message.content}</p>
+                            <p className="whitespace-pre-wrap break-words">{message.content}</p>
                             <span
                               className="text-xs mt-1 block"
                               style={{ color: message.isOwn ? 'rgba(255,255,255,0.7)' : DS.colors.text.secondary }}

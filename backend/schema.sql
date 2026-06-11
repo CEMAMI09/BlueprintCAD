@@ -56,6 +56,18 @@ CREATE TABLE IF NOT EXISTS projects (
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
 CREATE INDEX IF NOT EXISTS idx_projects_folder_id ON projects(folder_id);
 
+-- Project stars/likes (per-user)
+CREATE TABLE IF NOT EXISTS project_likes (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, project_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_likes_user ON project_likes (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_project_likes_project ON project_likes (project_id);
+
 -- CAD files table
 CREATE TABLE IF NOT EXISTS cad_files (
   id SERIAL PRIMARY KEY,

@@ -2,24 +2,31 @@
 
 import { usePathname } from 'next/navigation';
 import { AuthProvider } from '../context/AuthContext';
-import VerificationBanner from './VerificationBanner';
+import { ThemeProvider } from '../context/ThemeContext';
 import PasswordGate from './PasswordGate';
 
 export default function ConditionalWrappers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
-  // Don't wrap landing pages or home page with auth providers
-  // Home page shows coming-soon which doesn't need password gate
-  if (pathname === '/landingpage' || pathname === '/landingpage2' || pathname === '/') {
-    return <>{children}</>;
+  // Public marketing + auth entry pages bypass the gate entirely
+  const publicBypass =
+    pathname === '/' ||
+    pathname === '/landingpage' ||
+    pathname === '/landingpage2' ||
+    pathname === '/login' ||
+    pathname === '/register';
+
+  if (publicBypass) {
+    return <ThemeProvider>{children}</ThemeProvider>;
   }
   
   return (
-    <PasswordGate>
-      <AuthProvider>
-        <VerificationBanner />
-        {children}
-      </AuthProvider>
-    </PasswordGate>
+    <ThemeProvider>
+      <PasswordGate>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </PasswordGate>
+    </ThemeProvider>
   );
 }

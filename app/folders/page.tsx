@@ -226,7 +226,7 @@ export default function FoldersPage() {
                   size="md"
                   icon={<Upload size={18} />}
                   onClick={handleUploadFile}
-                  className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                  className="btn-ghost-themed"
                 >
                   Upload File
                 </Button>

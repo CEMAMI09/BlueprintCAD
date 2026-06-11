@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Lock, Eye, EyeOff } from 'lucide-react';
-import ComingSoonPage from '@/app/coming-soon/page';
+import CreateAccountModal from './CreateAccountModal';
+import { isPublicRoute } from '@/lib/public-routes';
 
 const ADMIN_PASSWORD = 'thorbeans1';
 
@@ -80,14 +81,8 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     };
   }, [pathname, router]);
 
-  // No redirects needed - we'll render the coming-soon page directly for non-allowed routes
-
-  // Always allow privacy, contact, and sitemap pages
-  if (
-    pathname === '/privacy' ||
-    pathname === '/contact' ||
-    pathname === '/sitemap.xml'
-  ) {
+  // Public routes (project pages, auth flows, legal pages, etc.)
+  if (isPublicRoute(pathname)) {
     return <>{children}</>;
   }
 
@@ -239,8 +234,21 @@ export default function PasswordGate({ children }: { children: React.ReactNode }
     return <>{children}</>;
   }
 
-  // For all other routes (including /, /coming-soon, /this, /that, etc.), show coming-soon page
-  return <ComingSoonPage />;
+  // Gated routes: blurred preview of the destination page behind the signup modal
+  return (
+    <div className="relative min-h-screen overflow-hidden">
+      <div
+        className="pointer-events-none select-none blur-[6px] opacity-50 scale-[1.01]"
+        aria-hidden="true"
+      >
+        {children}
+      </div>
+      <CreateAccountModal
+        isOpen
+        onClose={() => router.push('/')}
+      />
+    </div>
+  );
 }
 
 

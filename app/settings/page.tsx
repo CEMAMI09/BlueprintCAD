@@ -15,6 +15,7 @@ import {
 import { GlobalNavSidebar } from '@/components/ui/GlobalNavSidebar';
 import { Button, Card, Badge, Tabs } from '@/components/ui/UIComponents';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import { useTheme, type ThemePreference } from '@/app/context/ThemeContext';
 import TierBadge from '@/frontend/components/TierBadge';
 import Link from 'next/link';
 import {
@@ -51,7 +52,9 @@ type NotificationPreferences = {
 };
 
 export default function SettingsPage() {
+  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
+  const [appearanceMessage, setAppearanceMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1097,9 +1100,15 @@ export default function SettingsPage() {
                                   {formatStorage(userSubscription.storage.used * 1024 * 1024 * 1024)} / {formatStorage(userSubscription.storage.limit * 1024 * 1024 * 1024)}
                                 </span>
                               </div>
-                              <div className="w-full bg-gray-800 rounded-full h-2">
+                              <div
+                                className="w-full rounded-full h-2.5 overflow-hidden"
+                                style={{
+                                  backgroundColor: 'var(--ds-progress-track)',
+                                  border: `1px solid ${DS.colors.border.default}`,
+                                }}
+                              >
                                 <div
-                                  className="h-2 rounded-full transition-all"
+                                  className="h-full rounded-full transition-all"
                                   style={{
                                     width: `${Math.min(userSubscription.storage.percentUsed, 100)}%`,
                                     backgroundColor: userSubscription.storage.percentUsed > 90 
@@ -1133,12 +1142,40 @@ export default function SettingsPage() {
                       <h3 className="text-xl font-bold mb-6" style={{ color: DS.colors.text.primary }}>
                         Appearance Settings
                       </h3>
+                      {appearanceMessage && (
+                        <div
+                          className="mb-4 px-4 py-3 rounded-lg text-sm"
+                          style={{
+                            backgroundColor:
+                              appearanceMessage.type === 'success'
+                                ? 'rgba(16, 185, 129, 0.12)'
+                                : 'rgba(239, 68, 68, 0.12)',
+                            color:
+                              appearanceMessage.type === 'success'
+                                ? DS.colors.accent.success
+                                : DS.colors.accent.error,
+                            border: `1px solid ${
+                              appearanceMessage.type === 'success'
+                                ? 'rgba(16, 185, 129, 0.3)'
+                                : 'rgba(239, 68, 68, 0.3)'
+                            }`,
+                          }}
+                        >
+                          {appearanceMessage.text}
+                        </div>
+                      )}
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
                             Theme
                           </label>
                           <select
+                            value={theme}
+                            onChange={(e) => {
+                              setTheme(e.target.value as ThemePreference);
+                              setAppearanceMessage({ type: 'success', text: 'Theme updated.' });
+                              setTimeout(() => setAppearanceMessage(null), 2500);
+                            }}
                             className="w-full px-4 py-2 rounded-lg border"
                             style={{
                               backgroundColor: DS.colors.background.card,
@@ -1146,10 +1183,13 @@ export default function SettingsPage() {
                               color: DS.colors.text.primary,
                             }}
                           >
-                            <option>Dark (Default)</option>
-                            <option>Light</option>
-                            <option>Auto</option>
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                            <option value="auto">Auto (system)</option>
                           </select>
+                          <p className="text-xs mt-2" style={{ color: DS.colors.text.tertiary }}>
+                            Applies across the app. Auto follows your device light/dark preference.
+                          </p>
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-2" style={{ color: DS.colors.text.primary }}>
@@ -1162,14 +1202,23 @@ export default function SettingsPage() {
                               borderColor: DS.colors.border.default,
                               color: DS.colors.text.primary,
                             }}
+                            disabled
                           >
                             <option>English</option>
-                            <option>Spanish</option>
-                            <option>French</option>
-                            <option>German</option>
                           </select>
+                          <p className="text-xs mt-2" style={{ color: DS.colors.text.tertiary }}>
+                            Additional languages coming soon.
+                          </p>
                         </div>
-                        <Button variant="primary">Save Preferences</Button>
+                        <Button
+                          variant="primary"
+                          onClick={() => {
+                            setAppearanceMessage({ type: 'success', text: 'Appearance preferences saved.' });
+                            setTimeout(() => setAppearanceMessage(null), 3000);
+                          }}
+                        >
+                          Save Preferences
+                        </Button>
                       </div>
                     </Card>
                   </div>

@@ -382,21 +382,21 @@ export default function PublicStorefrontPage() {
                 className="w-full h-full object-cover"
               />
             )}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-              <div className="flex items-end gap-4">
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 to-transparent">
+              <div className="flex items-end gap-3 sm:gap-4 min-w-0">
                 {storefront.logo && (
                   <img
                     src={storefront.logo}
                     alt="Logo"
-                    className="w-24 h-24 rounded-full border-4 border-white object-cover"
+                    className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border-4 border-white object-cover flex-shrink-0"
                   />
                 )}
-                <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-white mb-1">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl sm:text-3xl font-bold text-white mb-1 truncate">
                     {storefront.store_name}
                   </h1>
                   {storefront.tagline && (
-                    <p className="text-white/90 text-lg">{storefront.tagline}</p>
+                    <p className="text-white/90 text-sm sm:text-lg line-clamp-2">{storefront.tagline}</p>
                   )}
                   {industryLabel(storefront.focused_industry) && (
                     <div className="mt-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm text-white/95 bg-white/15 backdrop-blur-sm">
@@ -411,7 +411,7 @@ export default function PublicStorefrontPage() {
 
           {/* Navigation Tabs */}
           <div className="border-b" style={{ borderColor: DS.colors.border.subtle }}>
-            <div className="flex gap-6 px-6">
+            <div className="flex gap-4 sm:gap-6 px-4 sm:px-6 overflow-x-auto">
               <button
                 onClick={() => setActiveSection('products')}
                 className="py-4 px-2 border-b-2 font-medium transition-colors"

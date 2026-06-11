@@ -85,8 +85,8 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50" style={{ minHeight: '90px' }}>
-      <div className="container mx-auto px-4" style={{ height: '90px', minHeight: '90px', padding: '0', margin: '0', lineHeight: '1' }}>
+    <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 min-h-14 md:min-h-[90px]">
+      <div className="container mx-auto px-4 h-14 md:h-[90px] min-h-14 md:min-h-[90px]">
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <Link href="/" className="flex items-center" style={{ padding: '0', margin: '0', lineHeight: '1' }}>
@@ -136,12 +136,10 @@ export default function Navbar() {
                 </svg>
               </button>
               <div className="absolute left-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <Link href="/marketplace" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-t-lg text-sm">
+                <Link href="/marketplace" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-lg text-sm">
                   🛒 Marketplace
                 </Link>
-                <Link href="/forum" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-sm">
-                  💬 Forum
-                </Link>
+                {/* Forum link hidden for initial launch — route remains accessible via direct URL */}
               </div>
             </div>
             
@@ -185,9 +183,7 @@ export default function Navbar() {
                     <Link href={`/profile/${user.username}`} className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-t-lg text-sm">
                       👤 Profile
                     </Link>
-                    <Link href="/folders" className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-sm">
-                      📁 My Folders
-                    </Link>
+                    {/* Folders link hidden for initial launch — route remains accessible via direct URL */}
                     <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition rounded-b-lg text-sm">
                       🚪 Logout
                     </button>
@@ -243,16 +239,12 @@ export default function Navbar() {
               <Link href="/marketplace" className="text-gray-300 hover:text-white transition py-2 pl-4">
                 🛒 Marketplace
               </Link>
-              <Link href="/forum" className="text-gray-300 hover:text-white transition py-2 pl-4">
-                💬 Forum
-              </Link>
+              {/* Forum link hidden for initial launch */}
               
               {user && (
                 <>
                   <div className="text-gray-400 text-xs font-semibold uppercase pt-2">Account</div>
-                  <Link href="/folders" className="text-gray-300 hover:text-white transition py-2 pl-4">
-                    📁 My Folders
-                  </Link>
+                  {/* Folders link hidden for initial launch */}
                   <Link href="/messages" className="text-gray-300 hover:text-white transition py-2 pl-4">
                     💬 Messages {unreadMessageCount > 0 && `(${unreadMessageCount})`}
                   </Link>

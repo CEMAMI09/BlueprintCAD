@@ -75,7 +75,7 @@ export default function InvitationsNotification() {
             className="fixed inset-0 z-10"
             onClick={() => setShowDropdown(false)}
           />
-          <div className="absolute right-0 mt-2 w-96 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl z-20">
+          <div className="absolute right-0 mt-2 w-[min(24rem,calc(100vw-2rem))] bg-gray-900 border border-gray-800 rounded-xl shadow-2xl z-20">
             <div className="p-4 border-b border-gray-800">
               <h3 className="font-semibold">Folder Invitations</h3>
             </div>

@@ -23,7 +23,7 @@ export default function Hero() {
       {/* Hero content below the gradient image */}
       <section
         className="section-large"
-        style={{ paddingTop: '80px', paddingBottom: '120px' }}
+        style={{ paddingTop: 'clamp(48px, 8vw, 80px)', paddingBottom: 'clamp(64px, 10vw, 120px)' }}
       >
         <div className="container hero-container">
           <ScrollReveal>
@@ -49,23 +49,14 @@ export default function Hero() {
 
               {/* Right: Hero Image/Visual */}
               <div className="w-full lg:w-1/2">
-                <div
-                  className="image-hero mx-auto"
-                  style={{
-                    width: '1140px',
-                    height: '570px',
-                    borderRadius: '24px',
-                    overflow: 'hidden',
-                    transform: 'translateX(12%)',
-                  }}
-                >
+                <div className="image-hero w-full max-w-full mx-auto lg:translate-x-[12%]">
                   <Image
                     src="/thumbnail.svg"
                     alt="BlueprintCAD hero visual"
                     width={1140}
                     height={570}
                     priority
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    className="w-full h-full object-cover"
                   />
                 </div>
               </div>

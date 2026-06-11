@@ -38,13 +38,13 @@ export function ExploreDesignGrid({
 }: ExploreDesignGridProps) {
   if (viewMode === 'grid') {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-w-0 w-full">
         {designs.map((design) => (
-          <Link href={`/project/${design.id}`} key={design.id} style={{ textDecoration: 'none' }}>
-            <Card hover padding="none" style={{ cursor: 'pointer' }} className="h-full flex flex-col">
+          <Link href={`/project/${design.id}`} key={design.id} style={{ textDecoration: 'none' }} className="min-w-0 w-full">
+            <Card hover padding="none" style={{ cursor: 'pointer' }} className="h-full flex flex-col min-w-0 w-full overflow-hidden">
               <div
-                className="aspect-video rounded-t-lg overflow-hidden flex-shrink-0 relative"
-                style={{ backgroundColor: DS.colors.background.panel, minHeight: '180px' }}
+                className="design-thumbnail-container rounded-t-lg flex-shrink-0"
+                style={{ backgroundColor: DS.colors.background.panel }}
               >
                 {design.thumbnailUrl ? (
                   <img
@@ -53,12 +53,6 @@ export function ExploreDesignGrid({
                     alt={design.title}
                     className="design-thumbnail"
                     loading="lazy"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
                     onError={(e) => {
                       const img = e.currentTarget;
                       img.style.display = 'none';
@@ -78,7 +72,7 @@ export function ExploreDesignGrid({
                     }}
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center w-full h-full">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-5xl mb-2">{design.thumbnail}</span>
                     <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>
                       No thumbnail available

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
+import { STUDIO_TIER_PURCHASE_ENABLED } from '@/lib/launch-flags';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -72,7 +73,11 @@ export default function UpgradeModal({
   if (!isOpen) return null;
   if (!tierInfo) return null;
 
+  const studioPurchaseBlocked =
+    requiredTier === 'studio' && !STUDIO_TIER_PURCHASE_ENABLED;
+
   const handleUpgrade = async () => {
+    if (studioPurchaseBlocked) return;
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -203,14 +208,23 @@ export default function UpgradeModal({
           </button>
           <button
             onClick={handleUpgrade}
-            disabled={loading}
+            disabled={loading || studioPurchaseBlocked}
             className="flex-1 px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
             style={{
-              backgroundColor: DS.colors.primary.blue,
-              color: '#ffffff',
+              backgroundColor: studioPurchaseBlocked
+                ? DS.colors.background.panel
+                : DS.colors.primary.blue,
+              color: studioPurchaseBlocked ? DS.colors.text.secondary : '#ffffff',
+              border: studioPurchaseBlocked
+                ? `1px solid ${DS.colors.border.default}`
+                : undefined,
             }}
           >
-            {loading ? 'Processing...' : `Upgrade to ${tierInfo.name}`}
+            {studioPurchaseBlocked
+              ? 'Coming Soon'
+              : loading
+                ? 'Processing...'
+                : `Upgrade to ${tierInfo.name}`}
           </button>
         </div>
       </div>

@@ -3,6 +3,14 @@ import { serverBackendBase } from '@/lib/serverBackendBase';
 
 export const runtime = 'nodejs';
 
+/** In local dev, Express often isn't running; stream downloads from the deployed API. */
+function downloadBackendBase(): string {
+  if (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_API_URL) {
+    return String(process.env.NEXT_PUBLIC_API_URL).replace(/\/$/, '');
+  }
+  return serverBackendBase();
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -11,7 +19,7 @@ export async function GET(
     const auth = req.headers.get('authorization');
     const id = params.id;
     const res = await fetch(
-      `${serverBackendBase()}/api/projects/${encodeURIComponent(id)}/download`,
+      `${downloadBackendBase()}/api/projects/${encodeURIComponent(id)}/download`,
       {
         headers: {
           ...(auth ? { Authorization: auth } : {}),

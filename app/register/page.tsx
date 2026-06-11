@@ -291,6 +291,7 @@ export default function Register() {
               variant="primary"
               fullWidth
               disabled={loading}
+              className="!bg-blue-600 !text-white hover:!bg-blue-500 shadow-lg shadow-blue-500/20"
             >
               {loading ? 'Creating account...' : 'Create account'}
             </Button>

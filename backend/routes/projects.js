@@ -1,9 +1,12 @@
 // backend/routes/projects.js
 const express = require("express");
+const path = require("path");
 const router = express.Router();
+const { GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getUserFromRequest } = require("../lib/auth");
-const { getOne, getAll, execute, query } = require("../lib/db");
-const { ensureProjectViewEventsTable } = require("../lib/analyticsSchema");
+const { getOne, getAll, execute, query, getPool } = require("../lib/db");
+const { ensureProjectViewEventsTable, ensureProjectLikesTable } = require("../lib/analyticsSchema");
+const { getR2Client } = require("../lib/r2");
 
 // GET /api/projects - List projects (with optional filters: username, sort, for_sale, search)
 router.get("/", async (req, res) => {
@@ -139,6 +142,28 @@ router.get("/", async (req, res) => {
   }
 });
 
+function formatProjectListRow(p) {
+  return {
+    id: p.id,
+    title: p.title,
+    description: p.description || "",
+    file_path: p.file_path,
+    file_type: p.file_type || "stl",
+    tags: p.tags,
+    is_public: p.is_public,
+    for_sale: p.for_sale || false,
+    price: p.price || null,
+    views: p.views || 0,
+    likes: p.likes || 0,
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+    thumbnail_path: p.thumbnail_path || null,
+    username: p.username,
+    profile_picture: p.profile_picture || null,
+    subscription_tier: p.subscription_tier || null,
+  };
+}
+
 // GET /api/projects/starred - Get user's starred projects (must come before /:id)
 router.get("/starred", async (req, res) => {
   try {
@@ -148,8 +173,36 @@ router.get("/starred", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Stub for now - would need a starred_projects or favorites table
-    res.json([]);
+    await ensureProjectLikesTable();
+
+    const projects = await getAll(
+      `SELECT
+        p.id,
+        p.title,
+        p.description,
+        p.file_path,
+        p.file_type,
+        p.tags,
+        p.is_public,
+        p.for_sale,
+        p.price,
+        p.views,
+        p.likes,
+        p.created_at,
+        p.updated_at,
+        p.thumbnail_path,
+        u.username,
+        u.profile_picture,
+        u.tier AS subscription_tier
+      FROM project_likes pl
+      INNER JOIN projects p ON p.id = pl.project_id
+      INNER JOIN users u ON p.user_id = u.id
+      WHERE pl.user_id = $1
+      ORDER BY pl.created_at DESC`,
+      [decoded.userId]
+    );
+
+    res.json(projects.map(formatProjectListRow));
   } catch (error) {
     console.error("GET /api/projects/starred error:", error);
     res.status(500).json({ error: "Failed to fetch starred projects" });
@@ -182,13 +235,6 @@ router.post("/:id/view", async (req, res) => {
 
     if (!isPublic && !isOwner && !shareToken) {
       return res.status(403).json({ error: "Project is private" });
-    }
-
-    if (isOwner) {
-      return res.json({
-        views: Number(project.views) || 0,
-        counted: false,
-      });
     }
 
     const updateResult = await execute(
@@ -442,7 +488,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// GET /api/projects/:id/like - Toggle like on project (stub for now)
+// GET /api/projects/:id/like - Get whether the current user starred this project
 router.get("/:id/like", async (req, res) => {
   try {
     const decoded = getUserFromRequest(req);
@@ -451,15 +497,33 @@ router.get("/:id/like", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Stub - would implement actual like logic
-    res.json({ liked: false, likes: 0 });
+    const { id } = req.params;
+    await ensureProjectLikesTable();
+
+    const project = await getOne(
+      `SELECT id, likes FROM projects WHERE id = $1`,
+      [id]
+    );
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    const existing = await getOne(
+      `SELECT id FROM project_likes WHERE user_id = $1 AND project_id = $2`,
+      [decoded.userId, id]
+    );
+
+    res.json({
+      liked: !!existing,
+      likes: project.likes != null ? Number(project.likes) : 0,
+    });
   } catch (error) {
     console.error("GET /api/projects/:id/like error:", error);
-    res.status(500).json({ error: "Failed to toggle like" });
+    res.status(500).json({ error: "Failed to fetch like state" });
   }
 });
 
-// POST /api/projects/:id/like - Toggle like on project (stub for now)
+// POST /api/projects/:id/like - Toggle star on project
 router.post("/:id/like", async (req, res) => {
   try {
     const decoded = getUserFromRequest(req);
@@ -468,15 +532,63 @@ router.post("/:id/like", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Stub - would implement actual like logic
-    res.json({ liked: true, likes: 1 });
+    const { id } = req.params;
+    await ensureProjectLikesTable();
+
+    const client = await getPool().connect();
+    try {
+      await client.query("BEGIN");
+
+      const projectResult = await client.query(
+        `SELECT id, likes FROM projects WHERE id = $1 FOR UPDATE`,
+        [id]
+      );
+      if (projectResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      const existing = await client.query(
+        `SELECT id FROM project_likes WHERE user_id = $1 AND project_id = $2`,
+        [decoded.userId, id]
+      );
+
+      let liked;
+      let likes = projectResult.rows[0].likes != null ? Number(projectResult.rows[0].likes) : 0;
+
+      if (existing.rows.length > 0) {
+        await client.query(
+          `DELETE FROM project_likes WHERE user_id = $1 AND project_id = $2`,
+          [decoded.userId, id]
+        );
+        likes = Math.max(0, likes - 1);
+        await client.query(`UPDATE projects SET likes = $1 WHERE id = $2`, [likes, id]);
+        liked = false;
+      } else {
+        await client.query(
+          `INSERT INTO project_likes (user_id, project_id) VALUES ($1, $2)`,
+          [decoded.userId, id]
+        );
+        likes += 1;
+        await client.query(`UPDATE projects SET likes = $1 WHERE id = $2`, [likes, id]);
+        liked = true;
+      }
+
+      await client.query("COMMIT");
+      res.json({ liked, likes });
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error("POST /api/projects/:id/like error:", error);
     res.status(500).json({ error: "Failed to toggle like" });
   }
 });
 
-// GET /api/projects/:id/download - Download project file (stub for now)
+// GET /api/projects/:id/download - Stream project file from R2
 router.get("/:id/download", async (req, res) => {
   try {
     const decoded = getUserFromRequest(req);
@@ -500,20 +612,59 @@ router.get("/:id/download", async (req, res) => {
       return res.status(403).json({ error: "Project is private" });
     }
 
-    // Build R2 URL
-    const publicBase = process.env.R2_PUBLIC_URL
-      ? process.env.R2_PUBLIC_URL.replace(/\/$/, "")
-      : null;
-    
-    if (publicBase && project.file_path) {
-      const fileUrl = `${publicBase}/${project.file_path}`;
-      return res.redirect(302, fileUrl);
+    if (!project.file_path) {
+      return res.status(404).json({ error: "File not found" });
     }
 
-    res.status(404).json({ error: "File not found" });
+    const bucketName = process.env.R2_BUCKET_NAME;
+    if (!bucketName) {
+      return res.status(500).json({ error: "R2 bucket not configured" });
+    }
+
+    const s3Client = getR2Client();
+    const command = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: project.file_path,
+    });
+
+    let response;
+    try {
+      response = await s3Client.send(command);
+    } catch (s3Error) {
+      if (s3Error.name === "NoSuchKey" || s3Error.$metadata?.httpStatusCode === 404) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      throw s3Error;
+    }
+
+    if (!response.Body) {
+      return res.status(404).json({ error: "File not found" });
+    }
+
+    const filename = path.basename(project.file_path) || "download";
+    const contentType = response.ContentType || "application/octet-stream";
+
+    res.setHeader("Content-Type", contentType);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename.replace(/"/g, "")}"`
+    );
+    if (response.ContentLength) {
+      res.setHeader("Content-Length", response.ContentLength);
+    }
+
+    response.Body.pipe(res);
+    response.Body.on("error", (err) => {
+      console.error(`GET /api/projects/${id}/download stream error:`, err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to download file" });
+      }
+    });
   } catch (error) {
     console.error("GET /api/projects/:id/download error:", error);
-    res.status(500).json({ error: "Failed to download file" });
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Failed to download file" });
+    }
   }
 });
 

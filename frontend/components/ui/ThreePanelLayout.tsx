@@ -7,9 +7,10 @@
 
 import { ReactNode, useState, createContext, useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import { Menu, X, ArrowLeft } from 'lucide-react';
+import { Menu, X, ArrowLeft, PanelRight } from 'lucide-react';
 import { DesignSystem as DS } from '@/backend/lib/ui/design-system';
 import { LUCIDE_STROKE } from '@/components/ui/StatKpiIcon';
+import VerificationBanner from '@/app/components/VerificationBanner';
 
 interface LayoutContextType {
   leftPanelCollapsed: boolean;
@@ -49,6 +50,7 @@ export function ThreePanelLayout({
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelVisible, setRightPanelVisible] = useState(!hideRightPanel);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mobileRightPanelOpen, setMobileRightPanelOpen] = useState(false);
 
   const router = useRouter();
 
@@ -68,12 +70,12 @@ export function ThreePanelLayout({
       }}
     >
       <div 
-        className="min-h-screen w-screen overflow-x-hidden flex flex-col md:flex-row md:items-stretch"
+        className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col md:flex-row md:items-stretch"
         style={{ backgroundColor: DS.colors.background.app }}
       >
-        {/* MOBILE TOP BAR - Back + Menu (always available on small screens) */}
+        {/* MOBILE TOP BAR - Back + Menu (available below lg where right panel is hidden) */}
         <div
-          className="md:hidden flex items-center justify-between px-4 py-3 border-b sticky top-0 z-30"
+          className="lg:hidden flex items-center justify-between px-4 py-3 border-b sticky top-0 z-30"
           style={{
             backgroundColor: DS.colors.background.panel,
             borderColor: DS.colors.border.subtle,
@@ -94,29 +96,45 @@ export function ThreePanelLayout({
           <div className="text-sm font-semibold tracking-wide">
             BlueprintCAD
           </div>
-          {!hideLeftPanel ? (
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(true)}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-md"
-              aria-label="Open navigation menu"
-              style={{
-                backgroundColor: DS.colors.background.elevated,
-                color: DS.colors.text.primary,
-              }}
-            >
-              <Menu size={20} strokeWidth={LUCIDE_STROKE} />
-            </button>
-          ) : (
-            <div className="w-9 h-9" />
-          )}
+          <div className="flex items-center gap-2">
+            {!hideRightPanel && rightPanel && (
+              <button
+                type="button"
+                onClick={() => setMobileRightPanelOpen(true)}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-md lg:hidden"
+                aria-label="Open info panel"
+                style={{
+                  backgroundColor: DS.colors.background.elevated,
+                  color: DS.colors.text.primary,
+                }}
+              >
+                <PanelRight size={20} strokeWidth={LUCIDE_STROKE} />
+              </button>
+            )}
+            {!hideLeftPanel ? (
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(true)}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-md"
+                aria-label="Open navigation menu"
+                style={{
+                  backgroundColor: DS.colors.background.elevated,
+                  color: DS.colors.text.primary,
+                }}
+              >
+                <Menu size={20} strokeWidth={LUCIDE_STROKE} />
+              </button>
+            ) : (
+              <div className="w-9 h-9" />
+            )}
+          </div>
         </div>
 
         {/* LEFT PANEL — fixed to viewport so it stays visible while the page scrolls; spacer reserves width in the flex row */}
         {!hideLeftPanel && (
           <>
             <aside
-              className="hidden md:flex md:flex-col fixed left-0 top-0 z-[25] h-screen max-h-screen flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+              className="hidden lg:flex lg:flex-col fixed left-0 top-0 z-[25] h-screen max-h-screen flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
               style={{
                 width: leftWidth,
                 backgroundColor: DS.colors.background.panel,
@@ -126,7 +144,7 @@ export function ThreePanelLayout({
               {leftPanel}
             </aside>
             <div
-              className="hidden md:block flex-shrink-0 transition-all duration-300 ease-in-out"
+              className="hidden lg:block flex-shrink-0 transition-all duration-300 ease-in-out"
               style={{ width: leftWidth }}
               aria-hidden
             />
@@ -135,6 +153,7 @@ export function ThreePanelLayout({
 
         {/* CENTER PANEL - Main Workspace */}
         <main className="flex-1 min-h-screen min-w-0 overflow-hidden flex flex-col">
+          <VerificationBanner />
           {centerPanel}
         </main>
 
@@ -152,9 +171,52 @@ export function ThreePanelLayout({
           </aside>
         )}
 
+        {/* MOBILE RIGHT PANEL DRAWER */}
+        {mobileRightPanelOpen && !hideRightPanel && rightPanel && (
+          <div className="fixed inset-0 z-40 lg:hidden">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setMobileRightPanelOpen(false)}
+              aria-label="Close info panel"
+            />
+            <div
+              className="absolute right-0 top-0 bottom-0 w-80 max-w-[calc(100vw-3rem)] flex flex-col"
+              style={{
+                backgroundColor: DS.colors.background.panel,
+                borderLeft: `1px solid ${DS.colors.border.subtle}`,
+              }}
+            >
+              <div
+                className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0"
+                style={{ borderColor: DS.colors.border.subtle }}
+              >
+                <span className="text-sm font-semibold" style={{ color: DS.colors.text.primary }}>
+                  Details
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMobileRightPanelOpen(false)}
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-md"
+                  aria-label="Close details panel"
+                  style={{
+                    backgroundColor: DS.colors.background.elevated,
+                    color: DS.colors.text.primary,
+                  }}
+                >
+                  <X size={18} strokeWidth={LUCIDE_STROKE} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {rightPanel}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* MOBILE NAV DRAWER - uses leftPanel content for page options */}
         {mobileNavOpen && !hideLeftPanel && (
-          <div className="fixed inset-0 z-40 md:hidden">
+          <div className="fixed inset-0 z-40 lg:hidden">
             {/* Backdrop */}
             <button
               type="button"
@@ -218,7 +280,7 @@ export function LeftPanel({ children, className = '' }: PanelProps) {
 
 export function CenterPanel({ children, className = '' }: PanelProps) {
   return (
-    <div className={`h-full flex flex-col overflow-hidden ${className}`}>
+    <div className={`h-full flex flex-col overflow-hidden min-w-0 w-full ${className}`}>
       {children}
     </div>
   );
@@ -242,7 +304,7 @@ interface PanelHeaderProps {
 export function PanelHeader({ title, actions, children }: PanelHeaderProps) {
   return (
     <div
-      className="flex-shrink-0 px-6 py-4 flex items-center justify-between border-b"
+      className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 border-b min-w-0"
       style={{
         borderColor: DS.colors.border.subtle,
         backgroundColor: DS.colors.background.panel,
@@ -252,13 +314,13 @@ export function PanelHeader({ title, actions, children }: PanelHeaderProps) {
         <>
           {title && (
             <h2
-              className="text-lg font-semibold"
+              className="text-base sm:text-lg font-semibold break-words min-w-0"
               style={{ color: DS.colors.text.primary }}
             >
               {title}
             </h2>
           )}
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+          {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
         </>
       )}
     </div>
@@ -267,7 +329,7 @@ export function PanelHeader({ title, actions, children }: PanelHeaderProps) {
 
 export function PanelContent({ children, className = '' }: PanelProps) {
   return (
-    <div className={`flex-1 overflow-y-auto ${className}`}>
+    <div className={`flex-1 overflow-y-auto overflow-x-hidden min-w-0 w-full ${className}`}>
       {children}
     </div>
   );

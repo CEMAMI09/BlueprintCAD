@@ -390,8 +390,8 @@ export default function ProjectDetail() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      // Fetch the file from the download endpoint
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/projects/${id}/download`, { headers });
+      // Same-origin proxy streams from R2 (direct Railway redirect breaks CORS in the browser)
+      const res = await fetch(`/api/projects/${id}/download`, { headers });
       
       if (!res.ok) {
         const error = await res.json().catch(() => ({ error: 'Download failed' }));
@@ -526,14 +526,14 @@ export default function ProjectDetail() {
           <PanelHeader
             title={project.title}
             actions={
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                 {project.is_public && (
-                  <Link href="/explore" className="hover:underline" style={{ color: DS.colors.primary.blue }}>
-                    &larr; Back to Explore
+                  <Link href="/explore" className="hover:underline text-sm sm:text-base whitespace-nowrap" style={{ color: DS.colors.primary.blue }}>
+                    &larr; Back
                   </Link>
                 )}
                 {project.for_sale && project.price && project.price > 0 && (
-                  <span className="text-2xl font-bold" style={{ color: DS.colors.accent.success }}>
+                  <span className="text-lg sm:text-2xl font-bold whitespace-nowrap" style={{ color: DS.colors.accent.success }}>
                     ${project.price}
                   </span>
                 )}
@@ -541,11 +541,13 @@ export default function ProjectDetail() {
             }
           />
           <PanelContent>
-            <div className="px-4 md:px-10 py-8">
-              <div className="grid md:grid-cols-3 gap-6">
-              {/* Left Column - Preview */}
-              <div className="md:col-span-2 space-y-6">
-                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl overflow-hidden">
+            <div className="px-4 md:px-10 py-8 min-w-0">
+              <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6 min-w-0">
+              {/* Main column — preview + description */}
+              <div className="min-w-0 order-1 2xl:col-span-2 flex flex-col gap-6">
+              {/* Preview */}
+              <div className="min-w-0">
+                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl overflow-hidden min-w-0 max-w-full">
                   {/* Auto-loading 3D Viewer for all CAD file types */}
                   {(() => {
                     if (project.file_type && project.file_path) {
@@ -553,7 +555,7 @@ export default function ProjectDetail() {
                       const viewableTypes = ['stl', 'obj', 'fbx', 'gltf', 'glb', 'ply', 'dae', 'collada'];
                       if (viewableTypes.includes(fileType)) {
                         return (
-                          <div style={{ width: '100%', margin: 0, padding: 0 }}>
+                          <div className="w-full min-w-0 max-w-full overflow-hidden" style={{ margin: 0, padding: 0 }}>
                             <ThreeDViewer
                               fileUrl={`/api/files/${encodeURIComponent(project.file_path)}`}
                               fileName={`${project.title}${project.file_type.startsWith('.') ? project.file_type : `.${project.file_type}`}`}
@@ -602,18 +604,22 @@ export default function ProjectDetail() {
                     );
                   })()}
                 </div>
-                {/* Description */}
-                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">
+              </div>
+              {/* Description */}
+              <div className="min-w-0">
+                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-4 sm:p-6 min-w-0">
                   <h2 className="text-xl font-bold mb-4" style={{ color: DS.colors.text.primary }}>Description</h2>
-                  <p className="whitespace-pre-wrap" style={{ color: DS.colors.text.secondary }}>
+                  <p className="whitespace-pre-wrap break-words" style={{ color: DS.colors.text.secondary }}>
                     {project.description || 'No description provided.'}
                   </p>
                 </div>
               </div>
-              {/* Right Column - Details & Actions */}
-              <div className="space-y-6">
-                {/* Actions */}
-                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6 space-y-3">
+              </div>
+              {/* Sidebar — stacks under Actions on desktop; reorders on mobile via contents */}
+              <div className="contents 2xl:flex 2xl:flex-col 2xl:gap-6 2xl:col-start-3 2xl:row-start-1 2xl:self-start min-w-0">
+              {/* Actions */}
+              <div className="min-w-0 order-4 2xl:order-none">
+                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-4 sm:p-6 space-y-3 min-w-0">
                   {actionError && (
                     <div className="p-3 text-sm rounded-md" style={{ background: DS.colors.accent.error + '20', border: `1px solid ${DS.colors.accent.error}40`, color: DS.colors.accent.error }}>
                       {actionError}
@@ -624,7 +630,11 @@ export default function ProjectDetail() {
                     className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
                     style={liked 
                       ? { background: DS.colors.primary.blue, color: '#fff', fontWeight: '600' }
-                      : { background: DS.colors.background.panel, color: DS.colors.text.primary }
+                      : {
+                          background: DS.colors.background.panel,
+                          color: DS.colors.text.primary,
+                          border: `1px solid ${DS.colors.border.default}`,
+                        }
                     }
                   >
                     <svg className="w-5 h-5" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -638,7 +648,11 @@ export default function ProjectDetail() {
                     <button
                       onClick={handleDownload}
                       className="w-full py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
-                      style={{ background: 'transparent', border: '1px solid #fff', color: '#fff' }}
+                      style={{
+                        background: 'transparent',
+                        border: `1px solid ${DS.colors.border.strong}`,
+                        color: DS.colors.text.primary,
+                      }}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -725,8 +739,10 @@ export default function ProjectDetail() {
                     </>
                   )}
                 </div>
-                {/* Details */}
-                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">
+              </div>
+              {/* Details */}
+              <div className="min-w-0 order-3 2xl:order-none">
+                <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-4 sm:p-6 min-w-0">
                   <h3 className="font-bold mb-4" style={{ color: DS.colors.text.primary }}>Details</h3>
                   
                   {/* File Metadata */}
@@ -735,9 +751,9 @@ export default function ProjectDetail() {
                       <h4 className="font-semibold text-sm mb-3" style={{ color: DS.colors.text.secondary }}>File Metadata</h4>
                       <div className="space-y-2 text-sm">
                         {project.file_size_bytes && (
-                          <div className="flex items-center justify-between">
-                            <span style={{ color: DS.colors.text.secondary }}>File Size</span>
-                            <span style={{ color: DS.colors.text.primary }}>
+                          <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="flex-shrink-0" style={{ color: DS.colors.text.secondary }}>File Size</span>
+                            <span className="sm:text-right break-words" style={{ color: DS.colors.text.primary }}>
                               {project.file_size_bytes < 1024 
                                 ? `${project.file_size_bytes} B`
                                 : project.file_size_bytes < 1024 * 1024
@@ -747,32 +763,32 @@ export default function ProjectDetail() {
                           </div>
                         )}
                         {project.file_format && (
-                          <div className="flex items-center justify-between">
-                            <span style={{ color: DS.colors.text.secondary }}>Format</span>
-                            <span style={{ color: DS.colors.text.primary }} className="uppercase">{project.file_format}</span>
+                          <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="flex-shrink-0" style={{ color: DS.colors.text.secondary }}>Format</span>
+                            <span className="sm:text-right uppercase break-words" style={{ color: DS.colors.text.primary }}>{project.file_format}</span>
                           </div>
                         )}
                         {(project.bounding_box_width || project.bounding_box_height || project.bounding_box_depth) && (
-                          <div className="flex items-center justify-between">
-                            <span style={{ color: DS.colors.text.secondary }}>Dimensions</span>
-                            <span style={{ color: DS.colors.text.primary }}>
+                          <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="flex-shrink-0" style={{ color: DS.colors.text.secondary }}>Dimensions</span>
+                            <span className="sm:text-right break-words" style={{ color: DS.colors.text.primary }}>
                               {project.bounding_box_width?.toFixed(2) || '?'} × {project.bounding_box_height?.toFixed(2) || '?'} × {project.bounding_box_depth?.toFixed(2) || '?'} mm
                             </span>
                           </div>
                         )}
                         {project.upload_timestamp && (
-                          <div className="flex items-center justify-between">
-                            <span style={{ color: DS.colors.text.secondary }}>Uploaded</span>
-                            <span style={{ color: DS.colors.text.primary }}>
+                          <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="flex-shrink-0" style={{ color: DS.colors.text.secondary }}>Uploaded</span>
+                            <span className="sm:text-right break-words" style={{ color: DS.colors.text.primary }}>
                               {new Date(project.upload_timestamp).toLocaleDateString()}
                             </span>
                           </div>
                         )}
                         {project.file_checksum && (
-                          <div className="flex items-center justify-between gap-2">
-                            <span style={{ color: DS.colors.text.secondary }}>Checksum</span>
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <span style={{ color: DS.colors.text.primary }} className="font-mono text-xs truncate flex-1" title={project.file_checksum}>
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                            <span className="flex-shrink-0" style={{ color: DS.colors.text.secondary }}>Checksum</span>
+                            <div className="flex items-center gap-2 min-w-0 sm:flex-1 sm:justify-end">
+                              <span style={{ color: DS.colors.text.primary }} className="font-mono text-xs truncate min-w-0" title={project.file_checksum}>
                                 {project.file_checksum.substring(0, 16)}...
                               </span>
                               <button
@@ -790,9 +806,9 @@ export default function ProjectDetail() {
                           </div>
                         )}
                         {project.branch_count !== null && project.branch_count !== undefined && project.branch_count > 0 && (
-                          <div className="flex items-center justify-between">
-                            <span style={{ color: DS.colors.text.secondary }}>Branches</span>
-                            <span style={{ color: DS.colors.text.primary }}>{project.branch_count}</span>
+                          <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="flex-shrink-0" style={{ color: DS.colors.text.secondary }}>Branches</span>
+                            <span className="sm:text-right" style={{ color: DS.colors.text.primary }}>{project.branch_count}</span>
                           </div>
                         )}
                       </div>
@@ -825,9 +841,11 @@ export default function ProjectDetail() {
                     </div>
                   </div>
                 </div>
-                {/* Tags */}
-                {project.tags && (
-                  <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">
+              </div>
+              {/* Tags */}
+              {project.tags && (
+                <div className="min-w-0 order-5 2xl:order-none">
+                  <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-4 sm:p-6 min-w-0">
                     <h3 className="font-bold mb-3" style={{ color: DS.colors.text.primary }}>Tags</h3>
                     <div className="flex flex-wrap gap-2">
                       {project.tags.split(',').map((tag, i) => (
@@ -837,7 +855,8 @@ export default function ProjectDetail() {
                       ))}
                     </div>
                   </div>
-                )}
+                </div>
+              )}
               </div>
               </div>
             </div>
@@ -865,9 +884,10 @@ export default function ProjectDetail() {
           // - Project not in folder, OR
           // - Author profile is available
           authorProfile ? (
-          <div className="p-6 space-y-6">
+          <RightPanel>
+            <div className="p-4 sm:p-6 space-y-6 min-w-0">
             {/* Author Profile */}
-            <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-6">
+            <div style={{ background: DS.colors.background.card, border: `1px solid ${DS.colors.border.default}` }} className="rounded-xl p-4 sm:p-6 min-w-0 overflow-hidden">
               <h3 className="font-bold mb-4" style={{ color: DS.colors.text.primary }}>Designer</h3>
               <Link href={`/profile/${authorProfile.username}`} className="block">
                 <div className="flex items-center gap-4 mb-4">
@@ -997,7 +1017,7 @@ export default function ProjectDetail() {
               )}
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-3 pt-4 border-t" style={{ borderColor: DS.colors.border.default }}>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-4 border-t" style={{ borderColor: DS.colors.border.default }}>
                 <div className="text-center">
                   <div className="text-lg font-bold" style={{ color: DS.colors.text.primary }}>
                     {authorProfile.followers || 0}
@@ -1036,7 +1056,8 @@ export default function ProjectDetail() {
                 </button>
               </Link>
             </div>
-          </div>
+            </div>
+          </RightPanel>
           ) : (
             // Loading or no author profile yet
             <RightPanel>

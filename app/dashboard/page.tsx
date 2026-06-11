@@ -182,7 +182,7 @@ export default function DashboardPage() {
                   <Button 
                     variant="ghost" 
                     icon={<BarChart3 size={20} strokeWidth={LUCIDE_STROKE} />} 
-                    className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                    className="btn-ghost-themed"
                   >
                     Analytics
                   </Button>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
                   variant="ghost" 
                   icon={<Upload size={20} strokeWidth={LUCIDE_STROKE} />} 
                   onClick={() => router.push('/upload')}
-                  className="font-bold border border-[#2A2A2A] bg-transparent text-[#A0A0A0] rounded-full px-5 py-2 hover:bg-[#181818] hover:border-[#333333] hover:text-[#E0E0E0] hover:scale-105 transition-transform"
+                  className="btn-ghost-themed"
                 >
                   Upload Design
                 </Button>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
             ) : (
               <>
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                   {displayStats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
@@ -342,17 +342,17 @@ export default function DashboardPage() {
                       No trending designs
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-w-0 w-full">
                       {(showAllTrending ? trending : trending.slice(0, 6)).map((design) => (
                   <Card 
                         key={design.id} 
                         hover 
                         padding="none"
-                        className="cursor-pointer"
+                        className="cursor-pointer min-w-0 w-full overflow-hidden"
                         onClick={() => router.push(`/project/${design.id}`)}
                       >
                         {/* Thumbnail */}
-                        <div className="aspect-video rounded-t-lg overflow-hidden relative" style={{ backgroundColor: DS.colors.background.panel, minHeight: '180px' }}>
+                        <div className="design-thumbnail-container rounded-t-lg" style={{ backgroundColor: DS.colors.background.panel }}>
                           {(design.thumbnail_path || design.thumbnail) ? (
                             <img 
                               src={(() => {
@@ -367,12 +367,6 @@ export default function DashboardPage() {
                               alt={design.title}
                               className="design-thumbnail"
                               loading="lazy"
-                              style={{ 
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                display: 'block'
-                              }}
                               onError={(e) => {
                                 console.error(`[Dashboard] Failed to load thumbnail for ${design.id}:`, e);
                                 e.currentTarget.style.display = 'none';
@@ -395,7 +389,7 @@ export default function DashboardPage() {
                               }}
                             />
                           ) : (
-                            <div className="flex flex-col items-center justify-center w-full h-full gap-2">
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                               <Package size={40} strokeWidth={LUCIDE_STROKE} style={{ color: DS.colors.text.tertiary }} />
                               <span className="text-xs" style={{ color: DS.colors.text.tertiary }}>No thumbnail available</span>
                             </div>
@@ -474,8 +468,11 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div
-                className="h-2 rounded-full overflow-hidden"
-                style={{ backgroundColor: DS.colors.background.elevated }}
+                className="h-2.5 rounded-full overflow-hidden"
+                style={{
+                  backgroundColor: 'var(--ds-progress-track)',
+                  border: `1px solid ${DS.colors.border.default}`,
+                }}
               >
                 <div
                   className="h-full rounded-full transition-all"

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useTheme } from '@/app/context/ThemeContext';
+import { getViewerBackgroundColor } from '@/lib/themeUtils';
 
 type ThreePreviewProps = {
   file: File;
@@ -11,6 +13,7 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const seqRef = useRef(0);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     let renderer: any;
@@ -66,7 +69,7 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
   if (seq !== seqRef.current) return;
 
   scene = new Scene();
-        scene.background = new Color(0x0b1220);
+        scene.background = new Color(getViewerBackgroundColor());
 
         // Ensure container has dimensions
         if (!containerRef.current) return;
@@ -293,7 +296,7 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
       } catch {}
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [file]);
+  }, [file, resolvedTheme]);
 
   return (
     <div className="rounded-xl border border-gray-800 bg-gray-900 w-full">
@@ -303,8 +306,8 @@ export default function ThreePreview({ file }: ThreePreviewProps) {
         </svg>
         {file.name}
       </div>
-      <div className="relative w-full" style={{ aspectRatio: '16/9', minHeight: '300px' }}>
-        <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ minHeight: '300px' }} />
+      <div className="relative w-full aspect-video min-h-[200px] overflow-hidden">
+        <div ref={containerRef} className="absolute inset-0 w-full h-full overflow-hidden" />
         {loading && !error && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm z-10">
             <div className="text-center">

@@ -65,6 +65,12 @@ interface Thread {
   replies_data?: any[];
 }
 
+interface TopContributor {
+  username: string;
+  profile_picture?: string | null;
+  reputation: number;
+}
+
 export default function ForumPage() {
   const router = useRouter();
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
@@ -92,6 +98,7 @@ export default function ForumPage() {
   const [submittingReply, setSubmittingReply] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeTier, setUpgradeTier] = useState<'pro' | 'creator' | 'enterprise'>('pro');
+  const [topContributors, setTopContributors] = useState<TopContributor[]>([]);
 
   const formatTimeAgo = (dateString: string) => {
     if (!dateString) return 'Just now';
@@ -113,6 +120,22 @@ export default function ForumPage() {
     fetchCategoryStats();
     fetchThreads();
   }, [selectedCategory, activeSort, searchQuery]);
+
+  useEffect(() => {
+    fetchTopContributors();
+  }, []);
+
+  const fetchTopContributors = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum/top-contributors?limit=10`);
+      if (res.ok) {
+        const data = await res.json();
+        setTopContributors(data);
+      }
+    } catch (error) {
+      console.error('Error fetching top contributors:', error);
+    }
+  };
 
   const fetchCategoryStats = async () => {
     try {
@@ -218,6 +241,7 @@ export default function ForumPage() {
         setNewThread({ title: '', content: '', category: 'general' });
         fetchThreads();
         fetchCategoryStats();
+        fetchTopContributors();
         // Navigate to the new thread
         router.push(`/forum/${thread.id}`);
       } else {
@@ -304,6 +328,7 @@ export default function ForumPage() {
         if (selectedThread) {
           await handleThreadClick(selectedThread);
         }
+        fetchTopContributors();
       } else {
         const error = await res.json();
         alert(error.error || 'Failed to post reply');
@@ -328,8 +353,6 @@ export default function ForumPage() {
   // Separate pinned threads
   const pinnedThreads = threads.filter(t => t.isPinned || t.is_pinned);
   const regularThreads = threads.filter(t => !t.isPinned && !t.is_pinned);
-
-  const topContributors: any[] = [];
 
   const rules = [
     'Be respectful and constructive',
@@ -609,19 +632,10 @@ export default function ForumPage() {
         ) : (
           <RightPanel>
             <PanelHeader title="Forum Info" />
-            <PanelContent>
-              <style dangerouslySetInnerHTML={{__html: `
-                .forum-right-panel input,
-                .forum-right-panel textarea {
-                  border-radius: 0 !important;
-                }
-                .forum-right-panel > div[class*="rounded-lg"] {
-                  border-radius: 0 !important;
-                }
-              `}} />
-              <div className="space-y-6 forum-right-panel">
+            <PanelContent className="p-4 sm:p-6">
+              <div className="space-y-6 min-w-0">
                 {/* Rules */}
-                <Card padding="md" style={{ borderRadius: 0 }}>
+                <Card padding="md" className="!rounded-xl">
                   <h3 className="font-semibold mb-3 flex items-center gap-2" style={{ color: DS.colors.text.primary }}>
                     <BookOpen size={18} />
                     Forum Rules
@@ -638,53 +652,61 @@ export default function ForumPage() {
                   </ol>
                 </Card>
 
-                {/* Moderators */}
-                <Card padding="md" style={{ borderRadius: 0 }}>
-                  <h3 className="font-semibold mb-3 flex items-center gap-2" style={{ color: DS.colors.text.primary }}>
-                    <Shield size={18} />
-                    Moderators
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full" style={{ backgroundColor: DS.colors.background.panelHover }} />
-                      <span className="text-sm" style={{ color: DS.colors.text.primary }}>
-                        @admin
-                      </span>
-                      <Crown size={14} style={{ color: DS.colors.accent.warning }} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full" style={{ backgroundColor: DS.colors.background.panelHover }} />
-                      <span className="text-sm" style={{ color: DS.colors.text.primary }}>
-                        @cadmaster
-                      </span>
-                      <Shield size={14} style={{ color: DS.colors.primary.blue }} />
-                    </div>
-                  </div>
-                </Card>
-
                 {/* Top Contributors */}
-                <Card padding="md" style={{ borderRadius: 0 }}>
+                <Card padding="md" className="!rounded-xl">
                   <h3 className="font-semibold mb-3 flex items-center gap-2" style={{ color: DS.colors.text.primary }}>
                     <Users size={18} />
                     Top Contributors
                   </h3>
                   <div className="space-y-3">
-                    {topContributors.map((contributor, index) => (
-                      <div key={contributor.username} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold" style={{ color: DS.colors.text.secondary }}>
-                            #{index + 1}
-                          </span>
-                          <span className="text-sm" style={{ color: DS.colors.text.primary }}>
-                            @{contributor.username}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs" style={{ color: DS.colors.text.secondary }}>
-                          <span>{contributor.posts} posts</span>
-                          <Badge variant="default" size="sm">{contributor.reputation}</Badge>
-                        </div>
-                      </div>
-                    ))}
+                    {topContributors.length > 0 ? (
+                      topContributors.map((contributor, index) => (
+                        <Link
+                          key={contributor.username}
+                          href={`/profile/${contributor.username}`}
+                          className="flex items-center justify-between gap-2 rounded-lg transition-colors hover:opacity-80"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-sm font-semibold flex-shrink-0" style={{ color: DS.colors.text.secondary }}>
+                              #{index + 1}
+                            </span>
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden"
+                              style={{
+                                backgroundColor: contributor.profile_picture ? 'transparent' : DS.colors.primary.blue,
+                                color: '#ffffff',
+                              }}
+                            >
+                              {contributor.profile_picture ? (
+                                <img
+                                  src={`/api/users/profile-picture/${contributor.profile_picture}`}
+                                  alt={contributor.username}
+                                  className="w-full h-full rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const parent = e.currentTarget.parentElement;
+                                    if (parent) {
+                                      parent.style.backgroundColor = DS.colors.primary.blue;
+                                      parent.textContent = contributor.username.substring(0, 2).toUpperCase();
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                contributor.username.substring(0, 2).toUpperCase()
+                              )}
+                            </div>
+                            <span className="text-sm truncate" style={{ color: DS.colors.text.primary }}>
+                              @{contributor.username}
+                            </span>
+                          </div>
+                          <Badge variant="default" size="sm">{contributor.reputation} rep</Badge>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="text-sm" style={{ color: DS.colors.text.tertiary }}>
+                        No contributors yet. Start a discussion!
+                      </p>
+                    )}
                   </div>
                 </Card>
               </div>

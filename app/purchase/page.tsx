@@ -293,7 +293,7 @@ export default function PurchasePage() {
                           const viewableTypes = ['stl', 'obj', 'fbx', 'gltf', 'glb', 'ply', 'dae', 'collada'];
                           if (viewableTypes.includes(fileType)) {
                             return (
-                              <div style={{ minHeight: '600px', width: '100%' }}>
+                              <div className="w-full min-w-0 max-w-full overflow-hidden">
                                 <ThreeDViewer
                                   fileUrl={`/api/files/${encodeURIComponent(project.file_path)}`}
                                   fileName={`${project.title}${project.file_type.startsWith('.') ? project.file_type : `.${project.file_type}`}`}

@@ -29,6 +29,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { LUCIDE_STROKE } from '@/components/ui/StatKpiIcon';
+import { PUBLIC_NAV_FEATURES_ENABLED } from '@/lib/launch-flags';
 
 interface NavItem {
   id: string;
@@ -42,9 +43,15 @@ const baseNavItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
   { id: 'explore', label: 'Explore', icon: Compass, href: '/explore' },
   { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart, href: '/marketplace' },
-  { id: 'forums', label: 'Forums', icon: MessageSquare, href: '/forum' },
+  ...(PUBLIC_NAV_FEATURES_ENABLED
+    ? [
+        { id: 'forums', label: 'Forums', icon: MessageSquare, href: '/forum' },
+      ]
+    : []),
   { id: 'quote', label: 'Quote Tool', icon: Calculator, href: '/quote' },
-  { id: 'folders', label: 'Folders', icon: Folder, href: '/folders' },
+  ...(PUBLIC_NAV_FEATURES_ENABLED
+    ? [{ id: 'folders', label: 'Folders', icon: Folder, href: '/folders' }]
+    : []),
   { id: 'messages', label: 'Messages', icon: Mail, href: '/messages' },
   { id: 'notifications', label: 'Notifications', icon: Bell, href: '/notifications' },
   { id: 'profile', label: 'Profile', icon: User, href: '/profile' },
@@ -135,18 +142,14 @@ export function GlobalNavSidebar() {
     >
       {/* Logo / Brand */}
       <div
-        className="flex-shrink-0 flex items-center border-b"
+        className="flex-shrink-0 flex items-center border-b h-14 md:h-[90px] min-h-14 md:min-h-[90px] overflow-hidden"
         style={{
           borderColor: DS.colors.border.subtle,
-          height: '90px',
-          minHeight: '90px',
           padding: '0',
           margin: '0',
           lineHeight: '1',
-          minWidth: 90,
           justifyContent: 'flex-start',
           transition: 'padding 0.2s ease, justify-content 0.2s ease',
-          overflow: 'visible',
         }}
       >
         {!leftPanelCollapsed ? (

@@ -177,7 +177,7 @@ async function sellerAnalytics(req, res) {
     const totalProjects = parseInt(totalProjectsResult?.c || 0, 10);
 
     const forSaleCountResult = await getOne(
-      `SELECT COUNT(*)::int AS c FROM projects WHERE user_id = $1 AND (for_sale IS TRUE OR for_sale = 1)`,
+      `SELECT COUNT(*)::int AS c FROM projects WHERE user_id = $1 AND for_sale IS TRUE`,
       [userId]
     );
     const forSaleCount = parseInt(forSaleCountResult?.c || 0, 10);
@@ -316,7 +316,7 @@ async function sellerAnalytics(req, res) {
            AND COALESCE(o.status, '') <> 'refunded'
            AND o.created_at >= $2::timestamptz
            AND o.created_at <= $3::timestamptz
-         WHERE p.user_id = $1 AND (p.for_sale IS TRUE OR p.for_sale = 1)
+         WHERE p.user_id = $1 AND p.for_sale IS TRUE
          GROUP BY p.id, p.title, p.thumbnail_path, p.price
          ORDER BY revenue DESC NULLS LAST, download_count DESC
          LIMIT 20`,
@@ -390,7 +390,7 @@ async function sellerAnalytics(req, res) {
           p.title,
           COALESCE(p.views, 0)::bigint AS views_lifetime,
           COALESCE(p.likes, 0)::bigint AS stars,
-          (p.for_sale IS TRUE OR p.for_sale = 1) AS for_sale,
+          COALESCE(p.for_sale, false) AS for_sale,
           p.created_at,
           COALESCE(vp.c, 0)::bigint AS views_period,
           COALESCE(dl.dc, 0)::bigint AS downloads_period,

@@ -872,7 +872,7 @@ export default function QuotePage() {
                               <p className="text-sm mb-3" style={{ color: DS.colors.text.secondary }}>
                                 Original Dimensions
                               </p>
-                              <div className="grid grid-cols-3 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
                                   <p className="text-xs mb-1" style={{ color: DS.colors.text.tertiary }}>
                                     Width (X)
@@ -1094,12 +1094,8 @@ export default function QuotePage() {
                                 3D Preview
                               </h3>
                               <div
-                                className="w-full rounded-lg overflow-hidden relative"
-                                style={{ 
-                                  backgroundColor: DS.colors.background.panel,
-                                  aspectRatio: '16/9',
-                                  minHeight: '300px'
-                                }}
+                                className="w-full rounded-lg overflow-hidden relative aspect-video min-h-[200px] flex flex-col"
+                                style={{ backgroundColor: DS.colors.background.panel }}
                               >
                                 {projectFileUrl ? (
                                   <ThreeDViewer
@@ -1107,6 +1103,8 @@ export default function QuotePage() {
                                     fileName={projectFileUrl.split('/').pop() || 'model'}
                                     fileType=".stl"
                                     preset="detail"
+                                    fill
+                                    className="h-full"
                                   />
                                 ) : (
                                   <ThreePreview file={file} />
@@ -1129,7 +1127,7 @@ export default function QuotePage() {
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                   <div>
                                     <p className="text-xs mb-1" style={{ color: DS.colors.text.tertiary }}>
                                       Width (X)

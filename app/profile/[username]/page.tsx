@@ -37,7 +37,6 @@ import {
   Instagram,
   Youtube,
   ShoppingBag,
-  Store,
   Trash2,
   CheckSquare,
   Square,
@@ -53,12 +52,13 @@ export default function ProfilePage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [starredProjects, setStarredProjects] = useState<any[]>([]);
   const [orders, setOrders] = useState<any>({ purchases: [], sales: [], manufacturingOrders: [] });
+  const [forumPosts, setForumPosts] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState<'not_found' | 'unavailable' | null>(null);
   const [following, setFollowing] = useState(false);
   const [pending, setPending] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
-  const [storage, setStorage] = useState<{ used: number; limit: number; remaining: number; percentUsed: number } | null>(null);
   const [activeTab, setActiveTab] = useState(searchParams?.get('tab') || 'projects');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -73,18 +73,6 @@ export default function ProfilePage() {
   }, []);
 
   const isOwnProfile = currentUser?.username === username;
-
-  const formatStorage = (bytes: number) => {
-    if (bytes === -1) return 'Unlimited';
-    if (bytes >= 1024 * 1024 * 1024) {
-      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
-    } else if (bytes >= 1024 * 1024) {
-      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-    } else if (bytes >= 1024) {
-      return (bytes / 1024).toFixed(2) + ' KB';
-    }
-    return bytes + ' B';
-  };
 
   // Helper function to format social media URLs
   const formatSocialUrl = (platform: string, value: string) => {
@@ -125,12 +113,14 @@ export default function ProfilePage() {
     if (username) {
       fetchProfile();
       fetchUserProjects();
+      fetchForumPosts();
     }
   }, [username]);
 
-  // Re-fetch projects when auth context is ready so /api/projects can attribute "own profile" correctly
+  // Re-fetch when auth is ready so own profile uses /api/users/me
   useEffect(() => {
     if (username && currentUser?.username) {
+      fetchProfile();
       fetchUserProjects();
     }
   }, [username, currentUser?.username]);
@@ -150,10 +140,21 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const tab = searchParams?.get('tab') || null;
-    if (tab && (tab === 'projects' || tab === 'starred' || tab === 'orders')) {
+    if (!tab) return;
+
+    const privateTabs = ['starred', 'orders'];
+    if (privateTabs.includes(tab) && !isOwnProfile) {
+      setActiveTab('projects');
+      return;
+    }
+    if (tab === 'forums' && forumPosts.length === 0) {
+      setActiveTab('projects');
+      return;
+    }
+    if (tab === 'projects' || tab === 'forums' || (isOwnProfile && (tab === 'starred' || tab === 'orders'))) {
       setActiveTab(tab);
     }
-  }, [searchParams]);
+  }, [searchParams, isOwnProfile, forumPosts.length]);
 
   useEffect(() => {
     if (activeTab === 'orders' && isOwnProfile) {
@@ -161,8 +162,19 @@ export default function ProfilePage() {
     }
   }, [activeTab, isOwnProfile]);
 
+  useEffect(() => {
+    if (!isOwnProfile && (activeTab === 'starred' || activeTab === 'orders')) {
+      setActiveTab('projects');
+    }
+    if (activeTab === 'forums' && forumPosts.length === 0) {
+      setActiveTab('projects');
+    }
+  }, [isOwnProfile, activeTab, forumPosts.length]);
+
   const fetchProfile = async () => {
+    const ownProfile = currentUser?.username === username;
     try {
+      setProfileError(null);
       const token = localStorage.getItem('token');
       const headers: HeadersInit = {};
       if (token) {
@@ -170,7 +182,7 @@ export default function ProfilePage() {
       }
       
       // Use /api/users/me for own profile, otherwise use username route
-      const endpoint = isOwnProfile 
+      const endpoint = ownProfile
         ? `${process.env.NEXT_PUBLIC_API_URL}/api/users/me`
         : `${process.env.NEXT_PUBLIC_API_URL}/api/users/${username}`;
       
@@ -182,28 +194,39 @@ export default function ProfilePage() {
         const data = await res.json();
         console.log('[Profile] Fetched profile data:', { username: data.username, subscription_tier: data.subscription_tier });
         setProfile(data);
-        // Set storage if available (only for own profile)
-        if (isOwnProfile && data.stats) {
-          setStorage({
-            used: data.stats.storage_used || 0,
-            limit: data.stats.storage_used || 0, // Will need to get from tier limits
-            remaining: 0,
-            percentUsed: 0,
-          });
-        } else if (data.storage) {
-          setStorage(data.storage);
-        }
+        setProfileError(null);
       } else {
         const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
         console.error('[Profile] Failed to fetch profile:', res.status, errorData);
         if (res.status === 404) {
           setProfile(null);
+          setProfileError('not_found');
+        } else {
+          setProfileError('unavailable');
         }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setProfileError('unavailable');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchForumPosts = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/forum/threads?username=${encodeURIComponent(username)}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setForumPosts(data || []);
+      } else {
+        setForumPosts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching forum posts:', error);
+      setForumPosts([]);
     }
   };
 
@@ -490,6 +513,7 @@ export default function ProfilePage() {
   }
 
   if (!profile) {
+    const isUnavailable = profileError === 'unavailable';
     return (
       <ThreePanelLayout
         leftPanel={<GlobalNavSidebar />}
@@ -499,8 +523,19 @@ export default function ProfilePage() {
               <div className="max-w-7xl mx-auto px-6 py-20">
                 <EmptyState
                   icon={<User size={48} />}
-                  title="User not found"
-                  description="This user doesn't exist or their profile is private."
+                  title={isUnavailable ? 'Could not load profile' : 'User not found'}
+                  description={
+                    isUnavailable
+                      ? 'The server could not be reached. Make sure the API is running (npm run dev:api or npm run dev:full), then refresh.'
+                      : "This user doesn't exist or their profile is private."
+                  }
+                  action={
+                    isUnavailable ? (
+                      <Button variant="primary" onClick={() => { setLoading(true); fetchProfile(); }}>
+                        Try again
+                      </Button>
+                    ) : undefined
+                  }
                 />
               </div>
             </PanelContent>
@@ -569,11 +604,11 @@ export default function ProfilePage() {
                   <div className="flex-1 w-full" style={{ paddingTop: '0px' }}>
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-2">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h1 className="text-2xl font-bold flex items-center" style={{ color: DS.colors.text.primary, marginTop: '-8px' }}>
+                        <div className="flex flex-wrap items-center gap-2 mb-1 min-w-0">
+                          <h1 className="text-xl sm:text-2xl font-bold truncate min-w-0" style={{ color: DS.colors.text.primary, marginTop: '-8px' }}>
                             {profile.display_name || username}
                           </h1>
-                          <div className="flex items-center gap-2" style={{ marginTop: '-8px' }}>
+                          <div className="flex items-center gap-2 flex-shrink-0" style={{ marginTop: '-8px' }}>
                             <TierBadge tier={profile.subscription_tier ?? profile.tier} size="md" />
                           </div>
                         </div>
@@ -588,13 +623,7 @@ export default function ProfilePage() {
                             <Button variant="secondary" icon={<Settings size={18} />} onClick={() => router.push('/settings')}>
                               Edit Profile
                             </Button>
-                            <Button 
-                              variant="secondary" 
-                              icon={<Store size={18} />} 
-                              onClick={() => router.push(`/${username}/store`)}
-                            >
-                              View Store
-                            </Button>
+                            {/* View Store hidden for initial launch */}
                           </>
                         ) : (
                           <>
@@ -615,13 +644,7 @@ export default function ProfilePage() {
                                 Message
                               </Button>
                             )}
-                            <Button 
-                              variant="secondary"
-                              icon={<Store size={18} />}
-                              onClick={() => router.push(`/${username}/store`)}
-                            >
-                              View Store
-                            </Button>
+                            {/* View Store hidden for initial launch */}
                           </>
                         )}
                       </div>
@@ -779,9 +802,7 @@ export default function ProfilePage() {
 
                 {/* Stats */}
                 <div
-                  className={`grid gap-4 mt-5 pt-5 border-t ${
-                    isOwnProfile && storage ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
-                  }`}
+                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-5 pt-5 border-t"
                   style={{ borderColor: DS.colors.border.default }}
                 >
                   <div className="text-center">
@@ -808,19 +829,6 @@ export default function ProfilePage() {
                     </div>
                     <div className="text-sm" style={{ color: DS.colors.text.secondary }}>Views</div>
                   </div>
-                  {isOwnProfile && storage && (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold" style={{ color: DS.colors.text.primary }}>
-                        {formatStorage(storage.used)}
-                      </div>
-                      <div className="text-sm" style={{ color: DS.colors.text.secondary }}>
-                        / {formatStorage(storage.limit)}
-                      </div>
-                      <div className="text-xs mt-1" style={{ color: DS.colors.text.tertiary }}>
-                        {storage.percentUsed ? storage.percentUsed.toFixed(1) : '0'}% used
-                      </div>
-                    </div>
-                  )}
                 </div>
                 </div>
               </Card>
@@ -829,6 +837,7 @@ export default function ProfilePage() {
               <Tabs
                 tabs={[
                   { id: 'projects', label: 'Projects', icon: <Grid size={16} />, badge: projects.length },
+                  // Forums tab hidden for initial launch
                   ...(isOwnProfile ? [
                     { id: 'starred', label: 'Starred', icon: <Star size={16} />, badge: starredProjects.length },
                     { id: 'orders', label: 'Orders', icon: <ShoppingBag size={16} />, badge: orders.purchases.length + orders.sales.length + orders.manufacturingOrders.length }
@@ -911,12 +920,13 @@ export default function ProfilePage() {
                         description={isOwnProfile ? "Upload your first project to get started!" : `${username} hasn't uploaded any projects yet.`}
                       />
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-w-0 w-full">
                         {projects.map((project) => (
                           <Card
                             key={project.id}
                             hover={!selectionMode}
                             padding="none"
+                            className="min-w-0 w-full overflow-hidden"
                             onClick={() => {
                               if (selectionMode) {
                                 toggleProjectSelected(Number(project.id));
@@ -928,7 +938,7 @@ export default function ProfilePage() {
                           >
                             {/* Thumbnail */}
                             <div 
-                              className="w-full h-48 rounded-t-lg overflow-hidden relative"
+                              className="design-thumbnail-container rounded-t-lg"
                               style={{ backgroundColor: DS.colors.background.panel }}
                             >
                               {isOwnProfile && selectionMode && (
@@ -965,18 +975,18 @@ export default function ProfilePage() {
                                     return `${base}/api/thumbnails/${encodeURIComponent(thumbnailPath)}?t=${Date.now()}`;
                                   })()}
                                   alt={project.title || project.name}
-                                  className="w-full h-full object-cover"
+                                  className="design-thumbnail"
                                   loading="lazy"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
                                     const container = e.currentTarget.parentElement;
                                     if (container) {
-                                      container.innerHTML = '<div class="w-full h-full flex items-center justify-center text-5xl">📦</div>';
+                                      container.innerHTML = '<div class="absolute inset-0 flex items-center justify-center text-5xl">📦</div>';
                                     }
                                   }}
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-5xl">📦</div>
+                                <div className="absolute inset-0 flex items-center justify-center text-5xl">📦</div>
                               )}
                             </div>
 
@@ -1014,7 +1024,60 @@ export default function ProfilePage() {
                   </>
                 )}
 
-                {activeTab === 'starred' && (
+                {activeTab === 'forums' && forumPosts.length > 0 && (
+                  <div className="space-y-3">
+                    {forumPosts.map((post) => (
+                      <Card
+                        key={post.id}
+                        hover
+                        padding="md"
+                        onClick={() => router.push(`/forum/${post.id}`)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3
+                                className="font-semibold line-clamp-1"
+                                style={{ color: DS.colors.text.primary }}
+                              >
+                                {post.title}
+                              </h3>
+                              {post.is_pinned && (
+                                <Badge variant="secondary" size="sm">Pinned</Badge>
+                              )}
+                              {post.is_locked && (
+                                <Badge variant="secondary" size="sm">Locked</Badge>
+                              )}
+                            </div>
+                            <p
+                              className="text-sm line-clamp-2 mb-2"
+                              style={{ color: DS.colors.text.secondary }}
+                            >
+                              {post.content}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-3 text-xs" style={{ color: DS.colors.text.tertiary }}>
+                              <Badge variant="secondary" size="sm">{post.category || 'general'}</Badge>
+                              <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-shrink-0 items-center gap-4 text-sm" style={{ color: DS.colors.text.tertiary }}>
+                            <div className="flex items-center gap-1">
+                              <MessageCircle size={14} />
+                              {post.reply_count || 0}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Eye size={14} />
+                              {post.views || 0}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {activeTab === 'starred' && isOwnProfile && (
                   <>
                     {starredProjects.length === 0 ? (
                       <EmptyState
@@ -1023,18 +1086,19 @@ export default function ProfilePage() {
                         description="Projects you star will appear here."
                       />
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-w-0 w-full">
                         {starredProjects.map((project) => (
                           <Card
                             key={project.id}
                             hover
                             padding="none"
+                            className="min-w-0 w-full overflow-hidden"
                             onClick={() => router.push(`/project/${project.id}`)}
                             style={{ cursor: 'pointer' }}
                           >
                             {/* Thumbnail */}
                             <div 
-                              className="aspect-video rounded-t-lg overflow-hidden relative"
+                              className="design-thumbnail-container rounded-t-lg"
                               style={{ backgroundColor: DS.colors.background.panel }}
                             >
                               {project.thumbnail_path ? (
@@ -1048,18 +1112,18 @@ export default function ProfilePage() {
                                     return `/api/thumbnails/${encodeURIComponent(filename)}?t=${Date.now()}`;
                                   })()}
                                   alt={project.title || project.name}
-                                  className="w-full h-full object-cover"
+                                  className="design-thumbnail"
                                   loading="lazy"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
                                     const container = e.currentTarget.parentElement;
                                     if (container) {
-                                      container.innerHTML = '<div class="w-full h-full flex items-center justify-center text-5xl">📦</div>';
+                                      container.innerHTML = '<div class="absolute inset-0 flex items-center justify-center text-5xl">📦</div>';
                                     }
                                   }}
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-5xl">📦</div>
+                                <div className="absolute inset-0 flex items-center justify-center text-5xl">📦</div>
                               )}
                             </div>
 

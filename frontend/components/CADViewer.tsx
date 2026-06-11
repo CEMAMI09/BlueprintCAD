@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useTheme } from '@/app/context/ThemeContext';
+import { getViewerBackgroundColor } from '@/lib/themeUtils';
 
 type CADViewerProps = {
   // Support both File objects (upload) and URLs (existing files)
@@ -13,6 +15,9 @@ type CADViewerProps = {
   showControls?: boolean;
   autoRotate?: boolean;
   noWrapper?: boolean; // Remove outer wrapper styling
+  /** When 'rotate-only', zoom/pan/advanced gestures are blocked and reported via callback */
+  interactionMode?: 'full' | 'rotate-only';
+  onAdvancedInteraction?: () => void;
 };
 
 export default function CADViewer({
@@ -25,12 +30,17 @@ export default function CADViewer({
   showControls = true,
   autoRotate = false,
   noWrapper = false,
+  interactionMode = 'full',
+  onAdvancedInteraction,
 }: CADViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const onAdvancedInteractionRef = useRef(onAdvancedInteraction);
+  onAdvancedInteractionRef.current = onAdvancedInteraction;
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const seqRef = useRef(0);
   const [isClient, setIsClient] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   // Debug state
   const [debugInfo, setDebugInfo] = useState<{fileUrl?: string, fileType?: string, size?: any} | null>(null);
@@ -106,7 +116,7 @@ export default function CADViewer({
         if (seq !== seqRef.current) return;
 
         scene = new Scene();
-        scene.background = new Color(0x0b1220);
+        scene.background = new Color(getViewerBackgroundColor());
 
         // Ensure container has dimensions
         if (!containerRef.current) return;
@@ -125,10 +135,12 @@ export default function CADViewer({
         renderer.setSize(width, height, false);
         renderer.outputEncoding = sRGBEncoding;
         
-        // Ensure canvas fits container exactly
+        // Ensure canvas fits container exactly and cannot overflow
         renderer.domElement.style.width = '100%';
         renderer.domElement.style.height = '100%';
         renderer.domElement.style.display = 'block';
+        renderer.domElement.style.maxWidth = '100%';
+        renderer.domElement.style.maxHeight = '100%';
         
         if (seq !== seqRef.current) return;
         container.appendChild(renderer.domElement);
@@ -161,6 +173,35 @@ export default function CADViewer({
           ONE: 2, // TOUCH.ROTATE
           TWO: 1  // TOUCH.DOLLY_PAN
         };
+
+        let handleWheel: ((e: WheelEvent) => void) | null = null;
+        let handleContextMenu: ((e: MouseEvent) => void) | null = null;
+        let handleMouseDown: ((e: MouseEvent) => void) | null = null;
+
+        if (interactionMode === 'rotate-only') {
+          controls.enableZoom = false;
+          controls.enablePan = false;
+
+          handleWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAdvancedInteractionRef.current?.();
+          };
+          handleContextMenu = (e: MouseEvent) => {
+            e.preventDefault();
+            onAdvancedInteractionRef.current?.();
+          };
+          handleMouseDown = (e: MouseEvent) => {
+            if (e.button === 1 || e.button === 2) {
+              e.preventDefault();
+              onAdvancedInteractionRef.current?.();
+            }
+          };
+
+          renderer.domElement.addEventListener('wheel', handleWheel, { passive: false });
+          renderer.domElement.addEventListener('contextmenu', handleContextMenu);
+          renderer.domElement.addEventListener('mousedown', handleMouseDown);
+        }
 
         // Load appropriate loader based on format
         let loader: any;
@@ -301,11 +342,15 @@ export default function CADViewer({
             renderer.setSize(w, h, false);
             renderer.domElement.style.width = '100%';
             renderer.domElement.style.height = '100%';
+            renderer.domElement.style.maxWidth = '100%';
+            renderer.domElement.style.maxHeight = '100%';
             camera.aspect = w / h;
             camera.updateProjectionMatrix();
           }
         };
         window.addEventListener('resize', onResize);
+        const resizeObserver = new ResizeObserver(() => onResize());
+        resizeObserver.observe(container);
         setTimeout(onResize, 100);
 
         const animate = () => {
@@ -513,7 +558,13 @@ export default function CADViewer({
           disposed = true;
           if (animationId) cancelAnimationFrame(animationId);
           window.removeEventListener('resize', onResize);
+          resizeObserver.disconnect();
           try {
+            if (renderer?.domElement) {
+              if (handleWheel) renderer.domElement.removeEventListener('wheel', handleWheel);
+              if (handleContextMenu) renderer.domElement.removeEventListener('contextmenu', handleContextMenu);
+              if (handleMouseDown) renderer.domElement.removeEventListener('mousedown', handleMouseDown);
+            }
             if (renderer) {
               renderer.dispose();
               if (renderer.domElement?.parentNode) {
@@ -539,7 +590,7 @@ export default function CADViewer({
     return () => {
       if (cleanupFn) cleanupFn();
     };
-  }, [file, fileUrl, isClient, detectFormat, autoRotate]);
+  }, [file, fileUrl, isClient, detectFormat, autoRotate, resolvedTheme, interactionMode]);
 
   if (!isClient) {
     return (
@@ -554,8 +605,8 @@ export default function CADViewer({
   // When noWrapper is true, render just the canvas with no extra divs
   if (noWrapper) {
     return (
-      <div className={`relative ${height} w-full ${className}`} style={{ minHeight: '400px', margin: 0, padding: 0, marginBottom: 0, paddingBottom: 0 }}>
-        <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ minHeight: '400px', margin: 0, padding: 0, marginBottom: 0, paddingBottom: 0 }} />
+      <div className={`relative h-full min-h-0 w-full max-w-full overflow-hidden ${height} ${className}`} style={{ margin: 0, padding: 0 }}>
+        <div ref={containerRef} className="absolute inset-0 w-full h-full overflow-hidden" style={{ margin: 0, padding: 0 }} />
         
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm z-10">
@@ -603,8 +654,8 @@ export default function CADViewer({
         </div>
       )}
       
-      <div className="relative overflow-hidden rounded-b-xl">
-        <div ref={containerRef} className={`${height} w-full`} style={{ boxSizing: 'border-box' }} />
+      <div className="relative overflow-hidden rounded-b-xl min-w-0">
+        <div ref={containerRef} className={`${height} w-full max-w-full overflow-hidden`} style={{ boxSizing: 'border-box' }} />
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-3">

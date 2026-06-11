@@ -255,13 +255,13 @@ export default function ActivityPanel({ folderId }: ActivityPanelProps) {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-start gap-2 mb-1">
                       {ACTION_ICONS[activity.action] && (
-                        <span style={{ color: DS.colors.text.secondary }}>
+                        <span className="flex-shrink-0 mt-0.5" style={{ color: DS.colors.text.secondary }}>
                           {ACTION_ICONS[activity.action]}
                         </span>
                       )}
-                      <p className="text-sm" style={{ color: DS.colors.text.primary }}>
+                      <p className="text-sm break-words" style={{ color: DS.colors.text.primary }}>
                         {formatActivityMessage(activity)}
                       </p>
                     </div>
